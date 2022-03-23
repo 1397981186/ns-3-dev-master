@@ -201,8 +201,15 @@ UeManager::DoInitialize ()
     rlc->SetRnti (m_rnti);
     rlc->SetLcId (lcid);
 
+    //sht -------------------------03.21
+    Ptr<LteRlc> rlc2 = CreateObject<LteRlcTm> ()->GetObject<LteRlc> ();
+    rlc2->SetLteMacSapProvider (m_rrc->m_macSapProvider);
+    rlc2->SetRnti (m_rnti);
+    rlc2->SetLcId (lcid);
+
     m_srb0 = CreateObject<LteSignalingRadioBearerInfo> ();
     m_srb0->m_rlc = rlc;
+    m_srb0->m_rlc2 = rlc2;
     m_srb0->m_srbIdentity = 0;
     // no need to store logicalChannelConfig as SRB0 is pre-configured
 
@@ -235,15 +242,24 @@ UeManager::DoInitialize ()
     rlc->SetRnti (m_rnti);
     rlc->SetLcId (lcid);
 
+    Ptr<LteRlc> rlc2 = CreateObject<LteRlcAm> ()->GetObject<LteRlc> ();
+    rlc2->SetLteMacSapProvider (m_rrc->m_macSapProvider);
+    rlc2->SetRnti (m_rnti);
+    rlc2->SetLcId (lcid);
+
     Ptr<LtePdcp> pdcp = CreateObject<LtePdcp> ();
     pdcp->SetRnti (m_rnti);
     pdcp->SetLcId (lcid);
     pdcp->SetLtePdcpSapUser (m_drbPdcpSapUser);
     pdcp->SetLteRlcSapProvider (rlc->GetLteRlcSapProvider ());
+    //sht
+    pdcp->SetLteRlcSapProvider2 (rlc2->GetLteRlcSapProvider ());
     rlc->SetLteRlcSapUser (pdcp->GetLteRlcSapUser ());
+    rlc2->SetLteRlcSapUser (pdcp->GetLteRlcSapUser ());
 
     m_srb1 = CreateObject<LteSignalingRadioBearerInfo> ();
     m_srb1->m_rlc = rlc;
+    m_srb1->m_rlc2 = rlc2;
     m_srb1->m_pdcp = pdcp;
     m_srb1->m_srbIdentity = 1;
     m_srb1->m_logicalChannelConfig.priority = 1;
@@ -270,6 +286,8 @@ UeManager::DoInitialize ()
 
   LteEnbRrcSapUser::SetupUeParameters ueParams;
   ueParams.srb0SapProvider = m_srb0->m_rlc->GetLteRlcSapProvider ();
+  //sht
+  ueParams.srb0SapProvider = m_srb0->m_rlc2->GetLteRlcSapProvider ();
   ueParams.srb1SapProvider = m_srb1->m_pdcp->GetLtePdcpSapProvider ();
   m_rrc->m_rrcSapUser->SetupUe (m_rnti, ueParams);
 
@@ -426,10 +444,16 @@ UeManager::SetupDataRadioBearer (EpsBearer bearer, uint8_t bearerId, uint32_t gt
   Ptr<LteRlc> rlc = rlcObjectFactory.Create ()->GetObject<LteRlc> ();
   rlc->SetLteMacSapProvider (m_rrc->m_macSapProvider);
   rlc->SetRnti (m_rnti);
+  //sht
+  Ptr<LteRlc> rlc2 = rlcObjectFactory.Create ()->GetObject<LteRlc> ();
+  rlc2->SetLteMacSapProvider (m_rrc->m_macSapProvider);
+  rlc2->SetRnti (m_rnti);
 
   drbInfo->m_rlc = rlc;
+  drbInfo->m_rlc2 = rlc2;
 
   rlc->SetLcId (lcid);
+  rlc2->SetLcId (lcid);
 
   // we need PDCP only for real RLC, i.e., RLC/UM or RLC/AM
   // if we are using RLC/SM we don't care of anything above RLC
@@ -440,7 +464,10 @@ UeManager::SetupDataRadioBearer (EpsBearer bearer, uint8_t bearerId, uint32_t gt
       pdcp->SetLcId (lcid);
       pdcp->SetLtePdcpSapUser (m_drbPdcpSapUser);
       pdcp->SetLteRlcSapProvider (rlc->GetLteRlcSapProvider ());
+      //sht
+      pdcp->SetLteRlcSapProvider2 (rlc2->GetLteRlcSapProvider ());
       rlc->SetLteRlcSapUser (pdcp->GetLteRlcSapUser ());
+      rlc2->SetLteRlcSapUser (pdcp->GetLteRlcSapUser ());
       drbInfo->m_pdcp = pdcp;
     }
 
@@ -519,6 +546,7 @@ UeManager::StartDataRadioBearers ()
       std::map <uint8_t, Ptr<LteDataRadioBearerInfo> >::iterator drbIt = m_drbMap.find (*drbIdIt);
       NS_ASSERT (drbIt != m_drbMap.end ());
       drbIt->second->m_rlc->Initialize ();
+      drbIt->second->m_rlc2->Initialize ();
       if (drbIt->second->m_pdcp)
         {
           drbIt->second->m_pdcp->Initialize ();
@@ -933,6 +961,7 @@ UeManager::CompleteSetupUe (LteEnbRrcSapProvider::CompleteSetupUeParameters para
 {
   NS_LOG_FUNCTION (this);
   m_srb0->m_rlc->SetLteRlcSapUser (params.srb0SapUser);
+  m_srb0->m_rlc2->SetLteRlcSapUser (params.srb0SapUser);
   m_srb1->m_pdcp->SetLtePdcpSapUser (params.srb1SapUser);
 }
 

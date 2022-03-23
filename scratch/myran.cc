@@ -72,6 +72,8 @@ static void SendPacket (Ptr<NetDevice> device, Address& addr, uint32_t packetSiz
   EpsBearerTag tag (1, 1);
   pkt->AddPacketTag (tag);
   device->Send (pkt, addr, Ipv4L3Protocol::PROT_NUMBER);
+  std::cout << "\n send success \n";
+
 }
 
 /**
@@ -99,7 +101,6 @@ RxPdcpPDU (std::string path, uint16_t rnti, uint8_t lcid, uint32_t bytes, uint64
  * @param lcid logical channel id
  * @param bytes RLC PDU size in bytes
  * @param rlcDelay RLC PDU delay
- * @test-sht
  */
 void
 RxRlcPDU (std::string path, uint16_t rnti, uint8_t lcid, uint32_t bytes, uint64_t rlcDelay)

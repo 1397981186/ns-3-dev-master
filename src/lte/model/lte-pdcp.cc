@@ -148,6 +148,14 @@ LtePdcp::SetLteRlcSapProvider (LteRlcSapProvider * s)
   m_rlcSapProvider = s;
 }
 
+//sht
+void
+LtePdcp::SetLteRlcSapProvider2 (LteRlcSapProvider * s)
+{
+  NS_LOG_FUNCTION (this << s);
+  m_rlcSapProvider2 = s;
+}
+
 LteRlcSapUser*
 LtePdcp::GetLteRlcSapUser ()
 {
@@ -205,6 +213,42 @@ LtePdcp::DoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters params
   txParams.pdcpPdu = p;
 
   m_rlcSapProvider->TransmitPdcpPdu (txParams);
+
+}
+
+//sht
+void
+LtePdcp::DoTransmitPdcpSdu2 (LtePdcpSapProvider::TransmitPdcpSduParameters params)
+{
+  NS_LOG_FUNCTION (this << m_rnti << static_cast <uint16_t> (m_lcid) << params.pdcpSdu->GetSize ());
+  Ptr<Packet> p = params.pdcpSdu;
+
+  // Sender timestamp
+  PdcpTag pdcpTag (Simulator::Now ());
+
+  LtePdcpHeader pdcpHeader;
+  pdcpHeader.SetSequenceNumber (m_txSequenceNumber);
+
+  m_txSequenceNumber++;
+  if (m_txSequenceNumber > m_maxPdcpSn)
+    {
+      m_txSequenceNumber = 0;
+    }
+
+  pdcpHeader.SetDcBit (LtePdcpHeader::DATA_PDU);
+
+  NS_LOG_LOGIC ("PDCP header: " << pdcpHeader);
+  p->AddHeader (pdcpHeader);
+  p->AddByteTag (pdcpTag, 1, pdcpHeader.GetSerializedSize ());
+
+  m_txPdu (m_rnti, m_lcid, p->GetSize ());
+
+  LteRlcSapProvider::TransmitPdcpPduParameters txParams;
+  txParams.rnti = m_rnti;
+  txParams.lcid = m_lcid;
+  txParams.pdcpPdu = p;
+
+  m_rlcSapProvider2->TransmitPdcpPdu (txParams);
 }
 
 void
