@@ -1,0 +1,2 @@
+Time	direction	frame	subF	slot	1stSym	nSymbol	cellId	rnti	tbSize	mcs	rv	SINR(dB)	corrupt	TBler	bwpId
+0.402143	DL	40	2	0	1	1	1	1	15970	28	0	30.0481	0	0	0

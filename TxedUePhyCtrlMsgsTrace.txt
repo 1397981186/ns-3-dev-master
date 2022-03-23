@@ -1,0 +1,2 @@
+Time	Entity	Frame	SF	Slot	VarTTI	nodeId	RNTI	bwpId	MsgType
+0.0179286	UE  PHY Txed	1	7	0	2	0	0	RACH_PREAMBLE

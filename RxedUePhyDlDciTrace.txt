@@ -1,0 +1,2 @@
+Time	Entity	Frame	SF	Slot	nodeId	RNTI	bwpId	Harq ID	K1 Delay
+0.402071	DL DCI Rxed	40	2	0	2	1	0	19	2
