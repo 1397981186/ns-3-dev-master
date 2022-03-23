@@ -198,13 +198,16 @@ DefaultSimulatorImpl::Run (void)
   m_main = SystemThread::Self ();
   ProcessEventsWithContext ();
   m_stop = false;
-  uint16_t countEvent=0;
+  uint32_t countEvent=0;
 
   while (!m_events->IsEmpty () && !m_stop)
     {
+	  countEvent++;
+	  std::cout << "\n Event : "+std::to_string(countEvent);
+	  if(countEvent==12255){
+		  std::cout << "\n here  ";
+	  }
       ProcessOneEvent ();
-      std::cout << "\n Event : "+std::to_string(countEvent)+   " \n";
-      countEvent++;
     }
 
   // If the simulator stopped naturally by lack of events, make a
