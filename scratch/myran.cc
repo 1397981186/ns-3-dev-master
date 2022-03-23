@@ -72,7 +72,7 @@ static void SendPacket (Ptr<NetDevice> device, Address& addr, uint32_t packetSiz
   EpsBearerTag tag (1, 1);
   pkt->AddPacketTag (tag);
   device->Send (pkt, addr, Ipv4L3Protocol::PROT_NUMBER);
-  std::cout << "\n send success \n";
+  std::cout << "\n send success !\n";
 
 }
 
