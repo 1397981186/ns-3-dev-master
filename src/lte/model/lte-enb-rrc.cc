@@ -287,7 +287,7 @@ UeManager::DoInitialize ()
   LteEnbRrcSapUser::SetupUeParameters ueParams;
   ueParams.srb0SapProvider = m_srb0->m_rlc->GetLteRlcSapProvider ();
   //sht
-  ueParams.srb0SapProvider = m_srb0->m_rlc2->GetLteRlcSapProvider ();
+  ueParams.srb0SapProvider2 = m_srb0->m_rlc2->GetLteRlcSapProvider ();
   ueParams.srb1SapProvider = m_srb1->m_pdcp->GetLtePdcpSapProvider ();
   m_rrc->m_rrcSapUser->SetupUe (m_rnti, ueParams);
 

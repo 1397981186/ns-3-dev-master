@@ -71,6 +71,7 @@ NS_OBJECT_ENSURE_REGISTERED (LtePdcp);
 LtePdcp::LtePdcp ()
   : m_pdcpSapUser (0),
     m_rlcSapProvider (0),
+    m_rlcSapProvider2 (0),
     m_rnti (0),
     m_lcid (0),
     m_txSequenceNumber (0),
@@ -79,6 +80,7 @@ LtePdcp::LtePdcp ()
   NS_LOG_FUNCTION (this);
   m_pdcpSapProvider = new LtePdcpSpecificLtePdcpSapProvider<LtePdcp> (this);
   m_rlcSapUser = new LtePdcpSpecificLteRlcSapUser (this);
+  m_rlcSapUser2 = new LtePdcpSpecificLteRlcSapUser (this);
 }
 
 LtePdcp::~LtePdcp ()
@@ -161,6 +163,13 @@ LtePdcp::GetLteRlcSapUser ()
 {
   NS_LOG_FUNCTION (this);
   return m_rlcSapUser;
+}
+
+LteRlcSapUser*
+LtePdcp::GetLteRlcSapUser2 ()
+{
+  NS_LOG_FUNCTION (this);
+  return m_rlcSapUser2;
 }
 
 LtePdcp::Status 

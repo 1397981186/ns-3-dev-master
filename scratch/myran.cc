@@ -171,6 +171,10 @@ main (int argc, char *argv[])
                 enableUl);
   cmd.Parse (argc, argv);
 
+  LogComponentEnable("Cttc3gppChannelSimpleRan", LOG_LEVEL_INFO);
+  LogComponentEnable("LteRlcUm", LOG_LEVEL_LOGIC);
+
+
   int64_t randomStream = 1;
   //Create the scenario
   GridScenarioHelper gridScenario;

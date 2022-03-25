@@ -203,10 +203,7 @@ DefaultSimulatorImpl::Run (void)
   while (!m_events->IsEmpty () && !m_stop)
     {
 	  countEvent++;
-	  std::cout << "\n Event : "+std::to_string(countEvent);
-	  if(countEvent==12255){
-		  std::cout << "\n here  ";
-	  }
+//	  std::cout << "\n Event : "+std::to_string(countEvent);
       ProcessOneEvent ();
     }
 
