@@ -1099,6 +1099,7 @@ NrGnbMac::DoSchedConfigIndication (NrMacSchedSapUser::SchedConfigIndParameters i
               for (unsigned int ipdu = 0; ipdu < rlcPduInfo.size (); ipdu++)
                 {
                   NS_ASSERT_MSG (rntiIt != m_rlcAttached.end (), "could not find RNTI" << rnti);
+                  //在unordered_map中，如果find()没找到要找的key，就返回和end()一样的iterator值。auto rntiIt = m_rlcAttached.find (rnti);
                   std::unordered_map<uint8_t, LteMacSapUser*>::iterator lcidIt = rntiIt->second.find (rlcPduInfo[ipdu].m_lcid);
                   NS_ASSERT_MSG (lcidIt != rntiIt->second.end (), "could not find LCID" << rlcPduInfo[ipdu].m_lcid);
                   NS_LOG_DEBUG ("Notifying RLC of TX opportunity for TB " << (unsigned int)tbUid << " PDU num " << ipdu << " size " << (unsigned int) rlcPduInfo[ipdu].m_size);

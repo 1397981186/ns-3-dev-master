@@ -133,6 +133,7 @@ public:
 
   // Interface implemented from LteRlcSapUser
   virtual void ReceivePdcpPdu (Ptr<Packet> p);
+  C* getPdcp();
 
 private:
   LteRlcSpecificLteRlcSapUser ();
@@ -154,6 +155,12 @@ template <class C>
 void LteRlcSpecificLteRlcSapUser<C>::ReceivePdcpPdu (Ptr<Packet> p)
 {
   m_pdcp->DoReceivePdcpPdu (p);
+}
+
+template <class C>
+C* LteRlcSpecificLteRlcSapUser<C>::getPdcp ()
+{
+	return m_pdcp;
 }
 
 

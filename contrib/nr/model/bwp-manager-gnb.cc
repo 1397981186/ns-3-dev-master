@@ -187,6 +187,8 @@ BwpManagerGnb::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txO
   NS_ASSERT_MSG (lcidIt != rntiIt->second.end (), "could not find LCID " << (uint16_t) txOpParams.lcid);
 
   (*lcidIt).second->NotifyTxOpportunity (txOpParams);
+//  (*lcidIt).second->
+
 }
 
 
