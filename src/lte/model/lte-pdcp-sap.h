@@ -124,7 +124,7 @@ LtePdcpSpecificLtePdcpSapProvider<C>::LtePdcpSpecificLtePdcpSapProvider ()
 template <class C>
 void LtePdcpSpecificLtePdcpSapProvider<C>::TransmitPdcpSdu (TransmitPdcpSduParameters params)
 {
-//  m_pdcp->DoTransmitPdcpSdu (params);
+  m_pdcp->DoTransmitPdcpSdu (params);
   m_pdcp->DoTransmitPdcpSdu2 (params);
 }
 
