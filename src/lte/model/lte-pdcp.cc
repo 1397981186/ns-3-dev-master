@@ -215,6 +215,7 @@ LtePdcp::DoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters params
   p->AddByteTag (pdcpTag, 1, pdcpHeader.GetSerializedSize ());
 
   m_txPdu (m_rnti, m_lcid, p->GetSize ());
+  m_txPdu (m_rnti, m_lcid+99, p->GetSize ());
 
   LteRlcSapProvider::TransmitPdcpPduParameters txParams;
   txParams.rnti = m_rnti;

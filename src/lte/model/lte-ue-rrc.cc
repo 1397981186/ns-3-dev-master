@@ -1545,6 +1545,7 @@ LteUeRrc::ApplyRadioResourceConfigDedicated (LteRrcSap::RadioResourceConfigDedic
               pdcp->SetLcId (dtamIt->logicalChannelIdentity);
               pdcp->SetLtePdcpSapUser (m_drbPdcpSapUser);
               pdcp->SetLteRlcSapProvider (rlc->GetLteRlcSapProvider ());
+              pdcp->SetLteRlcSapProvider2 (rlc2->GetLteRlcSapProvider ());
               rlc->SetLteRlcSapUser (pdcp->GetLteRlcSapUser ());
               drbInfo->m_pdcp = pdcp;
             }
