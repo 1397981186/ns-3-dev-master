@@ -258,7 +258,7 @@ LtePdcp::DoTransmitPdcpSdu2 (LtePdcpSapProvider::TransmitPdcpSduParameters param
   txParams.lcid = m_lcid;
   txParams.pdcpPdu = p;
 
-  m_rlcSapProvider2->TransmitPdcpPdu (txParams);
+  m_rlcSapProvider2->TransmitPdcpPdu2 (txParams);
 }
 
 void

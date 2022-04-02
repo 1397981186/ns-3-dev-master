@@ -224,6 +224,12 @@ LteRlcSm::DoTransmitPdcpPdu (Ptr<Packet> p)
 }
 
 void
+LteRlcSm::DoTransmitPdcpPdu2 (Ptr<Packet> p)
+{
+  NS_LOG_FUNCTION (this << p);
+}
+
+void
 LteRlcSm::DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams)
 {
   NS_LOG_FUNCTION (this << rxPduParams.p);

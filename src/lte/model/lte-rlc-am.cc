@@ -191,6 +191,40 @@ LteRlcAm::DoTransmitPdcpPdu (Ptr<Packet> p)
   m_rbsTimer = Simulator::Schedule (m_rbsTimerValue, &LteRlcAm::ExpireRbsTimer, this);
 }
 
+void
+LteRlcAm::DoTransmitPdcpPdu2 (Ptr<Packet> p)
+{
+  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << p->GetSize ());
+
+  if (m_txonBufferSize + p->GetSize () <= m_maxTxBufferSize || (m_maxTxBufferSize == 0))
+    {
+      /** Store PDCP PDU */
+      LteRlcSduStatusTag tag;
+      tag.SetStatus (LteRlcSduStatusTag::FULL_SDU);
+      p->AddPacketTag (tag);
+
+      NS_LOG_LOGIC ("Txon Buffer: New packet added");
+      m_txonBuffer.push_back (TxPdu (p, Simulator::Now ()));
+      m_txonBufferSize += p->GetSize ();
+      NS_LOG_LOGIC ("NumOfBuffers = " << m_txonBuffer.size() );
+      NS_LOG_LOGIC ("txonBufferSize = " << m_txonBufferSize);
+    }
+  else
+    {
+      // Discard full RLC SDU
+      NS_LOG_LOGIC ("TxonBuffer is full. RLC SDU discarded");
+      NS_LOG_LOGIC ("MaxTxBufferSize = " << m_maxTxBufferSize);
+      NS_LOG_LOGIC ("txonBufferSize    = " << m_txonBufferSize);
+      NS_LOG_LOGIC ("packet size     = " << p->GetSize ());
+      m_txDropTrace (p);
+    }
+
+  /** Report Buffer Status */
+  DoReportBufferStatus ();
+  m_rbsTimer.Cancel ();
+  m_rbsTimer = Simulator::Schedule (m_rbsTimerValue, &LteRlcAm::ExpireRbsTimer, this);
+}
+
 
 /**
  * MAC SAP
