@@ -255,7 +255,7 @@ UeManager::DoInitialize ()
     //sht
     pdcp->SetLteRlcSapProvider2 (rlc2->GetLteRlcSapProvider ());
     rlc->SetLteRlcSapUser (pdcp->GetLteRlcSapUser ());
-    rlc2->SetLteRlcSapUser (pdcp->GetLteRlcSapUser ());
+    rlc2->SetLteRlcSapUser (pdcp->GetLteRlcSapUser2 ());
 
     m_srb1 = CreateObject<LteSignalingRadioBearerInfo> ();
     m_srb1->m_rlc = rlc;
@@ -467,7 +467,7 @@ UeManager::SetupDataRadioBearer (EpsBearer bearer, uint8_t bearerId, uint32_t gt
       //sht
       pdcp->SetLteRlcSapProvider2 (rlc2->GetLteRlcSapProvider ());
       rlc->SetLteRlcSapUser (pdcp->GetLteRlcSapUser ());
-      rlc2->SetLteRlcSapUser (pdcp->GetLteRlcSapUser ());
+      rlc2->SetLteRlcSapUser (pdcp->GetLteRlcSapUser2 ());
       drbInfo->m_pdcp = pdcp;
     }
 

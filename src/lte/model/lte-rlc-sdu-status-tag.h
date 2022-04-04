@@ -54,6 +54,7 @@ public:
    * \return the object TypeId
    */
   static TypeId GetTypeId (void);
+//  TypeId GetTypeId (void);
   virtual TypeId GetInstanceTypeId (void) const;
   virtual uint32_t GetSerializedSize (void) const;
   virtual void Serialize (TagBuffer i) const;

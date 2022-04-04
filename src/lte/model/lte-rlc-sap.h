@@ -123,7 +123,7 @@ void LteRlcSpecificLteRlcSapProvider<C>::TransmitPdcpPdu (TransmitPdcpPduParamet
 template <class C>
 void LteRlcSpecificLteRlcSapProvider<C>::TransmitPdcpPdu2 (TransmitPdcpPduParameters params)
 {
-  m_rlc->DoTransmitPdcpPdu (params.pdcpPdu);
+  m_rlc->DoTransmitPdcpPdu2 (params.pdcpPdu);
 }
 
 /// LteRlcSpecificLteRlcSapUser class

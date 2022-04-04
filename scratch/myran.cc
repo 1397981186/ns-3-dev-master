@@ -173,6 +173,7 @@ main (int argc, char *argv[])
 
   LogComponentEnable("Cttc3gppChannelSimpleRan", LOG_LEVEL_INFO);
   LogComponentEnable("LteRlcUm", LOG_LEVEL_LOGIC);
+  LogComponentEnable("LtePdcp", LOG_LEVEL_FUNCTION);
 
 
   int64_t randomStream = 1;

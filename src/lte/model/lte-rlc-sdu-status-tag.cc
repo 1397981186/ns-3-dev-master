@@ -41,7 +41,7 @@ LteRlcSduStatusTag::GetStatus (void) const
 {
   return m_sduStatus;
 }
-//
+
 //TypeId
 //LteRlcSduStatusTag::GetTypeId (void)
 //{

@@ -195,7 +195,7 @@ LtePdcp::DoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters params
 {
   NS_LOG_FUNCTION (this << m_rnti << static_cast <uint16_t> (m_lcid) << params.pdcpSdu->GetSize ());
   Ptr<Packet> p = params.pdcpSdu;
-
+  NS_LOG_FUNCTION(this<<"p address"<<&p);
   // Sender timestamp
   PdcpTag pdcpTag (Simulator::Now ());
 
@@ -232,7 +232,7 @@ LtePdcp::DoTransmitPdcpSdu2 (LtePdcpSapProvider::TransmitPdcpSduParameters param
 {
   NS_LOG_FUNCTION (this << m_rnti << static_cast <uint16_t> (m_lcid) << params.pdcpSdu->GetSize ());
   Ptr<Packet> p = params.pdcpSdu;
-
+  NS_LOG_FUNCTION(this<<"p address"<<&p);
   // Sender timestamp
   PdcpTag pdcpTag (Simulator::Now ());
 
