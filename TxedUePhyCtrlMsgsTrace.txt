@@ -1,2 +1,4 @@
 Time	Entity	Frame	SF	Slot	VarTTI	nodeId	RNTI	bwpId	MsgType
 0.0179286	UE  PHY Txed	1	7	0	2	0	0	RACH_PREAMBLE
+0.404929	UE  PHY Txed	40	4	0	2	0	0	DL_HARQ
+0.405929	UE  PHY Txed	40	5	0	2	0	0	DL_CQI

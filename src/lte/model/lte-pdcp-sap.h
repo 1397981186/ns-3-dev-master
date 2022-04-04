@@ -126,10 +126,8 @@ void LtePdcpSpecificLtePdcpSapProvider<C>::TransmitPdcpSdu (TransmitPdcpSduParam
 {
   TransmitPdcpSduParameters params2;
 
-  Ptr<Packet> pdcpSdu;
-  Ptr<Packet> *pPacket2=&pdcpSdu;
-  Ptr<Packet> *pPacket=&params.pdcpSdu;
-  *pPacket2=*pPacket;
+  Ptr<Packet> pdcpSdu=Create<Packet> ();
+  *pdcpSdu=*params.pdcpSdu;
 
   params2.lcid=params.lcid;
   params2.rnti=params.rnti;
