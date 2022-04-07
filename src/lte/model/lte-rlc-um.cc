@@ -485,10 +485,10 @@ LteRlcUm::DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams)
   // - else:
   //    - place the received UMD PDU in the reception buffer.
 
-  NS_LOG_LOGIC ("VR(UR) = " << m_vrUr);
-  NS_LOG_LOGIC ("VR(UX) = " << m_vrUx);
-  NS_LOG_LOGIC ("VR(UH) = " << m_vrUh);
-  NS_LOG_LOGIC ("SN = " << seqNumber);
+  NS_LOG_LOGIC ("VR(UR) = " << m_vrUr);//1
+  NS_LOG_LOGIC ("VR(UX) = " << m_vrUx);//0
+  NS_LOG_LOGIC ("VR(UH) = " << m_vrUh);//1
+  NS_LOG_LOGIC ("SN = " << seqNumber);//0
 
   m_vrUr.SetModulusBase (m_vrUh - m_windowSize);
   m_vrUh.SetModulusBase (m_vrUh - m_windowSize);
@@ -560,7 +560,7 @@ LteRlcUm::DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams)
       m_vrUr = newVrUr;
       NS_LOG_LOGIC ("New VR(UR) = " << m_vrUr);
 
-      ReassembleSnInterval (oldVrUr, m_vrUr);
+      ReassembleSnInterval (oldVrUr, m_vrUr);//from here gives to RLC
     }
 
   // m_vrUh can change previously, set new modulus base
