@@ -72,7 +72,12 @@ static void SendPacket (Ptr<NetDevice> device, Address& addr, uint32_t packetSiz
   EpsBearerTag tag (1, 1);
   pkt->AddPacketTag (tag);
   device->Send (pkt, addr, Ipv4L3Protocol::PROT_NUMBER);
-  std::cout << "\n send success !!\n";
+
+//  Ptr<Packet> pkt2 = Create<Packet> (500);
+//  pkt2->AddHeader (ipv4Header);
+//  pkt2->AddPacketTag (tag);
+//  device->Send (pkt2, addr, Ipv4L3Protocol::PROT_NUMBER);
+  NS_LOG_FUNCTION ("\n--------------------- send success -----------------!!");
 
 }
 
@@ -130,10 +135,10 @@ RxRlcPDU (std::string path, uint16_t rnti, uint8_t lcid, uint32_t bytes, uint64_
 void
 ConnectPdcpRlcTraces ()
 {
-  Config::Connect ("/NodeList/*/DeviceList/*/LteUeRrc/DataRadioBearerMap/1/LtePdcp/RxPDU",
+  Config::Connect ("/NodeList/*/DeviceList/*/LteUeRrc/DataRadioBearerMap/*/LtePdcp/RxPDU",
                    MakeCallback (&RxPdcpPDU));
 
-  Config::Connect ("/NodeList/*/DeviceList/*/LteUeRrc/DataRadioBearerMap/1/LteRlc/RxPDU",
+  Config::Connect ("/NodeList/*/DeviceList/*/LteUeRrc/DataRadioBearerMap/*/LteRlc/RxPDU",
                    MakeCallback (&RxRlcPDU));
 }
 

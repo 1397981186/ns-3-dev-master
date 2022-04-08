@@ -418,7 +418,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
   RlcTag rlcTag (Simulator::Now ());
   packet->AddByteTag (rlcTag, 1, rlcHeader.GetSerializedSize ());
   m_txPdu (m_rnti, m_lcid, packet->GetSize ());
-
+//  m_txPdu (m_rnti, m_lcid+99, packet->GetSize ());
   // Send RLC PDU to MAC layer
   LteMacSapProvider::TransmitPduParameters params;
   params.pdu = packet;
@@ -446,8 +446,10 @@ LteRlcUm::DoNotifyHarqDeliveryFailure ()
 void
 LteRlcUm::DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams)
 {
-  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << rxPduParams.p->GetSize ());
-
+  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << rxPduParams.p->GetSize ()<<rxPduParams.lcid);
+  if(rxPduParams.lcid>=99){
+    rxPduParams.lcid=rxPduParams.lcid-99;
+  }
   // Receiver timestamp
   RlcTag rlcTag;
   Time delay;
@@ -457,7 +459,7 @@ LteRlcUm::DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams)
 
   delay = Simulator::Now() - rlcTag.GetSenderTimestamp ();
   m_rxPdu (m_rnti, m_lcid, rxPduParams.p->GetSize (), delay.GetNanoSeconds ());
-
+//  m_rxPdu (m_rnti, m_lcid+99, rxPduParams.p->GetSize (), delay.GetNanoSeconds ());
   // 5.1.2.2 Receive operations
 
   // Get RLC header parameters
