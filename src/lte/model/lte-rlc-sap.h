@@ -54,6 +54,7 @@ public:
    * \param params the TransmitPdcpPduParameters
    */
   virtual void TransmitPdcpPdu (TransmitPdcpPduParameters params) = 0;
+  virtual void TransmitPdcpPdu2 (TransmitPdcpPduParameters params) = 0;
 };
 
 
@@ -95,6 +96,7 @@ public:
    * \param params the TransmitPdcpPduParameters
    */
   virtual void TransmitPdcpPdu (TransmitPdcpPduParameters params);
+  virtual void TransmitPdcpPdu2 (TransmitPdcpPduParameters params);
 
 private:
   LteRlcSpecificLteRlcSapProvider ();
@@ -118,6 +120,11 @@ void LteRlcSpecificLteRlcSapProvider<C>::TransmitPdcpPdu (TransmitPdcpPduParamet
   m_rlc->DoTransmitPdcpPdu (params.pdcpPdu);
 }
 
+template <class C>
+void LteRlcSpecificLteRlcSapProvider<C>::TransmitPdcpPdu2 (TransmitPdcpPduParameters params)
+{
+  m_rlc->DoTransmitPdcpPdu2 (params.pdcpPdu);
+}
 
 /// LteRlcSpecificLteRlcSapUser class
 template <class C>

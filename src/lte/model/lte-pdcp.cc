@@ -195,7 +195,7 @@ LtePdcp::DoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters params
 {
   NS_LOG_FUNCTION (this << m_rnti << static_cast <uint16_t> (m_lcid) << params.pdcpSdu->GetSize ());
   Ptr<Packet> p = params.pdcpSdu;
-
+  NS_LOG_FUNCTION(this<<"p address"<<&p);
   // Sender timestamp
   PdcpTag pdcpTag (Simulator::Now ());
 
@@ -215,7 +215,7 @@ LtePdcp::DoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters params
   p->AddByteTag (pdcpTag, 1, pdcpHeader.GetSerializedSize ());
 
   m_txPdu (m_rnti, m_lcid, p->GetSize ());
-  m_txPdu (m_rnti, m_lcid+99, p->GetSize ());
+//  m_txPdu (m_rnti, m_lcid+99, p->GetSize ());
 
   LteRlcSapProvider::TransmitPdcpPduParameters txParams;
   txParams.rnti = m_rnti;
@@ -232,7 +232,7 @@ LtePdcp::DoTransmitPdcpSdu2 (LtePdcpSapProvider::TransmitPdcpSduParameters param
 {
   NS_LOG_FUNCTION (this << m_rnti << static_cast <uint16_t> (m_lcid) << params.pdcpSdu->GetSize ());
   Ptr<Packet> p = params.pdcpSdu;
-
+  NS_LOG_FUNCTION(this<<"p address"<<&p);
   // Sender timestamp
   PdcpTag pdcpTag (Simulator::Now ());
 
@@ -258,7 +258,7 @@ LtePdcp::DoTransmitPdcpSdu2 (LtePdcpSapProvider::TransmitPdcpSduParameters param
   txParams.lcid = m_lcid;
   txParams.pdcpPdu = p;
 
-  m_rlcSapProvider2->TransmitPdcpPdu (txParams);
+  m_rlcSapProvider2->TransmitPdcpPdu2 (txParams);
 }
 
 void

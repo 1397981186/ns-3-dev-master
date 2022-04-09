@@ -72,7 +72,12 @@ static void SendPacket (Ptr<NetDevice> device, Address& addr, uint32_t packetSiz
   EpsBearerTag tag (1, 1);
   pkt->AddPacketTag (tag);
   device->Send (pkt, addr, Ipv4L3Protocol::PROT_NUMBER);
-  std::cout << "\n send success !!\n";
+
+//  Ptr<Packet> pkt2 = Create<Packet> (500);
+//  pkt2->AddHeader (ipv4Header);
+//  pkt2->AddPacketTag (tag);
+//  device->Send (pkt2, addr, Ipv4L3Protocol::PROT_NUMBER);
+  NS_LOG_FUNCTION ("\n--------------------- send success -----------------!!");
 
 }
 
@@ -88,7 +93,10 @@ static void SendPacket (Ptr<NetDevice> device, Address& addr, uint32_t packetSiz
 void
 RxPdcpPDU (std::string path, uint16_t rnti, uint8_t lcid, uint32_t bytes, uint64_t pdcpDelay)
 {
-  std::cout << "\n Packet PDCP delay:" << pdcpDelay << "\n";
+  NS_LOG_FUNCTION ("------------start-------------------" );
+//  std::cout << "\n Packet PDCP delay:" << pdcpDelay << "\n";
+  NS_LOG_FUNCTION (" Packet PDCP delay:" << pdcpDelay);
+  NS_LOG_FUNCTION ("------------end-------------------" );
   g_rxPdcpCallbackCalled = true;
 }
 
@@ -105,11 +113,19 @@ RxPdcpPDU (std::string path, uint16_t rnti, uint8_t lcid, uint32_t bytes, uint64
 void
 RxRlcPDU (std::string path, uint16_t rnti, uint8_t lcid, uint32_t bytes, uint64_t rlcDelay)
 {
-  std::cout << "\n\n Data received at RLC layer at:" << Simulator::Now () << std::endl;
-  std::cout << "\n rnti:" << rnti << std::endl;
-  std::cout << "\n lcid:" << (unsigned)lcid << std::endl;
-  std::cout << "\n bytes :" << bytes << std::endl;
-  std::cout << "\n delay :" << rlcDelay << std::endl;
+
+  NS_LOG_FUNCTION ("------------start-------------------" );
+  NS_LOG_FUNCTION(" Data received at RLC layer at:"<<Simulator::Now ());
+  NS_LOG_FUNCTION(" rnti:" << rnti );
+  NS_LOG_FUNCTION(" lcid:" << (unsigned)lcid );
+  NS_LOG_FUNCTION(" bytes :" << bytes );
+  NS_LOG_FUNCTION(" delay :" << rlcDelay );
+  NS_LOG_FUNCTION ("------------end-------------------" );
+//  std::cout << "\n\n Data received at RLC layer at:" << Simulator::Now () << std::endl;
+//  std::cout << "\n rnti:" << rnti << std::endl;
+//  std::cout << "\n lcid:" << (unsigned)lcid << std::endl;
+//  std::cout << "\n bytes :" << bytes << std::endl;
+//  std::cout << "\n delay :" << rlcDelay << std::endl;
   g_rxRxRlcPDUCallbackCalled = true;
 }
 
@@ -119,10 +135,10 @@ RxRlcPDU (std::string path, uint16_t rnti, uint8_t lcid, uint32_t bytes, uint64_
 void
 ConnectPdcpRlcTraces ()
 {
-  Config::Connect ("/NodeList/*/DeviceList/*/LteUeRrc/DataRadioBearerMap/1/LtePdcp/RxPDU",
+  Config::Connect ("/NodeList/*/DeviceList/*/LteUeRrc/DataRadioBearerMap/*/LtePdcp/RxPDU",
                    MakeCallback (&RxPdcpPDU));
 
-  Config::Connect ("/NodeList/*/DeviceList/*/LteUeRrc/DataRadioBearerMap/1/LteRlc/RxPDU",
+  Config::Connect ("/NodeList/*/DeviceList/*/LteUeRrc/DataRadioBearerMap/*/LteRlc/RxPDU",
                    MakeCallback (&RxRlcPDU));
 }
 
@@ -171,8 +187,9 @@ main (int argc, char *argv[])
                 enableUl);
   cmd.Parse (argc, argv);
 
-  LogComponentEnable("Cttc3gppChannelSimpleRan", LOG_LEVEL_INFO);
+  LogComponentEnable("Cttc3gppChannelSimpleRan", LOG_LEVEL_FUNCTION);
   LogComponentEnable("LteRlcUm", LOG_LEVEL_LOGIC);
+  LogComponentEnable("LtePdcp", LOG_LEVEL_FUNCTION);
 
 
   int64_t randomStream = 1;

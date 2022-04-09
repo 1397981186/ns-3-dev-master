@@ -51,7 +51,7 @@ public:
    * \param p packet
    */
   virtual void DoTransmitPdcpPdu (Ptr<Packet> p);
-
+  virtual void DoTransmitPdcpPdu2 (Ptr<Packet> p);
   /**
    * MAC SAP
    *

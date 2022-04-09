@@ -1547,6 +1547,7 @@ LteUeRrc::ApplyRadioResourceConfigDedicated (LteRrcSap::RadioResourceConfigDedic
               pdcp->SetLteRlcSapProvider (rlc->GetLteRlcSapProvider ());
               pdcp->SetLteRlcSapProvider2 (rlc2->GetLteRlcSapProvider ());
               rlc->SetLteRlcSapUser (pdcp->GetLteRlcSapUser ());
+              rlc2->SetLteRlcSapUser (pdcp->GetLteRlcSapUser ());
               drbInfo->m_pdcp = pdcp;
             }
 
@@ -1565,8 +1566,8 @@ LteUeRrc::ApplyRadioResourceConfigDedicated (LteRrcSap::RadioResourceConfigDedic
 
           NS_LOG_DEBUG (this << " UE RRC RNTI " << m_rnti << " Number Of Component Carriers " << m_numberOfComponentCarriers << " lcID " << (uint16_t) dtamIt->logicalChannelIdentity);
           //Call AddLc of UE component carrier manager
-          std::vector <LteUeCcmRrcSapProvider::LcsConfig> lcOnCcMapping = m_ccmRrcSapProvider->AddLc (dtamIt->logicalChannelIdentity, lcConfig, rlc->GetLteMacSapUser ());
-
+//          std::vector <LteUeCcmRrcSapProvider::LcsConfig> lcOnCcMapping = m_ccmRrcSapProvider->AddLc (dtamIt->logicalChannelIdentity, lcConfig, rlc->GetLteMacSapUser ());
+          std::vector <LteUeCcmRrcSapProvider::LcsConfig> lcOnCcMapping = m_ccmRrcSapProvider->AddLc (dtamIt->logicalChannelIdentity, lcConfig, rlc->GetLteMacSapUser (), rlc2->GetLteMacSapUser ());
           NS_LOG_DEBUG ("Size of lcOnCcMapping vector " << lcOnCcMapping.size ());
           std::vector<LteUeCcmRrcSapProvider::LcsConfig>::iterator itLcOnCcMapping = lcOnCcMapping.begin ();
           NS_ASSERT_MSG (itLcOnCcMapping != lcOnCcMapping.end (), "Component carrier manager failed to add LC for data radio bearer");
