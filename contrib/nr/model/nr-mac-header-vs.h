@@ -177,6 +177,7 @@ public:
    * \return the stored size
    */
   uint16_t GetSize () const;
+  uint16_t GetSignOfRlc () const;
 
 protected:
   uint8_t   m_lcid {0}; //!< LC ID
