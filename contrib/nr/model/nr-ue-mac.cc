@@ -576,7 +576,7 @@ NrUeMac::DoReceivePhyPdu (Ptr<Packet> p)
   LteMacSapUser::ReceivePduParameters rxParams;
   rxParams.p = p;
   rxParams.rnti = m_rnti;
-  rxParams.lcid = header.GetLcId ();
+  rxParams.lcid = header.GetLcId ()+99;
 
   auto it = m_lcInfoMap.find (header.GetLcId());
 

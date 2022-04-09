@@ -171,7 +171,7 @@ public:
    * \param size the size to store (L in the standard)
    */
   void SetSize (uint16_t size);
-
+  void SetSignOfRlc (uint16_t size);
   /**
    * \brief GetS the stored size (L in the standard)
    * \return the stored size
@@ -181,6 +181,7 @@ public:
 protected:
   uint8_t   m_lcid {0}; //!< LC ID
   uint16_t  m_size {0}; //!< Size (L in the standard)
+  uint16_t  m_signOfRlc {0}; //!< Size (L in the standard)
 
 private:
   static std::vector<uint8_t> m_allowedLcId; //!< Vector of allowed LCID, to speed up checking
