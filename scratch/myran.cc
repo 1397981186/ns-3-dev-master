@@ -73,10 +73,10 @@ static void SendPacket (Ptr<NetDevice> device, Address& addr, uint32_t packetSiz
   pkt->AddPacketTag (tag);
   device->Send (pkt, addr, Ipv4L3Protocol::PROT_NUMBER);
 
-//  Ptr<Packet> pkt2 = Create<Packet> (500);
-//  pkt2->AddHeader (ipv4Header);
-//  pkt2->AddPacketTag (tag);
-//  device->Send (pkt2, addr, Ipv4L3Protocol::PROT_NUMBER);
+  Ptr<Packet> pkt2 = Create<Packet> (500);
+  pkt2->AddHeader (ipv4Header);
+  pkt2->AddPacketTag (tag);
+  device->Send (pkt2, addr, Ipv4L3Protocol::PROT_NUMBER);
   NS_LOG_FUNCTION ("\n--------------------- send success -----------------!!");
 
 }
@@ -190,6 +190,7 @@ main (int argc, char *argv[])
   LogComponentEnable("Cttc3gppChannelSimpleRan", LOG_LEVEL_FUNCTION);
   LogComponentEnable("LteRlcUm", LOG_LEVEL_LOGIC);
   LogComponentEnable("LtePdcp", LOG_LEVEL_FUNCTION);
+//  LogComponentEnable("NrUeMac", LOG_LEVEL_FUNCTION);
 
 
   int64_t randomStream = 1;
