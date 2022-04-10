@@ -84,8 +84,6 @@ public:
    * \param s the RLC SAP Provider to be used by this LTE_PDCP
    */
   void SetLteRlcSapProvider (LteRlcSapProvider * s);
-  //sht
-  void SetLteRlcSapProvider2 (LteRlcSapProvider * s);
 
   /**
    *
@@ -94,7 +92,6 @@ public:
    */
   LteRlcSapUser* GetLteRlcSapUser ();
   LteRlcSapUser* GetLteRlcSapUser2 ();
-
   /// maximum PDCP SN
   static const uint16_t MAX_PDCP_SN = 4096;
 
@@ -151,7 +148,7 @@ protected:
    * \param params the TransmitPdcpSduParameters
    */
   virtual void DoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters params);
-  virtual void DoTransmitPdcpSdu2 (LtePdcpSapProvider::TransmitPdcpSduParameters params);
+
   LtePdcpSapUser* m_pdcpSapUser; ///< PDCP SAP user
   LtePdcpSapProvider* m_pdcpSapProvider; ///< PDCP SAP provider
 
@@ -164,10 +161,6 @@ protected:
 
   LteRlcSapUser* m_rlcSapUser; ///< RLC SAP user 
   LteRlcSapProvider* m_rlcSapProvider; ///< RLC SAP provider
-
-  //-----------------------------sht 0321
-  LteRlcSapUser* m_rlcSapUser2; ///< RLC SAP user
-  LteRlcSapProvider* m_rlcSapProvider2; ///< RLC SAP provider
 
   uint16_t m_rnti; ///< RNTI
   uint8_t m_lcid; ///< LCID
