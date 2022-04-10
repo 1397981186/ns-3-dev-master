@@ -28,6 +28,8 @@ LteRlcSduStatusTag::LteRlcSduStatusTag ()
 {
 }
 
+
+
 void
 LteRlcSduStatusTag::SetStatus (uint8_t status)
 {
@@ -40,6 +42,17 @@ LteRlcSduStatusTag::GetStatus (void) const
   return m_sduStatus;
 }
 
+//TypeId
+//LteRlcSduStatusTag::GetTypeId (void)
+//{
+//  static TypeId tid = TypeId ("ns3::LteRlcSduStatusTag")
+//    .SetParent<Tag> ()
+//    .SetGroupName("Lte")
+//    .AddConstructor<LteRlcSduStatusTag> ()
+//  ;
+//  return tid;
+//}
+
 TypeId
 LteRlcSduStatusTag::GetTypeId (void)
 {
@@ -50,6 +63,7 @@ LteRlcSduStatusTag::GetTypeId (void)
   ;
   return tid;
 }
+
 TypeId
 LteRlcSduStatusTag::GetInstanceTypeId (void) const
 {

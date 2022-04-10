@@ -2,3 +2,6 @@
 !/src
 !/scratch
 !/contrib
+*.txt
+*.xml
+*.txt

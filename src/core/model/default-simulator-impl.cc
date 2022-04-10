@@ -198,9 +198,12 @@ DefaultSimulatorImpl::Run (void)
   m_main = SystemThread::Self ();
   ProcessEventsWithContext ();
   m_stop = false;
+  uint32_t countEvent=0;
 
   while (!m_events->IsEmpty () && !m_stop)
     {
+	  countEvent++;
+//	  std::cout << "\n Event : "+std::to_string(countEvent);
       ProcessOneEvent ();
     }
 

@@ -316,6 +316,100 @@ NoOpComponentCarrierManager::DoSetupDataRadioBearer (EpsBearer bearer, uint8_t b
 
 }
 
+//sht
+std::vector<LteCcmRrcSapProvider::LcsConfig>
+NoOpComponentCarrierManager::DoSetupDataRadioBearer (EpsBearer bearer, uint8_t bearerId, uint16_t rnti, uint8_t lcid, uint8_t lcGroup, LteMacSapUser *msu, LteMacSapUser *msu2)
+{
+  NS_LOG_FUNCTION (this << rnti);
+  std::map<uint16_t, uint8_t>::iterator eccIt; // m_enabledComponentCarrier iterator
+  eccIt = m_enabledComponentCarrier.find (rnti);
+  NS_ASSERT_MSG (eccIt != m_enabledComponentCarrier.end (), "SetupDataRadioBearer on unknown rnti ");
+
+  // enable by default all carriers
+  eccIt->second = m_noOfComponentCarriers;
+
+  std::vector<LteCcmRrcSapProvider::LcsConfig> res;
+  LteCcmRrcSapProvider::LcsConfig entry;
+  LteEnbCmacSapProvider::LcInfo lcinfo;
+  // NS_LOG_DEBUG (this << " componentCarrierEnabled " << (uint16_t) eccIt->second);
+  for (uint16_t ncc = 0; ncc < m_noOfComponentCarriers; ncc++)
+    {
+      // NS_LOG_DEBUG (this << " res size " << (uint16_t) res.size ());
+      LteEnbCmacSapProvider::LcInfo lci;
+      lci.rnti = rnti;
+      lci.lcId = lcid;
+      lci.lcGroup = lcGroup;
+      lci.qci = bearer.qci;
+      if (ncc == 0)
+        {
+          lci.isGbr = bearer.IsGbr ();
+          lci.mbrUl = bearer.gbrQosInfo.mbrUl;
+          lci.mbrDl = bearer.gbrQosInfo.mbrDl;
+          lci.gbrUl = bearer.gbrQosInfo.gbrUl;
+          lci.gbrDl = bearer.gbrQosInfo.gbrDl;
+        }
+      else
+        {
+          lci.isGbr = 0;
+          lci.mbrUl = 0;
+          lci.mbrDl = 0;
+          lci.gbrUl = 0;
+          lci.gbrDl = 0;
+        } // data flows only on PC
+      NS_LOG_DEBUG (this << " RNTI " << lci.rnti << "Lcid " << (uint16_t) lci.lcId << " lcGroup " << (uint16_t) lci.lcGroup);
+      entry.componentCarrierId = ncc;
+      entry.lc = lci;
+      entry.msu = m_ccmMacSapUser;
+      res.push_back (entry);
+    } // end for
+
+
+  // preparing the rnti,lcid,LcInfo map
+  std::map <uint16_t, std::map<uint8_t, LteEnbCmacSapProvider::LcInfo> >::iterator rntiIter = m_rlcLcInstantiated.find (rnti);
+  rntiIter = m_rlcLcInstantiated.begin ();
+  // while (rntiIter != m_rlcLcInstantiated.end ())
+  //   {
+  //     ++rntiIter;
+  //   }
+  // if (rntiIt == m_rlcLcInstantiated.end ())
+  //   {
+  //     //add new rnti in the map
+  //     std::map<uint8_t, LteEnbCmacSapProvider::LcInfo> empty;
+  //     std::pair <std::map <uint16_t, std::map<uint8_t, LteEnbCmacSapProvider::LcInfo> >::iterator, bool>
+  //       ret = m_rlcLcInstantiated.insert (std::pair <uint16_t,  std::map<uint8_t, LteEnbCmacSapProvider::LcInfo> >
+  //                                         (rnti, empty));
+  //     NS_LOG_DEBUG (this << " UE " << rnti << " added " << (uint16_t) ret.second);
+  //   }
+
+  std::map <uint16_t, std::map<uint8_t, LteMacSapUser*> >::iterator sapIt =  m_ueAttached.find (rnti);
+  NS_ASSERT_MSG (sapIt != m_ueAttached.end (), "RNTI not found");
+  rntiIter = m_rlcLcInstantiated.find (rnti);
+  std::map<uint8_t, LteEnbCmacSapProvider::LcInfo>::iterator lcidIt = rntiIter->second.find (lcid);
+  //std::map<uint8_t, LteMacSapUser*>::iterator lcidIt = sapIt->second.find (lcinfo.lcId);
+  NS_ASSERT_MSG (rntiIter != m_rlcLcInstantiated.end (), "RNTI not found");
+  if (lcidIt == rntiIter->second.end ())
+    {
+      lcinfo.rnti = rnti;
+      lcinfo.lcId = lcid;
+      lcinfo.lcGroup = lcGroup;
+      lcinfo.qci = bearer.qci;
+      lcinfo.isGbr = bearer.IsGbr ();
+      lcinfo.mbrUl = bearer.gbrQosInfo.mbrUl;
+      lcinfo.mbrDl = bearer.gbrQosInfo.mbrDl;
+      lcinfo.gbrUl = bearer.gbrQosInfo.gbrUl;
+      lcinfo.gbrDl = bearer.gbrQosInfo.gbrDl;
+      rntiIter->second.insert (std::pair<uint8_t, LteEnbCmacSapProvider::LcInfo> (lcinfo.lcId, lcinfo));
+      sapIt->second.insert (std::pair<uint8_t, LteMacSapUser*> (lcinfo.lcId, msu));
+      sapIt->second.insert (std::pair<uint8_t, LteMacSapUser*> (lcinfo.lcId+99, msu2));
+    }
+  else
+    {
+      NS_LOG_ERROR ("LC already exists");
+    }
+  return res;
+
+}
+
 std::vector<uint8_t>
 NoOpComponentCarrierManager::DoReleaseDataRadioBearer (uint16_t rnti, uint8_t lcid)
 {

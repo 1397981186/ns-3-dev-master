@@ -47,6 +47,7 @@ public:
   virtual void NotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters params);
   virtual void NotifyHarqDeliveryFailure ();
   virtual void ReceivePdu (LteMacSapUser::ReceivePduParameters params);
+  LteRlc* getRlc();
 
 private:
   LteRlcSpecificLteMacSapUser ();
@@ -76,6 +77,10 @@ void
 LteRlcSpecificLteMacSapUser::ReceivePdu (LteMacSapUser::ReceivePduParameters params)
 {
   m_rlc->DoReceivePdu (params);
+}
+
+LteRlc* LteRlcSpecificLteMacSapUser::getRlc(){
+	return m_rlc;
 }
 
 
@@ -214,6 +219,12 @@ LteRlcSm::DoDispose ()
 
 void
 LteRlcSm::DoTransmitPdcpPdu (Ptr<Packet> p)
+{
+  NS_LOG_FUNCTION (this << p);
+}
+
+void
+LteRlcSm::DoTransmitPdcpPdu2 (Ptr<Packet> p)
 {
   NS_LOG_FUNCTION (this << p);
 }

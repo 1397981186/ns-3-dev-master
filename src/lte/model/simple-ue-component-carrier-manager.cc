@@ -337,6 +337,44 @@ SimpleUeComponentCarrierManager::DoAddLc (uint8_t lcId,  LteUeCmacSapProvider::L
   return res;  
 }
 
+
+//sht
+std::vector<LteUeCcmRrcSapProvider::LcsConfig>
+SimpleUeComponentCarrierManager::DoAddLc (uint8_t lcId,  LteUeCmacSapProvider::LogicalChannelConfig lcConfig, LteMacSapUser* msu, LteMacSapUser* msu2)
+{
+  NS_LOG_FUNCTION (this);
+  std::vector<LteUeCcmRrcSapProvider::LcsConfig> res;
+  std::map<uint8_t, LteMacSapUser*>::iterator it = m_lcAttached.find (lcId);
+  NS_ABORT_MSG_IF (it != m_lcAttached.end (), "Warning, LCID " << lcId << " already exist");
+  m_lcAttached.insert (std::pair<uint8_t, LteMacSapUser*> (lcId, msu));
+  m_lcAttached.insert (std::pair<uint8_t, LteMacSapUser*> (lcId+99, msu2));
+  LteUeCcmRrcSapProvider::LcsConfig elem;
+  std::map <uint8_t, std::map<uint8_t, LteMacSapProvider*> >::iterator ccLcMapIt;
+  for (uint8_t ncc = 0; ncc < m_noOfComponentCarriers; ncc++)
+    {
+      elem.componentCarrierId = ncc;
+      elem.lcConfig = lcConfig;
+      elem.msu = m_ccmMacSapUser;
+      res.insert (res.end (), elem);
+
+      ccLcMapIt = m_componentCarrierLcMap.find (ncc);
+      if (ccLcMapIt != m_componentCarrierLcMap.end ())
+        {
+          ccLcMapIt->second.insert (std::pair <uint8_t, LteMacSapProvider*> (lcId, m_macSapProvidersMap.at (ncc)));
+        }
+      else
+        {
+          std::map<uint8_t, LteMacSapProvider*> empty;
+          std::pair <std::map <uint8_t, std::map<uint8_t, LteMacSapProvider*> >::iterator, bool>
+          ret = m_componentCarrierLcMap.insert (std::pair <uint8_t,  std::map<uint8_t, LteMacSapProvider*> > (ncc, empty));
+          NS_ABORT_MSG_IF (!ret.second, "element already present, ComponentCarrierId already exist");
+          ccLcMapIt = m_componentCarrierLcMap.find (ncc);
+          ccLcMapIt->second.insert (std::pair <uint8_t, LteMacSapProvider*> (lcId, m_macSapProvidersMap.at (ncc)));
+        }
+    }
+
+  return res;
+}
 LteMacSapUser*
 SimpleUeComponentCarrierManager::DoConfigureSignalBearer (uint8_t lcid,  LteUeCmacSapProvider::LogicalChannelConfig lcConfig, LteMacSapUser* msu)
 {

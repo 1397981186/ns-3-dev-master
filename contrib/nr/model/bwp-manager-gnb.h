@@ -136,6 +136,7 @@ protected:
    * \brief Overload DoSetupBadaRadioBearer to connect directly to Rlc retransmission buffer size.
    */
   virtual std::vector<LteCcmRrcSapProvider::LcsConfig> DoSetupDataRadioBearer (EpsBearer bearer, uint8_t bearerId, uint16_t rnti, uint8_t lcid, uint8_t lcGroup, LteMacSapUser* msu) override;
+  virtual std::vector<LteCcmRrcSapProvider::LcsConfig> DoSetupDataRadioBearer (EpsBearer bearer, uint8_t bearerId, uint16_t rnti, uint8_t lcid, uint8_t lcGroup, LteMacSapUser* msu,LteMacSapUser* msu2) override;
 
 private:
   /**

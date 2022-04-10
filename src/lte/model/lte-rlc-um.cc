@@ -119,6 +119,39 @@ LteRlcUm::DoTransmitPdcpPdu (Ptr<Packet> p)
   m_rbsTimer.Cancel ();
 }
 
+void
+LteRlcUm::DoTransmitPdcpPdu2 (Ptr<Packet> p)
+{
+  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << p->GetSize ());
+
+  if (m_txBufferSize + p->GetSize () <= m_maxTxBufferSize)
+    {
+      /** Store PDCP PDU */
+      LteRlcSduStatusTag tag;
+      tag.SetStatus (LteRlcSduStatusTag::FULL_SDU);
+      p->AddPacketTag (tag);
+
+      NS_LOG_LOGIC ("Tx Buffer: New packet added");
+      m_txBuffer.push_back (TxPdu (p, Simulator::Now ()));
+      m_txBufferSize += p->GetSize ();
+      NS_LOG_LOGIC ("NumOfBuffers = " << m_txBuffer.size() );
+      NS_LOG_LOGIC ("txBufferSize = " << m_txBufferSize);
+    }
+  else
+    {
+      // Discard full RLC SDU
+      NS_LOG_LOGIC ("TxBuffer is full. RLC SDU discarded");
+      NS_LOG_LOGIC ("MaxTxBufferSize = " << m_maxTxBufferSize);
+      NS_LOG_LOGIC ("txBufferSize    = " << m_txBufferSize);
+      NS_LOG_LOGIC ("packet size     = " << p->GetSize ());
+      m_txDropTrace (p);
+    }
+
+  /** Report Buffer Status */
+  DoReportBufferStatus ();
+  m_rbsTimer.Cancel ();
+}
+
 
 /**
  * MAC SAP
@@ -385,7 +418,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
   RlcTag rlcTag (Simulator::Now ());
   packet->AddByteTag (rlcTag, 1, rlcHeader.GetSerializedSize ());
   m_txPdu (m_rnti, m_lcid, packet->GetSize ());
-
+//  m_txPdu (m_rnti, m_lcid+99, packet->GetSize ());
   // Send RLC PDU to MAC layer
   LteMacSapProvider::TransmitPduParameters params;
   params.pdu = packet;
@@ -394,6 +427,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
   params.layer = txOpParams.layer;
   params.harqProcessId = txOpParams.harqId;
   params.componentCarrierId = txOpParams.componentCarrierId;
+  params.m_signOfRlc=txOpParams.m_signOfRlc;
 
   m_macSapProvider->TransmitPdu (params);
 
@@ -413,8 +447,10 @@ LteRlcUm::DoNotifyHarqDeliveryFailure ()
 void
 LteRlcUm::DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams)
 {
-  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << rxPduParams.p->GetSize ());
-
+  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << rxPduParams.p->GetSize ()<<rxPduParams.lcid);
+  if(rxPduParams.lcid>=99){
+    rxPduParams.lcid=rxPduParams.lcid-99;
+  }
   // Receiver timestamp
   RlcTag rlcTag;
   Time delay;
@@ -424,7 +460,7 @@ LteRlcUm::DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams)
 
   delay = Simulator::Now() - rlcTag.GetSenderTimestamp ();
   m_rxPdu (m_rnti, m_lcid, rxPduParams.p->GetSize (), delay.GetNanoSeconds ());
-
+//  m_rxPdu (m_rnti, m_lcid+99, rxPduParams.p->GetSize (), delay.GetNanoSeconds ());
   // 5.1.2.2 Receive operations
 
   // Get RLC header parameters
@@ -452,10 +488,10 @@ LteRlcUm::DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams)
   // - else:
   //    - place the received UMD PDU in the reception buffer.
 
-  NS_LOG_LOGIC ("VR(UR) = " << m_vrUr);
-  NS_LOG_LOGIC ("VR(UX) = " << m_vrUx);
-  NS_LOG_LOGIC ("VR(UH) = " << m_vrUh);
-  NS_LOG_LOGIC ("SN = " << seqNumber);
+  NS_LOG_LOGIC ("VR(UR) = " << m_vrUr);//1
+  NS_LOG_LOGIC ("VR(UX) = " << m_vrUx);//0
+  NS_LOG_LOGIC ("VR(UH) = " << m_vrUh);//1
+  NS_LOG_LOGIC ("SN = " << seqNumber);//0
 
   m_vrUr.SetModulusBase (m_vrUh - m_windowSize);
   m_vrUh.SetModulusBase (m_vrUh - m_windowSize);
@@ -527,7 +563,7 @@ LteRlcUm::DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams)
       m_vrUr = newVrUr;
       NS_LOG_LOGIC ("New VR(UR) = " << m_vrUr);
 
-      ReassembleSnInterval (oldVrUr, m_vrUr);
+      ReassembleSnInterval (oldVrUr, m_vrUr);//from here gives to RLC
     }
 
   // m_vrUh can change previously, set new modulus base

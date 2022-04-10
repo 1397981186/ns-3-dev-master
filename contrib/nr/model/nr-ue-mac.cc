@@ -576,7 +576,13 @@ NrUeMac::DoReceivePhyPdu (Ptr<Packet> p)
   LteMacSapUser::ReceivePduParameters rxParams;
   rxParams.p = p;
   rxParams.rnti = m_rnti;
-  rxParams.lcid = header.GetLcId ();
+  rxParams.m_signOfRlc=header.GetSignOfRlc();
+  if(rxParams.m_signOfRlc==0){
+      rxParams.lcid = header.GetLcId ();
+  }else{
+      rxParams.lcid = header.GetLcId ()+99;
+  }
+  NS_LOG_FUNCTION ("-----------signOfRlc: "<<rxParams.m_signOfRlc<<"----------");
 
   auto it = m_lcInfoMap.find (header.GetLcId());
 

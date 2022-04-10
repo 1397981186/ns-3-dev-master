@@ -535,11 +535,19 @@ LteUeRrc::DoInitialize (void)
   rlc->SetRnti (m_rnti);
   rlc->SetLcId (lcid);
 
+  //sht
+  Ptr<LteRlc> rlc2 = CreateObject<LteRlcTm> ()->GetObject<LteRlc> ();
+  rlc2->SetLteMacSapProvider (m_macSapProvider);
+  rlc2->SetRnti (m_rnti);
+  rlc2->SetLcId (lcid);
+
   m_srb0 = CreateObject<LteSignalingRadioBearerInfo> ();
   m_srb0->m_rlc = rlc;
+  m_srb0->m_rlc2 = rlc2;
   m_srb0->m_srbIdentity = 0;
   LteUeRrcSapUser::SetupParameters ueParams;
   ueParams.srb0SapProvider = m_srb0->m_rlc->GetLteRlcSapProvider ();
+  ueParams.srb0SapProvider = m_srb0->m_rlc2->GetLteRlcSapProvider ();
   ueParams.srb1SapProvider = 0;
   m_rrcSapUser->Setup (ueParams);
 
@@ -651,6 +659,7 @@ LteUeRrc::DoSetTemporaryCellRnti (uint16_t rnti)
   NS_LOG_FUNCTION (this << rnti);
   m_rnti = rnti;
   m_srb0->m_rlc->SetRnti (m_rnti);
+  m_srb0->m_rlc2->SetRnti (m_rnti);
   m_cphySapProvider.at (0)->SetRnti (m_rnti);
 }
 
@@ -965,6 +974,8 @@ LteUeRrc::DoCompleteSetup (LteUeRrcSapProvider::CompleteSetupParameters params)
 {
   NS_LOG_FUNCTION (this << " RNTI " << m_rnti);
   m_srb0->m_rlc->SetLteRlcSapUser (params.srb0SapUser);
+  //sht
+  m_srb0->m_rlc2->SetLteRlcSapUser (params.srb0SapUser);
   if (m_srb1)
     {
       m_srb1->m_pdcp->SetLtePdcpSapUser (params.srb1SapUser);
@@ -1081,6 +1092,7 @@ LteUeRrc::DoRecvRrcConnectionReconfiguration (LteRrcSap::RrcConnectionReconfigur
             m_cphySapProvider.at (0)->ConfigureUplink (mci.carrierFreq.ulCarrierFreq, mci.carrierBandwidth.ulBandwidth);
             m_rnti = msg.mobilityControlInfo.newUeIdentity;
             m_srb0->m_rlc->SetRnti (m_rnti);
+            m_srb0->m_rlc2->SetRnti (m_rnti);
             NS_ASSERT_MSG (mci.haveRachConfigDedicated, "handover is only supported with non-contention-based random access procedure");
             m_cmacSapProvider.at (0)->StartNonContentionBasedRandomAccessProcedure (m_rnti, mci.rachConfigDedicated.raPreambleIndex, mci.rachConfigDedicated.raPrachMaskIndex);
             m_cphySapProvider.at (0)->SetRnti (m_rnti);
@@ -1418,15 +1430,24 @@ LteUeRrc::ApplyRadioResourceConfigDedicated (LteRrcSap::RadioResourceConfigDedic
           rlc->SetRnti (m_rnti);
           rlc->SetLcId (lcid);
 
+          //sht
+          Ptr<LteRlc> rlc2 = CreateObject<LteRlcAm> ();
+          rlc2->SetLteMacSapProvider (m_macSapProvider);
+          rlc2->SetRnti (m_rnti);
+          rlc2->SetLcId (lcid);
+
           Ptr<LtePdcp> pdcp = CreateObject<LtePdcp> ();
           pdcp->SetRnti (m_rnti);
           pdcp->SetLcId (lcid);
           pdcp->SetLtePdcpSapUser (m_drbPdcpSapUser);
           pdcp->SetLteRlcSapProvider (rlc->GetLteRlcSapProvider ());
+          pdcp->SetLteRlcSapProvider2 (rlc2->GetLteRlcSapProvider ());
           rlc->SetLteRlcSapUser (pdcp->GetLteRlcSapUser ());
+          rlc2->SetLteRlcSapUser (pdcp->GetLteRlcSapUser2 ());
 
           m_srb1 = CreateObject<LteSignalingRadioBearerInfo> ();
           m_srb1->m_rlc = rlc;
+          m_srb1->m_rlc2 = rlc2;
           m_srb1->m_pdcp = pdcp;
           m_srb1->m_srbIdentity = 1;
           m_srb1CreatedTrace (m_imsi, m_cellId, m_rnti);
@@ -1448,6 +1469,7 @@ LteUeRrc::ApplyRadioResourceConfigDedicated (LteRrcSap::RadioResourceConfigDedic
 
           LteUeRrcSapUser::SetupParameters ueParams;
           ueParams.srb0SapProvider = m_srb0->m_rlc->GetLteRlcSapProvider ();
+          ueParams.srb0SapProvider2 = m_srb0->m_rlc2->GetLteRlcSapProvider ();
           ueParams.srb1SapProvider = m_srb1->m_pdcp->GetLtePdcpSapProvider ();
           m_rrcSapUser->Setup (ueParams);
         }
@@ -1502,8 +1524,14 @@ LteUeRrc::ApplyRadioResourceConfigDedicated (LteRrcSap::RadioResourceConfigDedic
           rlc->SetRnti (m_rnti);
           rlc->SetLcId (dtamIt->logicalChannelIdentity);
 
+          Ptr<LteRlc> rlc2 = rlcObjectFactory.Create ()->GetObject<LteRlc> ();
+          rlc2->SetLteMacSapProvider (m_macSapProvider);
+          rlc2->SetRnti (m_rnti);
+          rlc2->SetLcId (dtamIt->logicalChannelIdentity);
+
           Ptr<LteDataRadioBearerInfo> drbInfo = CreateObject<LteDataRadioBearerInfo> ();
           drbInfo->m_rlc = rlc;
+          drbInfo->m_rlc2 = rlc2;
           drbInfo->m_epsBearerIdentity = dtamIt->epsBearerIdentity;
           drbInfo->m_logicalChannelIdentity = dtamIt->logicalChannelIdentity;
           drbInfo->m_drbIdentity = dtamIt->drbIdentity;
@@ -1517,7 +1545,9 @@ LteUeRrc::ApplyRadioResourceConfigDedicated (LteRrcSap::RadioResourceConfigDedic
               pdcp->SetLcId (dtamIt->logicalChannelIdentity);
               pdcp->SetLtePdcpSapUser (m_drbPdcpSapUser);
               pdcp->SetLteRlcSapProvider (rlc->GetLteRlcSapProvider ());
+              pdcp->SetLteRlcSapProvider2 (rlc2->GetLteRlcSapProvider ());
               rlc->SetLteRlcSapUser (pdcp->GetLteRlcSapUser ());
+              rlc2->SetLteRlcSapUser (pdcp->GetLteRlcSapUser ());
               drbInfo->m_pdcp = pdcp;
             }
 
@@ -1536,8 +1566,8 @@ LteUeRrc::ApplyRadioResourceConfigDedicated (LteRrcSap::RadioResourceConfigDedic
 
           NS_LOG_DEBUG (this << " UE RRC RNTI " << m_rnti << " Number Of Component Carriers " << m_numberOfComponentCarriers << " lcID " << (uint16_t) dtamIt->logicalChannelIdentity);
           //Call AddLc of UE component carrier manager
-          std::vector <LteUeCcmRrcSapProvider::LcsConfig> lcOnCcMapping = m_ccmRrcSapProvider->AddLc (dtamIt->logicalChannelIdentity, lcConfig, rlc->GetLteMacSapUser ());
-
+//          std::vector <LteUeCcmRrcSapProvider::LcsConfig> lcOnCcMapping = m_ccmRrcSapProvider->AddLc (dtamIt->logicalChannelIdentity, lcConfig, rlc->GetLteMacSapUser ());
+          std::vector <LteUeCcmRrcSapProvider::LcsConfig> lcOnCcMapping = m_ccmRrcSapProvider->AddLc (dtamIt->logicalChannelIdentity, lcConfig, rlc->GetLteMacSapUser (), rlc2->GetLteMacSapUser ());
           NS_LOG_DEBUG ("Size of lcOnCcMapping vector " << lcOnCcMapping.size ());
           std::vector<LteUeCcmRrcSapProvider::LcsConfig>::iterator itLcOnCcMapping = lcOnCcMapping.begin ();
           NS_ASSERT_MSG (itLcOnCcMapping != lcOnCcMapping.end (), "Component carrier manager failed to add LC for data radio bearer");
@@ -3112,6 +3142,7 @@ LteUeRrc::LeaveConnectedMode ()
   m_cellId = 0;
   m_rnti = 0;
   m_srb0->m_rlc->SetRnti (m_rnti);
+  m_srb0->m_rlc2->SetRnti (m_rnti);
 }
 
 void
