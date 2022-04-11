@@ -77,6 +77,11 @@ static void SendPacket (Ptr<NetDevice> device, Address& addr, uint32_t packetSiz
   pkt2->AddHeader (ipv4Header);
   pkt2->AddPacketTag (tag);
   device->Send (pkt2, addr, Ipv4L3Protocol::PROT_NUMBER);
+
+  Ptr<Packet> pkt3 = Create<Packet> (2000);
+  pkt3->AddHeader (ipv4Header);
+  pkt3->AddPacketTag (tag);
+  device->Send (pkt3, addr, Ipv4L3Protocol::PROT_NUMBER);
   NS_LOG_FUNCTION ("\n--------------------- send success -----------------!!");
 
 }

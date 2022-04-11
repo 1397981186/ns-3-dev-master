@@ -80,7 +80,7 @@ LtePdcp::LtePdcp ()
   NS_LOG_FUNCTION (this);
   m_pdcpSapProvider = new LtePdcpSpecificLtePdcpSapProvider<LtePdcp> (this);
   m_rlcSapUser = new LtePdcpSpecificLteRlcSapUser (this);
-  m_rlcSapUser2 = new LtePdcpSpecificLteRlcSapUser (this);
+//  m_rlcSapUser2 = new LtePdcpSpecificLteRlcSapUser (this);
 }
 
 LtePdcp::~LtePdcp ()
@@ -165,12 +165,12 @@ LtePdcp::GetLteRlcSapUser ()
   return m_rlcSapUser;
 }
 
-LteRlcSapUser*
-LtePdcp::GetLteRlcSapUser2 ()
-{
-  NS_LOG_FUNCTION (this);
-  return m_rlcSapUser2;
-}
+//LteRlcSapUser*
+//LtePdcp::GetLteRlcSapUser2 ()
+//{
+//  NS_LOG_FUNCTION (this);
+//  return m_rlcSapUser2;
+//}
 
 LtePdcp::Status 
 LtePdcp::GetStatus ()

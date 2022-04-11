@@ -93,7 +93,7 @@ public:
    * \return the RLC SAP User interface offered to the RLC by this LTE_PDCP
    */
   LteRlcSapUser* GetLteRlcSapUser ();
-  LteRlcSapUser* GetLteRlcSapUser2 ();
+//  LteRlcSapUser* GetLteRlcSapUser2 ();
 
   /// maximum PDCP SN
   static const uint16_t MAX_PDCP_SN = 4096;
@@ -166,7 +166,7 @@ protected:
   LteRlcSapProvider* m_rlcSapProvider; ///< RLC SAP provider
 
   //-----------------------------sht 0321
-  LteRlcSapUser* m_rlcSapUser2; ///< RLC SAP user
+//  LteRlcSapUser* m_rlcSapUser2; ///< RLC SAP user
   LteRlcSapProvider* m_rlcSapProvider2; ///< RLC SAP provider
 
   uint16_t m_rnti; ///< RNTI
