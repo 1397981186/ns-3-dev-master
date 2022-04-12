@@ -1443,7 +1443,7 @@ LteUeRrc::ApplyRadioResourceConfigDedicated (LteRrcSap::RadioResourceConfigDedic
           pdcp->SetLteRlcSapProvider (rlc->GetLteRlcSapProvider ());
           pdcp->SetLteRlcSapProvider2 (rlc2->GetLteRlcSapProvider ());
           rlc->SetLteRlcSapUser (pdcp->GetLteRlcSapUser ());
-          rlc2->SetLteRlcSapUser (pdcp->GetLteRlcSapUser2 ());
+          rlc2->SetLteRlcSapUser (pdcp->GetLteRlcSapUser ());
 
           m_srb1 = CreateObject<LteSignalingRadioBearerInfo> ();
           m_srb1->m_rlc = rlc;
