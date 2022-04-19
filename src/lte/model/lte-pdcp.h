@@ -86,6 +86,7 @@ public:
   void SetLteRlcSapProvider (LteRlcSapProvider * s);
   //sht
   void SetLteRlcSapProvider2 (LteRlcSapProvider * s);
+  void NcPdcpARQ(Ptr<Packet> p);
 
   /**
    *

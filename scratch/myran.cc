@@ -73,15 +73,20 @@ static void SendPacket (Ptr<NetDevice> device, Address& addr, uint32_t packetSiz
   pkt->AddPacketTag (tag);
   device->Send (pkt, addr, Ipv4L3Protocol::PROT_NUMBER);
 
-//  Ptr<Packet> pkt2 = Create<Packet> (500);
+//  Ptr<Packet> pkt2 = Create<Packet> (8000);
 //  pkt2->AddHeader (ipv4Header);
 //  pkt2->AddPacketTag (tag);
 //  device->Send (pkt2, addr, Ipv4L3Protocol::PROT_NUMBER);
 //
-//  Ptr<Packet> pkt3 = Create<Packet> (2000);
+//  Ptr<Packet> pkt3 = Create<Packet> (9000);
 //  pkt3->AddHeader (ipv4Header);
 //  pkt3->AddPacketTag (tag);
 //  device->Send (pkt3, addr, Ipv4L3Protocol::PROT_NUMBER);
+
+//  Ptr<Packet> pkt4 = Create<Packet> (9000);
+//  pkt4->AddHeader (ipv4Header);
+//  pkt4->AddPacketTag (tag);
+//  device->Send (pkt4, addr, Ipv4L3Protocol::PROT_NUMBER);
   NS_LOG_FUNCTION ("\n--------------------- send success -----------------!!");
 
 }
@@ -99,6 +104,7 @@ void
 RxPdcpPDU (std::string path, uint16_t rnti, uint8_t lcid, uint32_t bytes, uint64_t pdcpDelay)
 {
   NS_LOG_FUNCTION ("------------start-------------------" );
+  NS_LOG_FUNCTION(" Data received at PDCP layer at:"<<Simulator::Now ());
 //  std::cout << "\n Packet PDCP delay:" << pdcpDelay << "\n";
   NS_LOG_FUNCTION (" Packet PDCP delay:" << pdcpDelay);
   NS_LOG_FUNCTION ("------------end-------------------" );
@@ -197,7 +203,7 @@ main (int argc, char *argv[])
   LogComponentEnable("LtePdcp", LOG_LEVEL_FUNCTION);
 //  LogComponentEnable("NrUeMac", LOG_LEVEL_FUNCTION);
 
-
+  std::string errorModel = "ns3::NrEesmCcT1";
   int64_t randomStream = 1;
   //Create the scenario
   GridScenarioHelper gridScenario;
@@ -257,12 +263,15 @@ main (int argc, char *argv[])
   nrHelper->SetGnbAntennaAttribute ("NumColumns", UintegerValue (8));
   nrHelper->SetGnbAntennaAttribute ("AntennaElement", PointerValue (CreateObject<IsotropicAntennaModel> ()));
 
+  nrHelper->SetDlErrorModel (errorModel);
+
   //Install and get the pointers to the NetDevices
   NetDeviceContainer enbNetDev = nrHelper->InstallGnbDevice (gridScenario.GetBaseStations (), allBwps);
   NetDeviceContainer ueNetDev = nrHelper->InstallUeDevice (gridScenario.GetUserTerminals (), allBwps);
 
   randomStream += nrHelper->AssignStreams (enbNetDev, randomStream);
   randomStream += nrHelper->AssignStreams (ueNetDev, randomStream);
+
 
   // Set the attribute of the netdevice (enbNetDev.Get (0)) and bandwidth part (0)
   nrHelper->GetGnbPhy (enbNetDev.Get (0), 0)->SetAttribute ("Numerology", UintegerValue (numerologyBwp1));

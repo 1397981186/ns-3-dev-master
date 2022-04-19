@@ -134,7 +134,7 @@ void LtePdcpSpecificLtePdcpSapProvider<C>::TransmitPdcpSdu (TransmitPdcpSduParam
   params2.pdcpSdu=pdcpSdu;
 
   m_pdcp->DoTransmitPdcpSdu (params);
-  m_pdcp->DoTransmitPdcpSdu2 (params2);
+//  m_pdcp->DoTransmitPdcpSdu2 (params2);
 }
 
 

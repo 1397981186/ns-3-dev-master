@@ -547,7 +547,7 @@ LteUeRrc::DoInitialize (void)
   m_srb0->m_srbIdentity = 0;
   LteUeRrcSapUser::SetupParameters ueParams;
   ueParams.srb0SapProvider = m_srb0->m_rlc->GetLteRlcSapProvider ();
-  ueParams.srb0SapProvider = m_srb0->m_rlc2->GetLteRlcSapProvider ();
+  ueParams.srb0SapProvider2 = m_srb0->m_rlc2->GetLteRlcSapProvider ();
   ueParams.srb1SapProvider = 0;
   m_rrcSapUser->Setup (ueParams);
 

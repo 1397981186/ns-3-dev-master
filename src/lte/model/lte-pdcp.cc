@@ -288,6 +288,40 @@ LtePdcp::DoReceivePdu (Ptr<Packet> p)
   params.rnti = m_rnti;
   params.lcid = m_lcid;
   m_pdcpSapUser->ReceivePdcpSdu (params);
+  NcPdcpARQ(p);
+}
+
+void
+LtePdcp::NcPdcpARQ (Ptr<Packet> ARQp){
+  NS_LOG_FUNCTION ("NcPdcpARQ");
+  Ptr<Packet> p = ARQp->Copy();
+  NS_LOG_FUNCTION(this<<"p address"<<&p);
+  // Sender timestamp
+  PdcpTag pdcpTag (Simulator::Now ());
+
+  LtePdcpHeader pdcpHeader;
+  pdcpHeader.SetSequenceNumber (m_txSequenceNumber);
+
+  m_txSequenceNumber++;
+  if (m_txSequenceNumber > m_maxPdcpSn)
+    {
+      m_txSequenceNumber = 0;
+    }
+
+  pdcpHeader.SetDcBit (LtePdcpHeader::DATA_PDU);
+
+  NS_LOG_LOGIC ("PDCP header: " << pdcpHeader);
+  p->AddHeader (pdcpHeader);
+  p->AddByteTag (pdcpTag, 1, pdcpHeader.GetSerializedSize ());
+
+  m_txPdu (m_rnti, m_lcid, p->GetSize ());
+
+  LteRlcSapProvider::TransmitPdcpPduParameters txParams;
+  txParams.rnti = m_rnti;
+  txParams.lcid = m_lcid;
+  txParams.pdcpPdu = p;
+
+  m_rlcSapProvider->TransmitPdcpPdu (txParams);
 }
 
 

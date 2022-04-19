@@ -33,7 +33,7 @@ NS_LOG_COMPONENT_DEFINE ("LteRlcUm");
 NS_OBJECT_ENSURE_REGISTERED (LteRlcUm);
 
 LteRlcUm::LteRlcUm ()
-  : m_maxTxBufferSize (10 * 1024),
+  : m_maxTxBufferSize (10 * 1024*2),
     m_txBufferSize (0),
     m_sequenceNumber (0),
     m_vrUr (0),
@@ -60,7 +60,7 @@ LteRlcUm::GetTypeId (void)
     .AddConstructor<LteRlcUm> ()
     .AddAttribute ("MaxTxBufferSize",
                    "Maximum Size of the Transmission Buffer (in Bytes)",
-                   UintegerValue (10 * 1024),
+                   UintegerValue (10 * 1024*2),
                    MakeUintegerAccessor (&LteRlcUm::m_maxTxBufferSize),
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("ReorderingTimer",
