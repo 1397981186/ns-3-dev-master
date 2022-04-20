@@ -74,7 +74,6 @@ NrMacHeaderVs::Serialize (Buffer::Iterator start) const
     {
       start.WriteU8 (static_cast<uint8_t> (m_size));
     }
-  start.WriteU8 (static_cast<uint8_t> (m_signOfRlc));
 }
 
 uint32_t
@@ -93,7 +92,6 @@ NrMacHeaderVs::Deserialize (Buffer::Iterator start)
 
   if (lFieldSize == 0x40)
     {
-      // 0x40: 0 1 0 0 0 0 0 0
       // the F bit is set to 1
       m_size = start.ReadNtohU16 ();
       readBytes += 2;
@@ -108,23 +106,14 @@ NrMacHeaderVs::Deserialize (Buffer::Iterator start)
     {
       NS_FATAL_ERROR ("The author of the code, who lies behind a christmas tree, is guilty");
     }
-  m_signOfRlc=start.ReadU8 ();
-  readBytes += 1;
-//  if (m_size > 127)
-//    {
-//      NS_ASSERT (readBytes == 3);
-//    }
-//  else
-//    {
-//      NS_ASSERT (readBytes == 2);
-//    }
+
   if (m_size > 127)
     {
-      NS_ASSERT (readBytes == 4);
+      NS_ASSERT (readBytes == 3);
     }
   else
     {
-      NS_ASSERT (readBytes == 3);
+      NS_ASSERT (readBytes == 2);
     }
   return readBytes;
 }
@@ -133,16 +122,11 @@ uint32_t
 NrMacHeaderVs::GetSerializedSize () const
 {
   NS_LOG_FUNCTION (this);
-//  if (m_size > 127)
-//    {
-//      return 3;
-//    }
-//  return 2;
   if (m_size > 127)
     {
-      return 4;
+      return 3;
     }
-  return 3;
+  return 2;
 }
 
 void
@@ -180,18 +164,6 @@ uint16_t
 NrMacHeaderVs::GetSize() const
 {
   return m_size;
-}
-
-void
-NrMacHeaderVs::SetSignOfRlc(uint16_t signOfRlc)
-{
-  m_signOfRlc = signOfRlc;
-}
-
-uint16_t
-NrMacHeaderVs::GetSignOfRlc() const
-{
-  return m_signOfRlc;
 }
 
 } // namespace ns3
