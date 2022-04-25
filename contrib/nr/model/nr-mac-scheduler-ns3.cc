@@ -1223,6 +1223,10 @@ NrMacSchedulerNs3::ComputeActiveUe (ActiveUeMap *activeUe,
                            static_cast<uint32_t> (lcgInfo.first) <<
                            " bytes " << lcg->GetTotalSize ());
             }
+          if(lcg->GetTotalSize () == 1064){
+              NS_LOG_INFO ("Here");
+
+          }
           totBuffer += lcg->GetTotalSize ();
         }
 

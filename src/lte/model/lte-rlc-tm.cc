@@ -179,6 +179,14 @@ LteRlcTm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
     }
 }
 
+//sht
+uint32_t
+LteRlcTm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters params,uint32_t flag)
+{
+  NS_LOG_LOGIC ("!!!!!!!!!!!!!!this should not be used");
+  return flag;
+}
+
 void
 LteRlcTm::DoNotifyHarqDeliveryFailure ()
 {

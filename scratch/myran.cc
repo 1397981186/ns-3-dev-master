@@ -43,6 +43,10 @@
 #include "ns3/grid-scenario-helper.h"
 #include "ns3/log.h"
 #include "ns3/antenna-module.h"
+//sht
+#include "ns3/internet-apps-module.h"
+#include "ns3/applications-module.h"
+#include <chrono>
 
 using namespace ns3;
 
@@ -63,6 +67,19 @@ static bool g_rxRxRlcPDUCallbackCalled = false;
  * @param addr Destination address for a packet.
  * @param packetSize The packet size.
  */
+static std::vector<uint64_t> packetsTime;
+static void
+PrintRxPkt (std::string context, Ptr<const Packet> pkt)
+{
+  NS_UNUSED (context);
+  // ASSUMING ONE UE
+
+  SeqTsHeader seqTs;
+  pkt->PeekHeader (seqTs);
+  packetsTime.push_back ((Simulator::Now () - seqTs.GetTs ()).GetMicroSeconds ());
+}
+
+
 static void SendPacket (Ptr<NetDevice> device, Address& addr, uint32_t packetSize)
 {
   Ptr<Packet> pkt = Create<Packet> (packetSize);
@@ -291,6 +308,40 @@ main (int argc, char *argv[])
   Ipv4InterfaceContainer ueIpIface;
   ueIpIface = epcHelper->AssignUeIpv4Address (NetDeviceContainer (ueNetDev));
 
+  //sht
+  // assign IP address to UEs, and install UDP downlink applications
+  uint16_t dlPort = 1234;
+  UdpServerHelper dlPacketSinkHelper (dlPort);
+  ApplicationContainer txApps, sinkApps;
+  double simTime = 10.0; // 50 seconds: to take statistics
+  Time udpAppStartTime = MilliSeconds (1000);
+  Time packetInterval = MilliSeconds (200);
+  uint32_t packets = (simTime - udpAppStartTime.GetSeconds ()) / packetInterval.GetSeconds ();
+  uint32_t pktSize = 200;
+//only for Dl,sink is ue
+
+  UdpClientHelper dlClient (ueNetDev.Get (0)->GetAddress (), dlPort);
+  dlClient.SetAttribute ("MaxPackets", UintegerValue (packets));
+  dlClient.SetAttribute ("PacketSize", UintegerValue (pktSize));
+  dlClient.SetAttribute ("Interval", TimeValue (packetInterval));
+  txApps.Add (dlClient.Install (gridScenario.GetBaseStations ().Get (0)));
+
+  sinkApps.Add (dlPacketSinkHelper.Install (gridScenario.GetUserTerminals ()));
+
+  sinkApps.Start (udpAppStartTime);
+  txApps.Start (udpAppStartTime);
+  sinkApps.Stop (Seconds (simTime));
+  txApps.Stop (Seconds (simTime));
+
+  for (uint32_t j = 0; j < sinkApps.GetN (); ++j)
+    {
+      Ptr<UdpServer> client = DynamicCast<UdpServer> (sinkApps.Get (j));
+      NS_ASSERT (client != nullptr);
+      std::stringstream ss;
+      ss << j;
+      client->TraceConnect ("Rx", ss.str (), MakeCallback (&PrintRxPkt));
+    }
+
   if (enableUl)
     {
       Simulator::Schedule (sendPacketTime, &SendPacket, ueNetDev.Get (0), enbNetDev.Get (0)->GetAddress (), udpPacketSize);
@@ -316,7 +367,7 @@ main (int argc, char *argv[])
 
   nrHelper->EnableTraces ();
 
-  Simulator::Stop (Seconds (1));
+  Simulator::Stop (Seconds (10));
   Simulator::Run ();
   Simulator::Destroy ();
 

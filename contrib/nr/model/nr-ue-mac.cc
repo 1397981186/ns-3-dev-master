@@ -570,18 +570,21 @@ NrUeMac::DoReceivePhyPdu (Ptr<Packet> p)
       return;
     }
 
-  NrMacHeaderVsDl header;
+//  NrMacHeaderVsDl header;
+//  p->RemoveHeader (header);
+  NrMacHeaderVs header;
   p->RemoveHeader (header);
 
   LteMacSapUser::ReceivePduParameters rxParams;
   rxParams.p = p;
   rxParams.rnti = m_rnti;
-  rxParams.m_signOfRlc=header.GetSignOfRlc();
-  if(rxParams.m_signOfRlc==0){
-      rxParams.lcid = header.GetLcId ();
-  }else{
-      rxParams.lcid = header.GetLcId ()+99;
-  }
+//  rxParams.m_signOfRlc=header.GetSignOfRlc();
+//  if(rxParams.m_signOfRlc==0){
+//      rxParams.lcid = header.GetLcId ();
+//  }else{
+//      rxParams.lcid = header.GetLcId ()+99;
+//  }
+  rxParams.lcid = header.GetLcId ();
   NS_LOG_FUNCTION ("-----------signOfRlc: "<<rxParams.m_signOfRlc<<"----------");
 
   auto it = m_lcInfoMap.find (header.GetLcId());

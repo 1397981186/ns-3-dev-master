@@ -199,7 +199,8 @@ BwpManagerGnb::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txO
   std::map<uint8_t, LteMacSapUser*>::iterator lcidIt2 = rntiIt->second.find (txOpParams.lcid+99);
   NS_ASSERT_MSG (lcidIt2 != rntiIt->second.end (), "could not find LCID " << (uint16_t) txOpParams.lcid);
 
-  (*lcidIt).second->NotifyTxOpportunity (txOpParams);
+//  (*lcidIt).second->NotifyTxOpportunity (txOpParams);
+  uint32_t remain=  (*lcidIt).second->NotifyTxOpportunity (txOpParams,0);
 //  uint32_t bytes;  /**< the number of bytes to transmit */
 //  uint8_t layer; /**<  the layer of transmission (MIMO) */
 //  uint8_t harqId; /**< the HARQ ID */
@@ -208,7 +209,8 @@ BwpManagerGnb::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txO
 //  uint8_t lcid; /**< the logical channel id */
 //  uint16_t  m_signOfRlc {0};
   LteMacSapUser::TxOpportunityParameters  txOpParams2;
-  txOpParams2.bytes=txOpParams.bytes;
+//  txOpParams2.bytes=txOpParams.bytes;
+  txOpParams2.bytes=remain;
   txOpParams2.layer=txOpParams.layer;
   txOpParams2.harqId=txOpParams.harqId;
   txOpParams2.componentCarrierId=txOpParams.componentCarrierId;

@@ -997,10 +997,14 @@ NrGnbMac::DoTransmitPdu (LteMacSapProvider::TransmitPduParameters params)
       NS_FATAL_ERROR ("No MAC PDU storage element found for this TB UID/RNTI");
     }
 
-  NrMacHeaderVsDl header;
+//  NrMacHeaderVsDl header;
+//  header.SetLcId (params.lcid);
+//  header.SetSize (params.pdu->GetSize ());
+//  header.SetSignOfRlc(params.m_signOfRlc);
+  NrMacHeaderVs header;
   header.SetLcId (params.lcid);
   header.SetSize (params.pdu->GetSize ());
-  header.SetSignOfRlc(params.m_signOfRlc);
+//  header.SetSignOfRlc(params.m_signOfRlc);
 
   params.pdu->AddHeader (header);
 

@@ -288,7 +288,7 @@ LtePdcp::DoReceivePdu (Ptr<Packet> p)
   params.rnti = m_rnti;
   params.lcid = m_lcid;
   m_pdcpSapUser->ReceivePdcpSdu (params);
-  NcPdcpARQ(p);
+//  NcPdcpARQ(p);
 }
 
 void

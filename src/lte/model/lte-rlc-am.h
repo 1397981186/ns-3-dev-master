@@ -58,6 +58,7 @@ public:
    * \param txOpParams the LteMacSapUser::TxOpportunityParameters
    */
   virtual void DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams);
+  virtual uint32_t DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters params,uint32_t flag);
     /**
    * Notify HARQ delivery failure
    */
