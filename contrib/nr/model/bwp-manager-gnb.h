@@ -143,6 +143,7 @@ private:
    * \brief Checks if the flow is is GBR.
    */
   bool IsGbr (LteMacSapProvider::ReportBufferStatusParameters params);
+  uint32_t flagForRlc2=0;
 
   Ptr<BwpManagerAlgorithm> m_algorithm; //!< The BWP selection algorithm.
 

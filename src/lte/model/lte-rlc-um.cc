@@ -442,14 +442,19 @@ uint32_t
 LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams,uint32_t flag)
 {
   NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << txOpParams.bytes);
-  flag=0;
   uint32_t remain=0;
 
   if (txOpParams.bytes <= 2)
     {
       // Stingy MAC: Header fix part is 2 bytes, we need more bytes for the data
       NS_LOG_LOGIC ("TX opportunity too small = " << txOpParams.bytes);
-      return 0;
+      if(flag==0){
+	remain=0;
+	return remain;
+      }else{
+	remain=2;
+	return remain;//do nothing remain state
+      }
     }
 
   Ptr<Packet> packet = Create<Packet> ();
@@ -467,7 +472,13 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
   if ( m_txBuffer.size () == 0 )
     {
       NS_LOG_LOGIC ("No data pending");
-      return 0;
+      if(flag==0){
+	remain=txOpParams.bytes;//gives to rlc2
+	return remain;
+      }else{
+	remain=0;
+	return remain;
+      }
     }
 
   Ptr<Packet> firstSegment = m_txBuffer.begin ()->m_pdu->Copy ();
@@ -573,8 +584,13 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
 
           // (NO more segments) → exit
           // break;
-          remain=0;
-          NS_LOG_LOGIC ("not enough for RLC1"<<"    remain = " << remain );
+          if(flag==2){
+            remain=2;//give a not 0 number
+            NS_LOG_LOGIC ("still not enough for RLC2"<<"    remain = " << remain );
+          }else{
+	    remain=0;
+	    NS_LOG_LOGIC ("not enough for RLC1"<<"    remain = " << remain );
+          }
         }
       else if ( (nextSegmentSize - firstSegment->GetSize () <= 2) || (m_txBuffer.size () == 0) )//451-1022 1037-530
         {
@@ -605,8 +621,13 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
 
           // (NO more segments) → exit
           // break;
-          remain=nextSegmentSize;
-          NS_LOG_LOGIC (" enough for RLC1 gives to rlc2"<<"    remain = " << remain );
+          if(flag==0){
+	    remain=nextSegmentSize;
+	    NS_LOG_LOGIC (" enough for RLC1 gives to rlc2"<<"    remain = " << remain );
+          }else{
+            remain=0;
+	    NS_LOG_LOGIC (" rlc2 finish "<<"    remain = " << remain );
+          }
         }
       else // (firstSegment->GetSize () < m_nextSegmentSize) && (m_txBuffer.size () > 0)
         {

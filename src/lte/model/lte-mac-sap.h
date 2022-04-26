@@ -155,8 +155,7 @@ public:
    * \param params the TxOpportunityParameters
    */
   virtual void NotifyTxOpportunity (TxOpportunityParameters params) = 0;
-  uint32_t NotifyTxOpportunity (TxOpportunityParameters params,uint32_t flag){
-    return 0;};//must be virtual
+  virtual uint32_t NotifyTxOpportunity (TxOpportunityParameters params,uint32_t flag)=0;//must be virtual
   /**
    * Called by the MAC to notify the RLC that an HARQ process related
    * to this RLC instance has failed

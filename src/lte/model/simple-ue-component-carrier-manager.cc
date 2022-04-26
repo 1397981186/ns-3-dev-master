@@ -91,6 +91,7 @@ public:
 
   // inherited from LteMacSapUser
   virtual void NotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams);
+  virtual uint32_t NotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams,uint32_t flag);
   virtual void ReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams);
   virtual void NotifyHarqDeliveryFailure ();
 
@@ -109,6 +110,14 @@ SimpleUeCcmMacSapUser::NotifyTxOpportunity (LteMacSapUser::TxOpportunityParamete
 {
   NS_LOG_INFO ("SimpleUeCcmMacSapUser::NotifyTxOpportunity for ccId:"<<(uint32_t)txOpParams.componentCarrierId);
   m_mac->DoNotifyTxOpportunity (txOpParams);
+}
+
+uint32_t
+SimpleUeCcmMacSapUser::NotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams,uint32_t flag)
+{
+  NS_LOG_INFO ("this should not be used!!!");
+  uint32_t remain=0;
+  return remain;
 }
 
 

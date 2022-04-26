@@ -111,6 +111,15 @@ NoOpComponentCarrierManager::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunity
 
 }
 
+uint32_t
+NoOpComponentCarrierManager::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams,uint32_t flag)
+{
+  NS_LOG_FUNCTION ("this should not be used");
+  uint32_t remain=0;
+  return remain;
+
+}
+
 void
 NoOpComponentCarrierManager::DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams)
 {
