@@ -586,10 +586,10 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
           // break;
           if(flag==2){
             remain=2;//give a not 0 number
-            NS_LOG_LOGIC ("still not enough for RLC2"<<"    remain = " << remain );
+            NS_LOG_LOGIC ("---still not enough for RLC2"<<"    remain = " << remain );
           }else{
 	    remain=0;
-	    NS_LOG_LOGIC ("not enough for RLC1"<<"    remain = " << remain );
+	    NS_LOG_LOGIC ("---not enough for RLC1"<<"    remain = " << remain );
           }
         }
       else if ( (nextSegmentSize - firstSegment->GetSize () <= 2) || (m_txBuffer.size () == 0) )//451-1022 1037-530
@@ -623,10 +623,10 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
           // break;
           if(flag==0){
 	    remain=nextSegmentSize;
-	    NS_LOG_LOGIC (" enough for RLC1 gives to rlc2"<<"    remain = " << remain );
+	    NS_LOG_LOGIC ("---enough for RLC1 gives to rlc2"<<"    remain = " << remain );
           }else{
             remain=0;
-	    NS_LOG_LOGIC (" rlc2 finish "<<"    remain = " << remain );
+	    NS_LOG_LOGIC ("---rlc2 finish "<<"    remain = " << remain );
           }
         }
       else // (firstSegment->GetSize () < m_nextSegmentSize) && (m_txBuffer.size () > 0)
@@ -662,7 +662,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
           m_txBuffer.erase (m_txBuffer.begin ());
           NS_LOG_LOGIC ("        txBufferSize = " << m_txBufferSize );
           remain=0;
-          NS_LOG_LOGIC (" don't want this happen"<<"    remain = " << remain );
+          NS_LOG_LOGIC ("---don't want this happen"<<"    remain = " << remain );
         }
 
 

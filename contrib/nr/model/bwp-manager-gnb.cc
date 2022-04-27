@@ -212,7 +212,7 @@ BwpManagerGnb::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txO
       txOpParams2.lcid=txOpParams.lcid;
       txOpParams2.m_signOfRlc=2;
       flagForRlc2=(*lcidIt2).second->NotifyTxOpportunity (txOpParams2,2);
-      NS_LOG_DEBUG("flagForRlc2 is "<<flagForRlc2);
+      NS_LOG_DEBUG("----------------flagForRlc2 is "<<flagForRlc2);
 
   }else{
 
@@ -225,7 +225,7 @@ BwpManagerGnb::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txO
       txOpParams2.lcid=txOpParams.lcid;
       txOpParams2.m_signOfRlc=2;
       flagForRlc2=(*lcidIt2).second->NotifyTxOpportunity (txOpParams2,2);
-      NS_LOG_DEBUG("remain ForRlc2 is "<<flagForRlc2);
+      NS_LOG_DEBUG("-------------------remain ForRlc2 is "<<flagForRlc2);
   }
 
 

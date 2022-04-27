@@ -47,6 +47,8 @@
 #include "ns3/internet-apps-module.h"
 #include "ns3/applications-module.h"
 #include <chrono>
+#include "ns3/point-to-point-helper.h"
+
 
 using namespace ns3;
 
@@ -215,6 +217,7 @@ main (int argc, char *argv[])
                 enableUl);
   cmd.Parse (argc, argv);
 
+  LogComponentEnable("UdpClient", LOG_LEVEL_LOGIC);
   LogComponentEnable("Cttc3gppChannelSimpleRan", LOG_LEVEL_FUNCTION);
   LogComponentEnable("LteRlcUm", LOG_LEVEL_LOGIC);
   LogComponentEnable("LtePdcp", LOG_LEVEL_FUNCTION);
@@ -307,6 +310,10 @@ main (int argc, char *argv[])
   internet.Install (gridScenario.GetUserTerminals ());
   Ipv4InterfaceContainer ueIpIface;
   ueIpIface = epcHelper->AssignUeIpv4Address (NetDeviceContainer (ueNetDev));
+//  enbIpIface=
+  NS_LOG_FUNCTION("enb address"<<enbNetDev.Get (0)->GetAddress ());
+  NS_LOG_FUNCTION("ue address"<<ueNetDev.Get (0)->GetAddress ());
+
 
   //sht
   // assign IP address to UEs, and install UDP downlink applications
@@ -320,7 +327,8 @@ main (int argc, char *argv[])
   uint32_t pktSize = 200;
 //only for Dl,sink is ue
 
-  UdpClientHelper dlClient (ueNetDev.Get (0)->GetAddress (), dlPort);
+//  UdpClientHelper dlClient (ueNetDev.Get (0)->GetAddress (), dlPort);
+  UdpClientHelper dlClient (ueIpIface.GetAddress (0), dlPort);
   dlClient.SetAttribute ("MaxPackets", UintegerValue (packets));
   dlClient.SetAttribute ("PacketSize", UintegerValue (pktSize));
   dlClient.SetAttribute ("Interval", TimeValue (packetInterval));
@@ -367,7 +375,7 @@ main (int argc, char *argv[])
 
   nrHelper->EnableTraces ();
 
-  Simulator::Stop (Seconds (10));
+  Simulator::Stop (Seconds (10.0));
   Simulator::Run ();
   Simulator::Destroy ();
 
