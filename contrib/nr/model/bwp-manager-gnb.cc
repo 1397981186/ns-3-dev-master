@@ -203,16 +203,20 @@ BwpManagerGnb::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txO
     //remian from RLC1 means source space,from 2 means data remain to transfer
       txOpParams.bytes=txOpParams.bytes-1;//for signOfRlc in macHeader
       uint32_t remain=  (*lcidIt).second->NotifyTxOpportunity (txOpParams,0);
-      LteMacSapUser::TxOpportunityParameters  txOpParams2;
-      txOpParams2.bytes=remain-3-1;
-      txOpParams2.layer=txOpParams.layer;
-      txOpParams2.harqId=txOpParams.harqId;
-      txOpParams2.componentCarrierId=txOpParams.componentCarrierId;
-      txOpParams2.rnti=txOpParams.rnti;
-      txOpParams2.lcid=txOpParams.lcid;
-      txOpParams2.m_signOfRlc=2;
-      flagForRlc2=(*lcidIt2).second->NotifyTxOpportunity (txOpParams2,2);
-      NS_LOG_DEBUG("----------------flagForRlc2 is "<<flagForRlc2);
+      if(remain!=1&&remain!=2&&remain!=0){//remain is the remain source here
+	LteMacSapUser::TxOpportunityParameters  txOpParams2;
+	txOpParams2.bytes=remain-3-1;
+	txOpParams2.layer=txOpParams.layer;
+	txOpParams2.harqId=txOpParams.harqId;
+	txOpParams2.componentCarrierId=txOpParams.componentCarrierId;
+	txOpParams2.rnti=txOpParams.rnti;
+	txOpParams2.lcid=txOpParams.lcid;
+	txOpParams2.m_signOfRlc=2;
+	flagForRlc2=(*lcidIt2).second->NotifyTxOpportunity (txOpParams2,2);
+	NS_LOG_DEBUG("----------------flagForRlc2 is "<<flagForRlc2);
+      }else if(remain==1){
+	flagForRlc2=0;
+      }
 
   }else{
 

@@ -588,7 +588,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
             remain=2;//give a not 0 number
             NS_LOG_LOGIC ("---still not enough for RLC2"<<"    remain = " << remain );
           }else{
-	    remain=0;
+	    remain=1;
 	    NS_LOG_LOGIC ("---not enough for RLC1"<<"    remain = " << remain );
           }
         }
