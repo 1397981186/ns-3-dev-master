@@ -65,7 +65,7 @@ static bool g_rxRxRlcPDUCallbackCalled = false;
  */
 static void SendPacket (Ptr<NetDevice> device, Address& addr, uint32_t packetSize)
 {
-  Ptr<Packet> pkt = Create<Packet> (packetSize);
+  Ptr<Packet> pkt = Create<Packet> (7000);
   Ipv4Header ipv4Header;
   ipv4Header.SetProtocol (UdpL4Protocol::PROT_NUMBER);
   pkt->AddHeader (ipv4Header);
@@ -73,15 +73,15 @@ static void SendPacket (Ptr<NetDevice> device, Address& addr, uint32_t packetSiz
   pkt->AddPacketTag (tag);
   device->Send (pkt, addr, Ipv4L3Protocol::PROT_NUMBER);
 
-  Ptr<Packet> pkt2 = Create<Packet> (500);
-  pkt2->AddHeader (ipv4Header);
-  pkt2->AddPacketTag (tag);
-  device->Send (pkt2, addr, Ipv4L3Protocol::PROT_NUMBER);
-
-  Ptr<Packet> pkt3 = Create<Packet> (2000);
-  pkt3->AddHeader (ipv4Header);
-  pkt3->AddPacketTag (tag);
-  device->Send (pkt3, addr, Ipv4L3Protocol::PROT_NUMBER);
+//  Ptr<Packet> pkt2 = Create<Packet> (500);
+//  pkt2->AddHeader (ipv4Header);
+//  pkt2->AddPacketTag (tag);
+//  device->Send (pkt2, addr, Ipv4L3Protocol::PROT_NUMBER);
+//
+//  Ptr<Packet> pkt3 = Create<Packet> (2000);
+//  pkt3->AddHeader (ipv4Header);
+//  pkt3->AddPacketTag (tag);
+//  device->Send (pkt3, addr, Ipv4L3Protocol::PROT_NUMBER);
   NS_LOG_FUNCTION ("\n--------------------- send success -----------------!!");
 
 }
@@ -173,7 +173,7 @@ main (int argc, char *argv[])
   bool enableUl = false;
 
   Time sendPacketTime = Seconds (0.4);
-
+  Time sendPacketTime2 = Seconds (0.6);
   CommandLine cmd;
   cmd.AddValue ("numerologyBwp1",
                 "The numerology to be used in bandwidth part 1",
@@ -289,6 +289,7 @@ main (int argc, char *argv[])
   else
     {
       Simulator::Schedule (sendPacketTime, &SendPacket, enbNetDev.Get (0), ueNetDev.Get (0)->GetAddress (), udpPacketSize);
+//      Simulator::Schedule (sendPacketTime2, &SendPacket, enbNetDev.Get (0), ueNetDev.Get (0)->GetAddress (), udpPacketSize);
     }
 
   // attach UEs to the closest eNB
