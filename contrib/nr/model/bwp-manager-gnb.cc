@@ -198,24 +198,40 @@ BwpManagerGnb::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txO
 
   std::map<uint8_t, LteMacSapUser*>::iterator lcidIt2 = rntiIt->second.find (txOpParams.lcid+99);
   NS_ASSERT_MSG (lcidIt2 != rntiIt->second.end (), "could not find LCID " << (uint16_t) txOpParams.lcid);
+  if(flagForRlc2==0){
+    //firt RLC1 then RLC2
+    //remian from RLC1 means source space,from 2 means data remain to transfer
+      txOpParams.bytes=txOpParams.bytes-1;//for signOfRlc in macHeader
+      uint32_t remain=  (*lcidIt).second->NotifyTxOpportunity (txOpParams,0);
+      if(remain!=1&&remain!=2&&remain!=0){//remain is the remain source here
+	LteMacSapUser::TxOpportunityParameters  txOpParams2;
+	txOpParams2.bytes=remain-3-1;
+	txOpParams2.layer=txOpParams.layer;
+	txOpParams2.harqId=txOpParams.harqId;
+	txOpParams2.componentCarrierId=txOpParams.componentCarrierId;
+	txOpParams2.rnti=txOpParams.rnti;
+	txOpParams2.lcid=txOpParams.lcid;
+	txOpParams2.m_signOfRlc=2;
+	flagForRlc2=(*lcidIt2).second->NotifyTxOpportunity (txOpParams2,2);
+	NS_LOG_DEBUG("----------------flagForRlc2 is "<<flagForRlc2);
+      }else if(remain==1){
+	flagForRlc2=0;
+      }
 
-  (*lcidIt).second->NotifyTxOpportunity (txOpParams);
-//  uint32_t bytes;  /**< the number of bytes to transmit */
-//  uint8_t layer; /**<  the layer of transmission (MIMO) */
-//  uint8_t harqId; /**< the HARQ ID */
-//  uint8_t componentCarrierId; /**< the component carrier id */
-//  uint16_t rnti; /**< the C-RNTI identifying the UE */
-//  uint8_t lcid; /**< the logical channel id */
-//  uint16_t  m_signOfRlc {0};
-  LteMacSapUser::TxOpportunityParameters  txOpParams2;
-  txOpParams2.bytes=txOpParams.bytes;
-  txOpParams2.layer=txOpParams.layer;
-  txOpParams2.harqId=txOpParams.harqId;
-  txOpParams2.componentCarrierId=txOpParams.componentCarrierId;
-  txOpParams2.rnti=txOpParams.rnti;
-  txOpParams2.lcid=txOpParams.lcid;
-  txOpParams2.m_signOfRlc=2;
-  (*lcidIt2).second->NotifyTxOpportunity (txOpParams2);
+  }else{
+
+      LteMacSapUser::TxOpportunityParameters  txOpParams2;
+      txOpParams2.bytes=txOpParams.bytes-1;
+      txOpParams2.layer=txOpParams.layer;
+      txOpParams2.harqId=txOpParams.harqId;
+      txOpParams2.componentCarrierId=txOpParams.componentCarrierId;
+      txOpParams2.rnti=txOpParams.rnti;
+      txOpParams2.lcid=txOpParams.lcid;
+      txOpParams2.m_signOfRlc=2;
+      flagForRlc2=(*lcidIt2).second->NotifyTxOpportunity (txOpParams2,2);
+      NS_LOG_DEBUG("-------------------remain ForRlc2 is "<<flagForRlc2);
+  }
+
 
 }
 

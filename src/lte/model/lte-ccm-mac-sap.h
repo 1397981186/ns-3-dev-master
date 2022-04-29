@@ -164,6 +164,7 @@ public:
   virtual void NotifyPrbOccupancy (double prbOccupancy, uint8_t componentCarrierId);
   // inherited from LteMacSapUser
   virtual void NotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams);
+  virtual uint32_t NotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams,uint32_t flag);
   virtual void ReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams);
   virtual void NotifyHarqDeliveryFailure ();
 
@@ -200,6 +201,12 @@ template <class C>
 void MemberLteCcmMacSapUser<C>::NotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams)
 {
   m_owner->DoNotifyTxOpportunity (txOpParams);
+}
+
+template <class C>
+uint32_t MemberLteCcmMacSapUser<C>::NotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams,uint32_t flag)
+{
+  return m_owner->DoNotifyTxOpportunity (txOpParams, flag);
 }
 
 template <class C>

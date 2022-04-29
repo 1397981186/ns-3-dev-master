@@ -43,6 +43,12 @@
 #include "ns3/grid-scenario-helper.h"
 #include "ns3/log.h"
 #include "ns3/antenna-module.h"
+//sht
+#include "ns3/internet-apps-module.h"
+#include "ns3/applications-module.h"
+#include <chrono>
+#include "ns3/point-to-point-helper.h"
+
 
 using namespace ns3;
 
@@ -63,6 +69,19 @@ static bool g_rxRxRlcPDUCallbackCalled = false;
  * @param addr Destination address for a packet.
  * @param packetSize The packet size.
  */
+static std::vector<uint64_t> packetsTime;
+static void
+PrintRxPkt (std::string context, Ptr<const Packet> pkt)
+{
+  NS_UNUSED (context);
+  // ASSUMING ONE UE
+
+  SeqTsHeader seqTs;
+  pkt->PeekHeader (seqTs);
+  packetsTime.push_back ((Simulator::Now () - seqTs.GetTs ()).GetMicroSeconds ());
+}
+
+
 static void SendPacket (Ptr<NetDevice> device, Address& addr, uint32_t packetSize)
 {
   Ptr<Packet> pkt = Create<Packet> (packetSize);
@@ -73,10 +92,20 @@ static void SendPacket (Ptr<NetDevice> device, Address& addr, uint32_t packetSiz
   pkt->AddPacketTag (tag);
   device->Send (pkt, addr, Ipv4L3Protocol::PROT_NUMBER);
 
-  Ptr<Packet> pkt2 = Create<Packet> (500);
-  pkt2->AddHeader (ipv4Header);
-  pkt2->AddPacketTag (tag);
-  device->Send (pkt2, addr, Ipv4L3Protocol::PROT_NUMBER);
+//  Ptr<Packet> pkt2 = Create<Packet> (8000);
+//  pkt2->AddHeader (ipv4Header);
+//  pkt2->AddPacketTag (tag);
+//  device->Send (pkt2, addr, Ipv4L3Protocol::PROT_NUMBER);
+//
+//  Ptr<Packet> pkt3 = Create<Packet> (9000);
+//  pkt3->AddHeader (ipv4Header);
+//  pkt3->AddPacketTag (tag);
+//  device->Send (pkt3, addr, Ipv4L3Protocol::PROT_NUMBER);
+
+//  Ptr<Packet> pkt4 = Create<Packet> (9000);
+//  pkt4->AddHeader (ipv4Header);
+//  pkt4->AddPacketTag (tag);
+//  device->Send (pkt4, addr, Ipv4L3Protocol::PROT_NUMBER);
   NS_LOG_FUNCTION ("\n--------------------- send success -----------------!!");
 
 }
@@ -94,6 +123,7 @@ void
 RxPdcpPDU (std::string path, uint16_t rnti, uint8_t lcid, uint32_t bytes, uint64_t pdcpDelay)
 {
   NS_LOG_FUNCTION ("------------start-------------------" );
+  NS_LOG_FUNCTION(" Data received at PDCP layer at:"<<Simulator::Now ());
 //  std::cout << "\n Packet PDCP delay:" << pdcpDelay << "\n";
   NS_LOG_FUNCTION (" Packet PDCP delay:" << pdcpDelay);
   NS_LOG_FUNCTION ("------------end-------------------" );
@@ -187,12 +217,13 @@ main (int argc, char *argv[])
                 enableUl);
   cmd.Parse (argc, argv);
 
+  LogComponentEnable("UdpClient", LOG_LEVEL_LOGIC);
   LogComponentEnable("Cttc3gppChannelSimpleRan", LOG_LEVEL_FUNCTION);
   LogComponentEnable("LteRlcUm", LOG_LEVEL_LOGIC);
   LogComponentEnable("LtePdcp", LOG_LEVEL_FUNCTION);
 //  LogComponentEnable("NrUeMac", LOG_LEVEL_FUNCTION);
 
-
+  std::string errorModel = "ns3::NrEesmCcT1";
   int64_t randomStream = 1;
   //Create the scenario
   GridScenarioHelper gridScenario;
@@ -252,12 +283,15 @@ main (int argc, char *argv[])
   nrHelper->SetGnbAntennaAttribute ("NumColumns", UintegerValue (8));
   nrHelper->SetGnbAntennaAttribute ("AntennaElement", PointerValue (CreateObject<IsotropicAntennaModel> ()));
 
+  nrHelper->SetDlErrorModel (errorModel);
+
   //Install and get the pointers to the NetDevices
   NetDeviceContainer enbNetDev = nrHelper->InstallGnbDevice (gridScenario.GetBaseStations (), allBwps);
   NetDeviceContainer ueNetDev = nrHelper->InstallUeDevice (gridScenario.GetUserTerminals (), allBwps);
 
   randomStream += nrHelper->AssignStreams (enbNetDev, randomStream);
   randomStream += nrHelper->AssignStreams (ueNetDev, randomStream);
+
 
   // Set the attribute of the netdevice (enbNetDev.Get (0)) and bandwidth part (0)
   nrHelper->GetGnbPhy (enbNetDev.Get (0), 0)->SetAttribute ("Numerology", UintegerValue (numerologyBwp1));
@@ -276,6 +310,45 @@ main (int argc, char *argv[])
   internet.Install (gridScenario.GetUserTerminals ());
   Ipv4InterfaceContainer ueIpIface;
   ueIpIface = epcHelper->AssignUeIpv4Address (NetDeviceContainer (ueNetDev));
+//  enbIpIface=
+  NS_LOG_FUNCTION("enb address"<<enbNetDev.Get (0)->GetAddress ());
+  NS_LOG_FUNCTION("ue address"<<ueNetDev.Get (0)->GetAddress ());
+
+
+  //sht
+  // assign IP address to UEs, and install UDP downlink applications
+  uint16_t dlPort = 1234;
+  UdpServerHelper dlPacketSinkHelper (dlPort);
+  ApplicationContainer txApps, sinkApps;
+  double simTime = 10.0; // 50 seconds: to take statistics
+  Time udpAppStartTime = MilliSeconds (1000);
+  Time packetInterval = MilliSeconds (200);
+  uint32_t packets = (simTime - udpAppStartTime.GetSeconds ()) / packetInterval.GetSeconds ();
+  uint32_t pktSize = 200;
+//only for Dl,sink is ue
+
+//  UdpClientHelper dlClient (ueNetDev.Get (0)->GetAddress (), dlPort);
+  UdpClientHelper dlClient (ueIpIface.GetAddress (0), dlPort);
+  dlClient.SetAttribute ("MaxPackets", UintegerValue (packets));
+  dlClient.SetAttribute ("PacketSize", UintegerValue (pktSize));
+  dlClient.SetAttribute ("Interval", TimeValue (packetInterval));
+  txApps.Add (dlClient.Install (gridScenario.GetBaseStations ().Get (0)));
+
+  sinkApps.Add (dlPacketSinkHelper.Install (gridScenario.GetUserTerminals ()));
+
+  sinkApps.Start (udpAppStartTime);
+  txApps.Start (udpAppStartTime);
+  sinkApps.Stop (Seconds (simTime));
+  txApps.Stop (Seconds (simTime));
+
+  for (uint32_t j = 0; j < sinkApps.GetN (); ++j)
+    {
+      Ptr<UdpServer> client = DynamicCast<UdpServer> (sinkApps.Get (j));
+      NS_ASSERT (client != nullptr);
+      std::stringstream ss;
+      ss << j;
+      client->TraceConnect ("Rx", ss.str (), MakeCallback (&PrintRxPkt));
+    }
 
   if (enableUl)
     {
@@ -302,7 +375,7 @@ main (int argc, char *argv[])
 
   nrHelper->EnableTraces ();
 
-  Simulator::Stop (Seconds (1));
+  Simulator::Stop (Seconds (10.0));
   Simulator::Run ();
   Simulator::Destroy ();
 

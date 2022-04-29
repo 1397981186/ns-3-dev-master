@@ -45,6 +45,7 @@ public:
 
   // Interface implemented from LteMacSapUser
   virtual void NotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters params);
+  uint32_t NotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters params,uint32_t flag);
   virtual void NotifyHarqDeliveryFailure ();
   virtual void ReceivePdu (LteMacSapUser::ReceivePduParameters params);
   LteRlc* getRlc();
@@ -65,6 +66,14 @@ void
 LteRlcSpecificLteMacSapUser::NotifyTxOpportunity (TxOpportunityParameters params)
 {
   m_rlc->DoNotifyTxOpportunity (params);
+}
+
+uint32_t
+LteRlcSpecificLteMacSapUser::NotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters params,uint32_t flag)
+{
+  uint32_t remain=1;
+  remain=m_rlc->DoNotifyTxOpportunity (params,flag);
+  return remain;
 }
 
 void
@@ -276,6 +285,15 @@ LteRlcSm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
   m_macSapProvider->TransmitPdu (params);
   ReportBufferStatus ();
 }
+
+//sht
+uint32_t
+LteRlcSm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters params,uint32_t flag)
+{
+  NS_LOG_LOGIC ("!!!!!!!!!!!!!!this should not be used");
+  return flag;
+}
+
 
 void
 LteRlcSm::DoNotifyHarqDeliveryFailure ()

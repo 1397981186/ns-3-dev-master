@@ -151,6 +151,7 @@ protected:
    * \param params LteMacSapUser::TxOpportunityParameters
    */ 
   virtual void DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters params) = 0;
+  virtual uint32_t DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters params,uint32_t flag)=0;
   /**
    * Notify HARQ delivery failure
    */ 
@@ -210,6 +211,7 @@ public:
   virtual void DoTransmitPdcpPdu (Ptr<Packet> p);
   virtual void DoTransmitPdcpPdu2 (Ptr<Packet> p);
   virtual void DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams);
+  virtual uint32_t DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters params,uint32_t flag);
   virtual void DoNotifyHarqDeliveryFailure ();
   virtual void DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams);
 

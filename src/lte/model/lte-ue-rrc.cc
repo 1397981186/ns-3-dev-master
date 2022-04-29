@@ -547,7 +547,7 @@ LteUeRrc::DoInitialize (void)
   m_srb0->m_srbIdentity = 0;
   LteUeRrcSapUser::SetupParameters ueParams;
   ueParams.srb0SapProvider = m_srb0->m_rlc->GetLteRlcSapProvider ();
-  ueParams.srb0SapProvider = m_srb0->m_rlc2->GetLteRlcSapProvider ();
+  ueParams.srb0SapProvider2 = m_srb0->m_rlc2->GetLteRlcSapProvider ();
   ueParams.srb1SapProvider = 0;
   m_rrcSapUser->Setup (ueParams);
 
@@ -1443,7 +1443,7 @@ LteUeRrc::ApplyRadioResourceConfigDedicated (LteRrcSap::RadioResourceConfigDedic
           pdcp->SetLteRlcSapProvider (rlc->GetLteRlcSapProvider ());
           pdcp->SetLteRlcSapProvider2 (rlc2->GetLteRlcSapProvider ());
           rlc->SetLteRlcSapUser (pdcp->GetLteRlcSapUser ());
-          rlc2->SetLteRlcSapUser (pdcp->GetLteRlcSapUser2 ());
+          rlc2->SetLteRlcSapUser (pdcp->GetLteRlcSapUser ());
 
           m_srb1 = CreateObject<LteSignalingRadioBearerInfo> ();
           m_srb1->m_rlc = rlc;

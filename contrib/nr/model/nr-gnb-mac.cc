@@ -34,6 +34,8 @@
 #include "nr-mac-header-vs.h"
 #include "nr-mac-header-fs-ul.h"
 #include "nr-mac-short-bsr-ce.h"
+#include "nr-mac-header-vs-dl.h"
+
 
 #include <ns3/lte-radio-bearer-tag.h>
 #include <ns3/log.h>
@@ -995,10 +997,14 @@ NrGnbMac::DoTransmitPdu (LteMacSapProvider::TransmitPduParameters params)
       NS_FATAL_ERROR ("No MAC PDU storage element found for this TB UID/RNTI");
     }
 
-  NrMacHeaderVs header;
+  NrMacHeaderVsDl header;
   header.SetLcId (params.lcid);
   header.SetSize (params.pdu->GetSize ());
   header.SetSignOfRlc(params.m_signOfRlc);
+//  NrMacHeaderVs header;
+//  header.SetLcId (params.lcid);
+//  header.SetSize (params.pdu->GetSize ());
+
 
   params.pdu->AddHeader (header);
 

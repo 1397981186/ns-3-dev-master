@@ -794,6 +794,14 @@ LteRlcAm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
   m_macSapProvider->TransmitPdu (params);
 }
 
+//sht
+uint32_t
+LteRlcAm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters params,uint32_t flag)
+{
+  NS_LOG_LOGIC ("!!!!!!!!!!!!!!this should not be used");
+  return flag;
+}
+
 void
 LteRlcAm::DoNotifyHarqDeliveryFailure ()
 {

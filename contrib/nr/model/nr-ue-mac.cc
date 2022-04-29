@@ -32,7 +32,7 @@
 #include <ns3/random-variable-stream.h>
 #include "nr-phy-sap.h"
 #include "nr-control-messages.h"
-#include "nr-mac-header-vs.h"
+#include "nr-mac-header-vs-dl.h"
 #include "nr-mac-short-bsr-ce.h"
 
 namespace ns3 {
@@ -570,8 +570,10 @@ NrUeMac::DoReceivePhyPdu (Ptr<Packet> p)
       return;
     }
 
-  NrMacHeaderVs header;
+  NrMacHeaderVsDl header;
   p->RemoveHeader (header);
+//  NrMacHeaderVs header;
+//  p->RemoveHeader (header);
 
   LteMacSapUser::ReceivePduParameters rxParams;
   rxParams.p = p;
@@ -582,7 +584,8 @@ NrUeMac::DoReceivePhyPdu (Ptr<Packet> p)
   }else{
       rxParams.lcid = header.GetLcId ()+99;
   }
-  NS_LOG_FUNCTION ("-----------signOfRlc: "<<rxParams.m_signOfRlc<<"----------");
+//  rxParams.lcid = header.GetLcId ();
+  NS_LOG_DEBUG ("-----------signOfRlc: "<<rxParams.m_signOfRlc<<"----------");
 
   auto it = m_lcInfoMap.find (header.GetLcId());
 
