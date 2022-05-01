@@ -124,17 +124,20 @@ LtePdcpSpecificLtePdcpSapProvider<C>::LtePdcpSpecificLtePdcpSapProvider ()
 template <class C>
 void LtePdcpSpecificLtePdcpSapProvider<C>::TransmitPdcpSdu (TransmitPdcpSduParameters params)
 {
-  TransmitPdcpSduParameters params2;
+//  TransmitPdcpSduParameters params2;
+//
+//  Ptr<Packet> pdcpSdu=Create<Packet> ();
+//  *pdcpSdu=*params.pdcpSdu;
+//
+//  params2.lcid=params.lcid;
+//  params2.rnti=params.rnti;
+//  params2.pdcpSdu=pdcpSdu;
+//
+//
+//  m_pdcp->DoTransmitPdcpSdu (params);
+//  m_pdcp->DoTransmitPdcpSdu2 (params2);
 
-  Ptr<Packet> pdcpSdu=Create<Packet> ();
-  *pdcpSdu=*params.pdcpSdu;
-
-  params2.lcid=params.lcid;
-  params2.rnti=params.rnti;
-  params2.pdcpSdu=pdcpSdu;
-
-  m_pdcp->DoTransmitPdcpSdu (params);
-  m_pdcp->DoTransmitPdcpSdu2 (params2);
+  m_pdcp->TriggerDoTransmitPdcpSdu(params);
 }
 
 

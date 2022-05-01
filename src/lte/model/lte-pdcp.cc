@@ -26,6 +26,8 @@
 #include "ns3/lte-pdcp-sap.h"
 #include "ns3/lte-pdcp-tag.h"
 
+
+
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("LtePdcp");
@@ -75,12 +77,15 @@ LtePdcp::LtePdcp ()
     m_rnti (0),
     m_lcid (0),
     m_txSequenceNumber (0),
-    m_rxSequenceNumber (0)
+    m_rxSequenceNumber (0),
+    m_NcEnable(false),
+    m_CopyEnable(false)
 {
   NS_LOG_FUNCTION (this);
   m_pdcpSapProvider = new LtePdcpSpecificLtePdcpSapProvider<LtePdcp> (this);
   m_rlcSapUser = new LtePdcpSpecificLteRlcSapUser (this);
 //  m_rlcSapUser2 = new LtePdcpSpecificLteRlcSapUser (this);
+  m_Nc=new NcControl();
 }
 
 LtePdcp::~LtePdcp ()
@@ -102,6 +107,16 @@ LtePdcp::GetTypeId (void)
                      "PDU received.",
                      MakeTraceSourceAccessor (&LtePdcp::m_rxPdu),
                      "ns3::LtePdcp::PduRxTracedCallback")
+    .AddAttribute ("NcEnable",
+		     "Nc if open",
+		     BooleanValue (false),
+		     MakeBooleanAccessor (&LtePdcp::m_NcEnable),
+		     MakeBooleanChecker ())
+    .AddAttribute ("CopyEnable",
+		   "Copy if open",
+		   BooleanValue (false),
+		   MakeBooleanAccessor (&LtePdcp::m_CopyEnable),
+		   MakeBooleanChecker ())
     ;
   return tid;
 }
@@ -259,6 +274,44 @@ LtePdcp::DoTransmitPdcpSdu2 (LtePdcpSapProvider::TransmitPdcpSduParameters param
   txParams.pdcpPdu = p;
 
   m_rlcSapProvider2->TransmitPdcpPdu2 (txParams);
+}
+
+//sht
+void
+LtePdcp::TriggerDoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters params)
+{
+  if(m_NcEnable){
+    if(params.pdcpSdu->GetSize()<100){
+      DoTransmitPdcpSdu (params);//never at here?
+    }else{
+	//start Nc
+      m_Nc->HelloWorld();
+      m_Nc->SaveAndSetTime(params.pdcpSdu);
+//      m_Nc
+
+
+    }
+
+
+//    DoTransmitPdcpSdu2 (params2);
+
+
+  }else if(m_CopyEnable){
+    LtePdcpSapProvider::TransmitPdcpSduParameters params2;
+
+    Ptr<Packet> pdcpSdu=Create<Packet> ();
+    *pdcpSdu=*params.pdcpSdu;
+
+    params2.lcid=params.lcid;
+    params2.rnti=params.rnti;
+    params2.pdcpSdu=pdcpSdu;
+
+
+    DoTransmitPdcpSdu (params);
+    DoTransmitPdcpSdu2 (params2);
+  }else{
+    DoTransmitPdcpSdu (params);
+  }
 }
 
 void

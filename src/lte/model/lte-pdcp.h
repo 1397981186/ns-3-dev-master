@@ -28,7 +28,7 @@
 
 #include "ns3/lte-pdcp-sap.h"
 #include "ns3/lte-rlc-sap.h"
-
+#include "NcControl.h"
 namespace ns3 {
 
 /**
@@ -41,7 +41,9 @@ class LtePdcp : public Object // SimpleRefCount<LtePdcp>
   /// allow LtePdcpSpecificLtePdcpSapProvider<LtePdcp> class friend access
   friend class LtePdcpSpecificLtePdcpSapProvider<LtePdcp>;
 public:
+
   LtePdcp ();
+
   virtual ~LtePdcp ();
   /**
    * \brief Get the type ID.
@@ -153,9 +155,11 @@ protected:
    */
   virtual void DoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters params);
   virtual void DoTransmitPdcpSdu2 (LtePdcpSapProvider::TransmitPdcpSduParameters params);
+  virtual void TriggerDoTransmitPdcpSdu(LtePdcpSapProvider::TransmitPdcpSduParameters params);
   LtePdcpSapUser* m_pdcpSapUser; ///< PDCP SAP user
   LtePdcpSapProvider* m_pdcpSapProvider; ///< PDCP SAP provider
 
+  NcControl* m_Nc;
   /**
    * Interface provided to lower RLC entity
    *
@@ -198,6 +202,9 @@ private:
    * Constants. See section 7.2 in TS 36.323
    */
   static const uint16_t m_maxPdcpSn = 4095;
+
+  bool m_NcEnable;
+  bool m_CopyEnable;
 
 };
 
