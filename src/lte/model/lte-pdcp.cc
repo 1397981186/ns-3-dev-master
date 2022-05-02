@@ -277,6 +277,16 @@ LtePdcp::DoTransmitPdcpSdu2 (LtePdcpSapProvider::TransmitPdcpSduParameters param
 }
 
 //sht
+/**
+ * m_Nc->HelloWorld();
+ * m_Nc->SaveAndSetTime(params.pdcpSdu);
+ * if > 10
+ *
+ *
+ *
+ *
+ *
+ */
 void
 LtePdcp::TriggerDoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters params)
 {
@@ -286,8 +296,23 @@ LtePdcp::TriggerDoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters
     }else{
 	//start Nc
       m_Nc->HelloWorld();
-      m_Nc->SaveAndSetTime(params.pdcpSdu);
+      params.pdcpSdu=m_Nc->SaveAndSetTime(params.pdcpSdu);
+      uint32_t Ncdesize=m_Nc->GetNcedSize();
 //      m_Nc
+      if(m_NcRlcToSend%2==0){
+	DoTransmitPdcpSdu (params);
+	m_NcRlcToSend++;
+      }else if(m_NcRlcToSend%2==1){
+	DoTransmitPdcpSdu2 (params);
+	m_NcRlcToSend++;
+      }
+      if(Ncdesize==m_Nc->m_originalBlockSize){
+	//params.pdcpSdu==RedundancePacket()
+	m_NcRlcToSend++;
+	//判断Rlc并发送
+      }else if((Ncdesize==m_Nc->m_encodingBlockSize)){
+	m_NcRlcToSend=0;
+      }
 
 
     }

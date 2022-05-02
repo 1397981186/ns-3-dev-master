@@ -205,6 +205,7 @@ private:
 
   bool m_NcEnable;
   bool m_CopyEnable;
+  uint32_t m_NcRlcToSend=0;
 
 };
 

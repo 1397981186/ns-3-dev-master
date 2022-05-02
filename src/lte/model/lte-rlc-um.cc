@@ -473,7 +473,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
     {
       NS_LOG_LOGIC ("No data pending");
       if(flag==0){
-	remain=txOpParams.bytes;//gives to rlc2
+	remain=txOpParams.bytes+4;//gives to rlc2
 	return remain;
       }else{
 	remain=0;
