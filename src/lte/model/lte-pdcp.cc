@@ -276,7 +276,7 @@ LtePdcp::DoTransmitPdcpSdu2 (LtePdcpSapProvider::TransmitPdcpSduParameters param
   m_rlcSapProvider2->TransmitPdcpPdu2 (txParams);
 }
 
-//sht
+//Nc main process
 /**
  * m_Nc->HelloWorld();
  * m_Nc->SaveAndSetTime(params.pdcpSdu);
@@ -288,6 +288,17 @@ LtePdcp::DoTransmitPdcpSdu2 (LtePdcpSapProvider::TransmitPdcpSduParameters param
  *
  */
 void
+LtePdcp::ToogleSend(LtePdcpSapProvider::TransmitPdcpSduParameters params){
+  if(m_NcRlcToSend%2==0){
+	DoTransmitPdcpSdu (params);
+	m_NcRlcToSend++;
+  }else if(m_NcRlcToSend%2==1){
+	DoTransmitPdcpSdu2 (params);
+	m_NcRlcToSend++;
+  }
+}
+
+void
 LtePdcp::TriggerDoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters params)
 {
   if(m_NcEnable){
@@ -296,31 +307,25 @@ LtePdcp::TriggerDoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters
     }else{
 	//start Nc
       m_Nc->HelloWorld();
-      params.pdcpSdu=m_Nc->SaveAndSetTime(params.pdcpSdu);
-      uint32_t Ncdesize=m_Nc->GetNcedSize();
+      params.pdcpSdu=m_Nc->SendSaveAndSetTime(params.pdcpSdu);
+      uint32_t Ncedsize=m_Nc->GetNcedSize();
 //      m_Nc
-      if(m_NcRlcToSend%2==0){
-	DoTransmitPdcpSdu (params);
-	m_NcRlcToSend++;
-      }else if(m_NcRlcToSend%2==1){
-	DoTransmitPdcpSdu2 (params);
-	m_NcRlcToSend++;
+      ToogleSend(params);
+      if(Ncedsize==m_Nc->m_originalBlockSize){
+	for (int var = 0; var < m_Nc->m_encodingBlockSize-m_Nc->m_originalBlockSize; var++) {
+	  LtePdcpSapProvider::TransmitPdcpSduParameters paramsRe;
+	  paramsRe.lcid=params.lcid;
+	  paramsRe.rnti=params.rnti;
+	  paramsRe.pdcpSdu=m_Nc->MakeRedundancePacket();
+	  Ncedsize++;
+	  ToogleSend(paramsRe);
+	}
+	if(Ncedsize==m_Nc->m_encodingBlockSize){
+	    m_Nc->m_groupnum++;
+	    m_NcRlcToSend=m_NcRlcToSend%2;
+	}
       }
-      if(Ncdesize==m_Nc->m_originalBlockSize){
-	//params.pdcpSdu==RedundancePacket()
-	m_NcRlcToSend++;
-	//判断Rlc并发送
-      }else if((Ncdesize==m_Nc->m_encodingBlockSize)){
-	m_NcRlcToSend=0;
-      }
-
-
     }
-
-
-//    DoTransmitPdcpSdu2 (params2);
-
-
   }else if(m_CopyEnable){
     LtePdcpSapProvider::TransmitPdcpSduParameters params2;
 
@@ -337,6 +342,27 @@ LtePdcp::TriggerDoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters
   }else{
     DoTransmitPdcpSdu (params);
   }
+}
+
+void
+LtePdcp::TriggerRecvPdcpSdu(Ptr<Packet> p){
+  if(m_NcEnable&&p->GetSize()>100){
+
+    NcHeader ncheader;
+    p->RemoveHeader(ncheader);
+    //if !NcComplete
+      //recv----save data at NcControl
+      //if(SN<origin) send this
+      //if(Decode ready) send SN>origin
+      //NcComplete
+    //if !NcComplete&&ncheader.GetPolling()==1 ---ARQ
+  }
+
+  LtePdcpSapUser::ReceivePdcpSduParameters params;
+  params.pdcpSdu = p;
+  params.rnti = m_rnti;
+  params.lcid = m_lcid;
+  m_pdcpSapUser->ReceivePdcpSdu (params);
 }
 
 void
@@ -361,13 +387,9 @@ LtePdcp::DoReceivePdu (Ptr<Packet> p)
       m_rxSequenceNumber = 0;
     }
 
-  LtePdcpSapUser::ReceivePdcpSduParameters params;
-  params.pdcpSdu = p;
-  params.rnti = m_rnti;
-  params.lcid = m_lcid;
-  m_pdcpSapUser->ReceivePdcpSdu (params);
-//  NcPdcpARQ(p);
+  TriggerRecvPdcpSdu(p);
 }
+
 
 void
 LtePdcp::NcPdcpARQ (Ptr<Packet> ARQp){

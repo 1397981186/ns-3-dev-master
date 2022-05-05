@@ -12,6 +12,7 @@
 #include "ns3/ipv4-header.h"
 //#include "ns3/epc-gtpu-header.h"
 #include "ns3/lte-pdcp-header.h"
+#include "ns3/lte-nc-header.h"
 
 
 
@@ -53,9 +54,10 @@ public:
 
   NcControl();
   void HelloWorld();
-  Ptr<Packet> SaveAndSetTime(Ptr<Packet> p);
-  Ptr<Packet> RedundancePacket();
+  Ptr<Packet> SendSaveAndSetTime(Ptr<Packet> p);
+  Ptr<Packet> MakeRedundancePacket();
   uint32_t GetNcedSize();
+  void RecvAndSave();
 
 
 

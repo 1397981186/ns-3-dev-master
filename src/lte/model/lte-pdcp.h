@@ -29,6 +29,8 @@
 #include "ns3/lte-pdcp-sap.h"
 #include "ns3/lte-rlc-sap.h"
 #include "NcControl.h"
+#include "ns3/lte-nc-header.h"
+
 namespace ns3 {
 
 /**
@@ -156,6 +158,8 @@ protected:
   virtual void DoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters params);
   virtual void DoTransmitPdcpSdu2 (LtePdcpSapProvider::TransmitPdcpSduParameters params);
   virtual void TriggerDoTransmitPdcpSdu(LtePdcpSapProvider::TransmitPdcpSduParameters params);
+  void TriggerRecvPdcpSdu(Ptr<Packet> p);
+  void ToogleSend(LtePdcpSapProvider::TransmitPdcpSduParameters params);
   LtePdcpSapUser* m_pdcpSapUser; ///< PDCP SAP user
   LtePdcpSapProvider* m_pdcpSapProvider; ///< PDCP SAP provider
 
