@@ -662,7 +662,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
           m_txBuffer.erase (m_txBuffer.begin ());
           NS_LOG_LOGIC ("        txBufferSize = " << m_txBufferSize );
           remain=0;
-          NS_LOG_LOGIC ("---don't want this happen"<<"    remain = " << remain );
+          NS_LOG_LOGIC ("---don't want this happen but this will go in will,remain is not remain"<<"    remain = " << remain );
         }
 
 

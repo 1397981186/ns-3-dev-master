@@ -101,15 +101,16 @@ NcControl::MakeRedundancePacket ()
     ncheader.SetPolling(1);
   }
 
-  redundantPacket->AddHeader(ncheader);
-
   ncPara para;
   for (int k=63;k>=0;k--)
   {
     para.m_coff.push_back(static_cast<double>((Coeff>>k) & 1));
   }
-  it->second.m_ncVector.push_back(para);
 
+  ncheader.SetSN(it->second.m_ncVector.size());
+  redundantPacket->AddHeader(ncheader);
+
+  it->second.m_ncVector.push_back(para);
   NS_LOG_DEBUG ("Ncde size  "<<it->second.m_ncVector.size()<<" groupNum "<<m_groupnum);
   return redundantPacket;
 
@@ -124,10 +125,60 @@ NcControl::GetNcedSize ()
   return it->second.m_ncVector.size();
 }
 
-void
-NcControl::RecvAndSave ()
+Ptr<Packet>
+NcControl::RecvAndSave (Ptr<Packet> p)
 {
+  NcHeader ncheader;
+  p->RemoveHeader(ncheader);
+  m_rxEncodingPacketNum++;
+  ncPara para;
+  para.p=p;
+  para.israwpacket = ncheader.IsRawPacket();
+  para.SN = ncheader.GetSN();
+  uint64_t ncCoeff = ncheader.GetCoeff();
+  for (int k=63;k>=0;k--)
+  {
+    para.m_coff.push_back(static_cast<double>((ncCoeff>>k) & 1));
+  }
+  m_groupnum=ncheader.GetGroupnum();
+  auto it1=m_ncDecodingBufferList.find(m_groupnum);
+  NS_LOG_DEBUG ("---recv group num---  "<<ncheader.GetGroupnum());
+  if(it1==m_ncDecodingBufferList.end())
+  {
+    NcDecodingBuffer newBuffer;
+    m_ncDecodingBufferList.insert({ncheader.GetGroupnum(),newBuffer});
+    it1=m_ncDecodingBufferList.find(ncheader.GetGroupnum());
+    //it1->second.startTime = rxnctag.GetSenderTimestamp();
+  }
 
+  if (!it1->second.m_ncComplete){
+    it1->second.m_ncVector.push_back(para);
+    NS_LOG_DEBUG ("---para sn ---  "<<unsigned(para.SN));
+    if (para.SN < m_originalBlockSize){
+      m_rxOriginalPacketNum ++;
+      it1->second.deliverdSN.push_back(para.SN);
+      m_packetStatistic[0]++;
+      m_IfTransmitSduFlag=true;
+    }else{
+      m_IfTransmitSduFlag=true;
+    }
+
+
+  }
+  return p;
+
+}
+
+bool
+NcControl::IfTransmitSdu ()
+{
+  return m_IfTransmitSduFlag;
+}
+
+bool
+NcControl::IfNcArq ()
+{
+  return true;
 }
 
 };

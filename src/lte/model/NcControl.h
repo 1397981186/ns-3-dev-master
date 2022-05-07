@@ -43,6 +43,7 @@ public:
     Time startTime;
   };
 
+//send use
   uint32_t m_rlcFlag=0;
   uint8_t m_originalBlockSize;
   uint8_t m_encodingBlockSize;
@@ -50,14 +51,43 @@ public:
   uint64_t m_groupnum = 0;
   std::vector < ncPara > m_ncVector; //ncBuffer
 
+//recv use
+  uint64_t m_rxEncodingPacketNum = 0;
+  class NcDecodingBuffer
+  {
+  public:
+    std::vector < ncPara > m_ncVector; //ncBuffer
+    //uint8_t Polling_num = 0;
+    uint8_t m_rank = 0;
+    bool m_statusReportSent = false;
+    bool m_ncComplete = false;
+    uint8_t num_statusReport = 0;
+    EventId m_statusReportTimer;
+    std::vector<uint8_t> deliverdSN;
+    Time startTime;
+    std::vector <uint32_t> seqVector;
+    std::vector <Time> tsVector;
+    std::vector <Time> txTimeVector;
+    std::vector <Time> linkDelayVector;
+    std::vector <Time> networkDelayVector;
+  };
+  std::map<uint64_t,NcDecodingBuffer> m_ncDecodingBufferList;
 
 
+
+//send use
   NcControl();
   void HelloWorld();
   Ptr<Packet> SendSaveAndSetTime(Ptr<Packet> p);
   Ptr<Packet> MakeRedundancePacket();
   uint32_t GetNcedSize();
-  void RecvAndSave();
+//recv use
+  Ptr<Packet> RecvAndSave(Ptr<Packet> p);
+  bool IfTransmitSdu();
+  bool IfNcArq();
+  bool m_IfTransmitSduFlag=false;
+  uint64_t m_rxOriginalPacketNum = 0;
+  uint64_t m_packetStatistic[5] = {0,0,0,0,0};
 
 
 

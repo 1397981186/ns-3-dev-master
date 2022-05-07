@@ -348,21 +348,28 @@ void
 LtePdcp::TriggerRecvPdcpSdu(Ptr<Packet> p){
   if(m_NcEnable&&p->GetSize()>100){
 
-    NcHeader ncheader;
-    p->RemoveHeader(ncheader);
-    //if !NcComplete
-      //recv----save data at NcControl
-      //if(SN<origin) send this
-      //if(Decode ready) send SN>origin
-      //NcComplete
-    //if !NcComplete&&ncheader.GetPolling()==1 ---ARQ
+    Ptr<Packet> Sdu=Create<Packet> ();
+    Sdu=m_Nc->RecvAndSave(p);
+
+    if(m_Nc->IfTransmitSdu()){
+      LtePdcpSapUser::ReceivePdcpSduParameters params;
+      params.pdcpSdu = Sdu;
+      params.rnti = m_rnti;
+      params.lcid = m_lcid;
+      m_pdcpSapUser->ReceivePdcpSdu (params);
+    }
+
+    if(m_Nc->IfNcArq()){
+	//arq
+    }
+  }else{
+    LtePdcpSapUser::ReceivePdcpSduParameters params;
+    params.pdcpSdu = p;
+    params.rnti = m_rnti;
+    params.lcid = m_lcid;
+    m_pdcpSapUser->ReceivePdcpSdu (params);
   }
 
-  LtePdcpSapUser::ReceivePdcpSduParameters params;
-  params.pdcpSdu = p;
-  params.rnti = m_rnti;
-  params.lcid = m_lcid;
-  m_pdcpSapUser->ReceivePdcpSdu (params);
 }
 
 void
