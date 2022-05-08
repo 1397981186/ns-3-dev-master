@@ -158,7 +158,7 @@ main (int argc, char *argv[])
   LogComponentEnable("UdpClient", LOG_LEVEL_LOGIC);
   LogComponentEnable("NrUeMac", LOG_LEVEL_DEBUG);
   LogComponentEnable("BwpManagerGnb", LOG_LEVEL_DEBUG);
-  LogComponentEnable("LteRlcUm", LOG_LEVEL_LOGIC);
+  LogComponentEnable("LteRlcUm", LOG_LEVEL_FUNCTION);
   LogComponentEnable("LtePdcp", LOG_LEVEL_FUNCTION);
   LogComponentEnable("NcControl", LOG_LEVEL_DEBUG);
 

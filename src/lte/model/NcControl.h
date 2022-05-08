@@ -84,6 +84,8 @@ public:
 //recv use
   Ptr<Packet> RecvAndSave(Ptr<Packet> p);
   bool IfTransmitSdu();
+  bool IfDeocde();
+  std::vector <Ptr<Packet>> NcDecode();
   bool IfNcArq();
   bool m_IfTransmitSduFlag=false;
   uint64_t m_rxOriginalPacketNum = 0;

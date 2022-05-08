@@ -160,7 +160,7 @@ NcControl::RecvAndSave (Ptr<Packet> p)
       m_packetStatistic[0]++;
       m_IfTransmitSduFlag=true;
     }else{
-      m_IfTransmitSduFlag=true;
+      m_IfTransmitSduFlag=false;
     }
 
 
@@ -173,6 +173,23 @@ bool
 NcControl::IfTransmitSdu ()
 {
   return m_IfTransmitSduFlag;
+}
+
+bool
+NcControl::IfDeocde ()
+{
+  auto it1=m_ncDecodingBufferList.find(m_groupnum);
+  if(it1->second.m_ncVector.size()>=m_originalBlockSize){
+      return true;
+  }else{
+      return false;
+  }
+}
+
+std::vector <Ptr<Packet>>
+NcControl::NcDecode ()
+{
+
 }
 
 bool

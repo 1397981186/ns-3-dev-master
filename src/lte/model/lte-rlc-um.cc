@@ -447,7 +447,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
   if (txOpParams.bytes <= 2)
     {
       // Stingy MAC: Header fix part is 2 bytes, we need more bytes for the data
-      NS_LOG_LOGIC ("TX opportunity too small = " << txOpParams.bytes);
+      NS_LOG_DEBUG ("TX opportunity too small = " << txOpParams.bytes);
       if(flag==0){
 	remain=0;
 	return remain;
@@ -471,7 +471,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
   // If only a segment of the packet is taken, then the remaining is given back later
   if ( m_txBuffer.size () == 0 )
     {
-      NS_LOG_LOGIC ("No data pending");
+      NS_LOG_DEBUG ("No data pending");
       if(flag==0){
 	remain=txOpParams.bytes+4;//gives to rlc2
 	return remain;
@@ -586,10 +586,10 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
           // break;
           if(flag==2){
             remain=2;//give a not 0 number
-            NS_LOG_LOGIC ("---still not enough for RLC2"<<"    remain = " << remain );
+            NS_LOG_DEBUG ("---still not enough for RLC2"<<"    remain = " << remain );
           }else{
 	    remain=1;
-	    NS_LOG_LOGIC ("---not enough for RLC1"<<"    remain = " << remain );
+	    NS_LOG_DEBUG ("---not enough for RLC1"<<"    remain = " << remain );
           }
         }
       else if ( (nextSegmentSize - firstSegment->GetSize () <= 2) || (m_txBuffer.size () == 0) )//451-1022 1037-530
@@ -623,14 +623,44 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
           // break;
           if(flag==0){
 	    remain=nextSegmentSize;
-	    NS_LOG_LOGIC ("---enough for RLC1 gives to rlc2"<<"    remain = " << remain );
+	    NS_LOG_DEBUG ("---enough for RLC1 gives to rlc2"<<"    remain = " << remain );
           }else{
             remain=0;
-	    NS_LOG_LOGIC ("---rlc2 finish "<<"    remain = " << remain );
+            NS_LOG_DEBUG ("---rlc2 finish "<<"    remain = " << remain );
           }
         }
       else // (firstSegment->GetSize () < m_nextSegmentSize) && (m_txBuffer.size () > 0)
         {
+//          NS_LOG_LOGIC ("    IF firstSegment < NextSegmentSize && txBuffer.size > 0");//have source not use
+//          // Add txBuffer.FirstBuffer to DataField
+//          dataFieldAddedSize = firstSegment->GetSize ();
+//          dataFieldTotalSize += dataFieldAddedSize;
+//          dataField.push_back (firstSegment);
+//          firstSegment = 0;
+//
+//          // ExtensionBit (Next_Segment - 1) = 0
+//          rlcHeader.PushExtensionBit (LteRlcHeader::DATA_FIELD_FOLLOWS);
+//
+//          // no LengthIndicator for the last one
+//
+//          nextSegmentSize -= dataFieldAddedSize;
+//          nextSegmentId++;
+//
+//          NS_LOG_LOGIC ("        SDUs in TxBuffer  = " << m_txBuffer.size ());
+//          if (m_txBuffer.size () > 0)
+//            {
+//              NS_LOG_LOGIC ("        First SDU buffer  = " << m_txBuffer.begin()->m_pdu);
+//              NS_LOG_LOGIC ("        First SDU size    = " << m_txBuffer.begin()->m_pdu->GetSize ());
+//            }
+//          NS_LOG_LOGIC ("        Next segment size = " << nextSegmentSize);
+//          if(flag==0){
+//	    remain=nextSegmentSize;
+//	    NS_LOG_LOGIC ("---source remain ,rlc1buffer have data but gives to rlc2"<<"    remain = " << remain );
+//          }else{
+//	    remain=0;
+//	    NS_LOG_LOGIC ("---source remain ,rlc2buffer have data but gives to rlc1"<<"    remain = " << remain );
+//          }
+//	  break;
           NS_LOG_LOGIC ("    IF firstSegment < NextSegmentSize && txBuffer.size > 0");//have source not use
           // Add txBuffer.FirstBuffer to DataField
           dataFieldAddedSize = firstSegment->GetSize ();
@@ -662,7 +692,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
           m_txBuffer.erase (m_txBuffer.begin ());
           NS_LOG_LOGIC ("        txBufferSize = " << m_txBufferSize );
           remain=0;
-          NS_LOG_LOGIC ("---don't want this happen but this will go in will,remain is not remain"<<"    remain = " << remain );
+          NS_LOG_DEBUG ("---don't want this happen"<<"    remain = " << remain );
         }
 
 
