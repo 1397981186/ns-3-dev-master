@@ -162,8 +162,8 @@ NcControl::RecvAndSave (Ptr<Packet> p)
     }else{
       m_IfTransmitSduFlag=false;
     }
-
-
+  }else{
+    m_IfTransmitSduFlag=false;
   }
   return p;
 
@@ -179,18 +179,122 @@ bool
 NcControl::IfDeocde ()
 {
   auto it1=m_ncDecodingBufferList.find(m_groupnum);
-  if(it1->second.m_ncVector.size()>=m_originalBlockSize){
-      return true;
+  if (!it1->second.m_ncComplete){
+    if(it1->second.m_ncVector.size()>=m_originalBlockSize){
+	return true;
+    }else{
+	return false;
+    }
   }else{
       return false;
   }
 }
 
+uint8_t
+NcControl::CalulateDecodingRank( uint64_t groupnum)
+{
+
+  auto it=m_ncDecodingBufferList.find(groupnum);
+  int decodingBlockSize = it->second.m_ncVector.size();
+
+  uint8_t rank = decodingBlockSize<m_originalBlockSize ? decodingBlockSize:m_originalBlockSize;
+  it->second.m_rank = rank;
+  NS_LOG_DEBUG ("---CalulateDecodingRank is "<<unsigned(rank));
+  return rank;
+  /*
+  Eigen::MatrixXf a(decodingBlockSize,64);
+  if (decodingBlockSize!=0)
+  {
+	  for(int k=0;k<decodingBlockSize;k++)
+	  {
+		  for (int l=0; l<64; l++)
+		  {
+			  a(k,l) = it->second.m_ncVector[k].m_coff[l];
+		  }
+	  }
+	  Eigen::JacobiSVD<Eigen::MatrixXf> svd(a);
+	  it->second.m_rank = svd.rank();
+	  return svd.rank();
+  }
+  else
+  {
+	  return 0;
+  }
+  */
+}
+
 std::vector <Ptr<Packet>>
 NcControl::NcDecode ()
 {
+  auto it1=m_ncDecodingBufferList.find(m_groupnum);
+  std::vector <Ptr<Packet>> packets;
+  if(!it1->second.m_ncComplete){
+    NS_LOG_DEBUG ("---Ncdecode");
+    CalulateDecodingRank(m_groupnum);
+    if(it1->second.m_rank >= m_originalBlockSize)
+    {
+      uint8_t num_nonDeliveredPackets = 0;
+      for(uint8_t j=0; j<m_originalBlockSize ;j++)
+      {
+	if (std::find(it1->second.deliverdSN.begin(),it1->second.deliverdSN.end(),j)==it1->second.deliverdSN.end())
+	{//if not find ,means miss ,need to decode
+	  NS_LOG_DEBUG ("---not find j "<<unsigned(j));
+	  num_nonDeliveredPackets ++;
+	  m_rxOriginalPacketNum ++;
+	  m_totalRxSize += it1->second.m_ncVector[j].p->GetSize();
 
+
+	  Ptr <Packet> retrievalPacket = it1->second.m_ncVector[j].p->Copy();
+	  Ipv4Header ipv4header;
+	  retrievalPacket->RemoveHeader(ipv4header);
+	  UdpHeader udpheader;
+	  retrievalPacket->RemoveHeader(udpheader);
+	  SeqTsHeader seqtsheader;
+	  retrievalPacket->RemoveHeader(seqtsheader);
+//	  NS_LOG_DEBUG ("---here");
+//	  seqtsheader.SetSeq(it1->second.seqVector[j]);
+//	  seqtsheader.SetTs(it1->second.tsVector[j]);
+
+  //	m_rlcSapUser->ReceivePdcpPdu(retrievalPacket);
+	  packets.push_back(retrievalPacket);
+	  it1->second.deliverdSN.push_back(j);
+
+	}
+      }
+
+      m_okGroupNum ++;
+      m_packetStatistic[it1->second.num_statusReport] += num_nonDeliveredPackets;
+      m_statusReportStatistic[it1->second.num_statusReport] ++ ;
+      //if(m_cellId==1 && it1->second.num_statusReport!=0)
+      /*
+      if(m_cellId==1)
+      {
+	      std::cout<<"SRnum_"<<ncheader.GetGroupnum()<<" = "<<+it1->second.num_statusReport
+			      <<", SRstatistic = {"
+			      <<statusReportStatistic[0]<<", "
+			      <<statusReportStatistic[1]<<", "
+			      <<statusReportStatistic[2]<<", "
+			      <<statusReportStatistic[3]<<", "
+			      <<statusReportStatistic[4]<<"}"
+			      <<", PacketStatistic = {"
+			      <<packetStatistic[0]<<", "
+			      <<packetStatistic[1]<<", "
+			      <<packetStatistic[2]<<", "
+			      <<packetStatistic[3]<<", "
+			      <<packetStatistic[4]<<"}"
+			      <<", rxPacketNum = "<<rxOriginalPacketNum
+			      <<std::endl;
+      }
+      */
+      it1->second.m_ncComplete = true;
+    }
+  }else{
+    NS_LOG_DEBUG ("---complete don't need decode");
+  }
+  NS_LOG_DEBUG ("---Ncdecode packet nums is "<<packets.size());
+  return packets;
 }
+
 
 bool
 NcControl::IfNcArq ()
@@ -198,7 +302,12 @@ NcControl::IfNcArq ()
   return true;
 }
 
+
+
+
+
+
+
+
 };
-
-
 

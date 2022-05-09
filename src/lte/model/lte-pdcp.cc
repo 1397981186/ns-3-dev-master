@@ -362,7 +362,11 @@ LtePdcp::TriggerRecvPdcpSdu(Ptr<Packet> p){
       params.lcid = m_lcid;
       m_pdcpSapUser->ReceivePdcpSdu (params);
     }
-//    if()
+    if(m_Nc->IfDeocde()){
+	std::vector <Ptr<Packet>> decodePackets;
+	decodePackets=m_Nc->NcDecode();
+
+    }
     if(m_Nc->IfNcArq()){
 	//arq
     }

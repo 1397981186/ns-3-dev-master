@@ -4,6 +4,7 @@
 #include "ns3/lte-pdcp-sap.h"
 #include <vector>
 #include <map>
+#include <algorithm>
 #include "ns3/simulator.h"
 #include "ns3/lte-rlc-header.h"
 #include "ns3/lte-pdcp-tag.h"
@@ -87,9 +88,13 @@ public:
   bool IfDeocde();
   std::vector <Ptr<Packet>> NcDecode();
   bool IfNcArq();
+  uint8_t CalulateDecodingRank(uint64_t groupnum);
   bool m_IfTransmitSduFlag=false;
   uint64_t m_rxOriginalPacketNum = 0;
   uint64_t m_packetStatistic[5] = {0,0,0,0,0};
+  uint64_t m_totalRxSize = 0;
+  uint64_t m_okGroupNum = 0;
+  uint64_t m_statusReportStatistic[5] = {0,0,0,0,0};
 
 
 
