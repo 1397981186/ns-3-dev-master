@@ -354,21 +354,33 @@ LtePdcp::TriggerRecvPdcpSdu(Ptr<Packet> p){
 
     Ptr<Packet> Sdu=Create<Packet> ();
     Sdu=m_Nc->RecvAndSave(p);
+    if(m_Nc->IfRecvArq()){
 
-    if(m_Nc->IfTransmitSdu()){
-      LtePdcpSapUser::ReceivePdcpSduParameters params;
-      params.pdcpSdu = Sdu;
-      params.rnti = m_rnti;
-      params.lcid = m_lcid;
-      m_pdcpSapUser->ReceivePdcpSdu (params);
-    }
-    if(m_Nc->IfDeocde()){
-	std::vector <Ptr<Packet>> decodePackets;
-	decodePackets=m_Nc->NcDecode();
+    }else{
+      if(m_Nc->IfTransmitSdu()){
+	LtePdcpSapUser::ReceivePdcpSduParameters params;
+	params.pdcpSdu = Sdu;
+	params.rnti = m_rnti;
+	params.lcid = m_lcid;
+	m_pdcpSapUser->ReceivePdcpSdu (params);
+      }
+      if(m_Nc->IfDeocde()){
+	  std::vector <Ptr<Packet>> decodePackets;
+	  decodePackets=m_Nc->NcDecode();
+	  for(auto it =decodePackets.begin();it != decodePackets.end();it ++){
+	      Ptr<Packet> deocdeOne=*it;
+	      LtePdcpSapUser::ReceivePdcpSduParameters params;
+	      params.pdcpSdu = deocdeOne;
+	      params.rnti = m_rnti;
+	      params.lcid = m_lcid;
+	      m_pdcpSapUser->ReceivePdcpSdu (params);
+	  }
 
-    }
-    if(m_Nc->IfNcArq()){
-	//arq
+      }
+      if(m_Nc->IfNcSendArq()){
+	  std::vector <Ptr<Packet>> ArqPackets;
+	  ArqPackets=m_Nc->NcSendArq();
+      }
     }
   }else{
     LtePdcpSapUser::ReceivePdcpSduParameters params;

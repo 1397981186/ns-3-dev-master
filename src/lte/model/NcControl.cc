@@ -7,7 +7,8 @@ NS_OBJECT_ENSURE_REGISTERED (NcControl);
 
 NcControl::NcControl():
   m_originalBlockSize (10),
-  m_encodingBlockSize (12){
+  m_encodingBlockSize (14),
+  m_ncVrMs(0){
   NS_LOG_LOGIC (this);
 }
 
@@ -130,6 +131,19 @@ NcControl::RecvAndSave (Ptr<Packet> p)
 {
   NcHeader ncheader;
   p->RemoveHeader(ncheader);
+
+  if(ncheader.GetDorC()==1){
+    m_IfRecvArq=true;
+  }else{
+    m_IfRecvArq=false;
+  }
+
+  if(ncheader.GetPolling()==1){
+    m_IfSendArq=true;
+  }else{
+    m_IfSendArq=false;
+  }
+
   m_rxEncodingPacketNum++;
   ncPara para;
   para.p=p;
@@ -256,6 +270,10 @@ NcControl::NcDecode ()
 //	  seqtsheader.SetTs(it1->second.tsVector[j]);
 
   //	m_rlcSapUser->ReceivePdcpPdu(retrievalPacket);
+	  retrievalPacket->AddHeader(seqtsheader);
+	  retrievalPacket->AddHeader(udpheader);
+	  retrievalPacket->AddHeader(ipv4header);
+
 	  packets.push_back(retrievalPacket);
 	  it1->second.deliverdSN.push_back(j);
 
@@ -297,17 +315,106 @@ NcControl::NcDecode ()
 
 
 bool
-NcControl::IfNcArq ()
+NcControl::IfNcSendArq ()
 {
-  return true;
+  return m_IfSendArq;
+}
+
+Ptr<Packet>
+NcControl::MakeStatusReport (uint64_t groupnum)
+{
+  auto it=m_ncDecodingBufferList.find(groupnum);
+  Ptr<Packet> StatusReport = Create<Packet> (150);
+  NcHeader Statusncheader;
+  Statusncheader.SetGroupnum(groupnum);
+  Statusncheader.SetDorC(1);
+  Statusncheader.SetRank(it->second.m_rank);
+  StatusReport->AddHeader(Statusncheader)	;
+  it->second.num_statusReport ++;
+  it->second.m_statusReportTimer = Simulator::Schedule (m_statusReportTimerValue,
+								  &NcControl::ExpireStatusReportTimer, this, groupnum);
+  return StatusReport;
 }
 
 
 
+std::vector<Ptr<Packet> >
+NcControl::NcSendArq ()
+{
+  //对m_ncVrMs<=i<=ncheader.GetGroupnum()中的每个组号i依次进行处理
+  std::vector<Ptr<Packet> > ArqPackets;
+  for (uint64_t i=m_ncVrMs; i<=m_groupnum; i++)
+  {
+    //将it3指向第i组的解码buffer
+    auto it3=m_ncDecodingBufferList.find(i);
+    if (it3==m_ncDecodingBufferList.end())
+    {
+      NcDecodingBuffer newBuffer;
+      m_ncDecodingBufferList.insert({i,newBuffer});
+      it3 = m_ncDecodingBufferList.find(i);
+    }
+    if (!it3->second.m_ncComplete && !it3->second.m_statusReportTimer.IsRunning())
+    {
+      if (it3->second.num_statusReport<3)
+      {
+	CalulateDecodingRank(i);
+	ArqPackets.push_back(MakeStatusReport(i));
+	/*
+	if (m_cellId==1)
+	{
+		std::cout<<"reTxgroup = "<<i
+				<<",  SRnum ="<<+it3->second.num_statusReport
+				<<",  rank = "<<+it3->second.m_rank
+				<<",  vectorsize = "<<+it3->second.m_ncVector.size()
+				<<std::endl;
+	}
+	*/
+      }
+      else
+      {
+	/*
+	if (m_cellId==1)
+	{
+		std::cout<<"failedgroup = "<< i
+				<<",  vectorsize = "<<it3->second.m_ncVector.size()
+				<<",  rank = "<<+it3->second.m_rank
+				<<",  statusReportNum = "<<+it3->second.num_statusReport
+				<<std::endl;
+	}
+	*/
+	m_statusReportStatistic[it3->second.num_statusReport+1] ++ ;
+	m_failedGroupNum ++;
+	it3->second.m_ncComplete = true;
+      }
+    }
+  }
+  // 将m_ncVrMs置为ncCompelte=1的连续的最小组号+1
+  auto it1 = m_ncDecodingBufferList.find(m_ncVrMs);
+  while (it1!=m_ncDecodingBufferList.end() && it1->second.m_ncComplete)
+  {
+    m_ncVrMs ++;
+    it1 = m_ncDecodingBufferList.find(m_ncVrMs);
+  }
 
+  return ArqPackets;
 
+}
 
+void
+NcControl::ExpireStatusReportTimer (uint64_t groupnum)
+{
+  auto it = m_ncDecodingBufferList.find(groupnum);
+  if (it->second.num_statusReport<3)
+  {
+      MakeStatusReport(groupnum);
+  }
+}
 
+bool
+NcControl::IfRecvArq ()
+{
+  return m_IfRecvArq;
+}
 
 };
 

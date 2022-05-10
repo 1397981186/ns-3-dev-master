@@ -82,19 +82,32 @@ public:
   Ptr<Packet> SendSaveAndSetTime(Ptr<Packet> p);
   Ptr<Packet> MakeRedundancePacket();
   uint32_t GetNcedSize();
+
+
 //recv use
   Ptr<Packet> RecvAndSave(Ptr<Packet> p);
   bool IfTransmitSdu();
   bool IfDeocde();
   std::vector <Ptr<Packet>> NcDecode();
-  bool IfNcArq();
+  bool IfNcSendArq();
   uint8_t CalulateDecodingRank(uint64_t groupnum);
+  Ptr<Packet> MakeStatusReport(uint64_t groupnum);
+  std::vector <Ptr<Packet>> NcSendArq();
+  void ExpireStatusReportTimer( uint64_t groupnum);
   bool m_IfTransmitSduFlag=false;
   uint64_t m_rxOriginalPacketNum = 0;
   uint64_t m_packetStatistic[5] = {0,0,0,0,0};
   uint64_t m_totalRxSize = 0;
   uint64_t m_okGroupNum = 0;
   uint64_t m_statusReportStatistic[5] = {0,0,0,0,0};
+  bool m_IfSendArq;
+  bool m_IfRecvArq;
+  uint64_t m_ncVrMs;   //尚未完整接受的最小组号
+  uint64_t m_failedGroupNum = 0;
+  Time m_statusReportTimerValue = MilliSeconds(40.0);
+  bool IfRecvArq();
+
+
 
 
 
