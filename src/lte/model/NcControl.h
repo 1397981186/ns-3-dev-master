@@ -92,7 +92,7 @@ public:
   bool IfNcSendArq();
   uint8_t CalulateDecodingRank(uint64_t groupnum);
   Ptr<Packet> MakeStatusReport(uint64_t groupnum);
-  std::vector <Ptr<Packet>> NcSendArq();
+  std::vector <Ptr<Packet>> NcSendArqReq();
   void ExpireStatusReportTimer( uint64_t groupnum);
   bool m_IfTransmitSduFlag=false;
   uint64_t m_rxOriginalPacketNum = 0;
@@ -106,6 +106,8 @@ public:
   uint64_t m_failedGroupNum = 0;
   Time m_statusReportTimerValue = MilliSeconds(40.0);
   bool IfRecvArq();
+//  uint64_t m_Arqgroupnum = 0;
+  std::vector <Ptr<Packet>> MakeNcArqSendPacket(Ptr<Packet> p);
 
 
 

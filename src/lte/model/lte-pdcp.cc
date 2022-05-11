@@ -355,7 +355,15 @@ LtePdcp::TriggerRecvPdcpSdu(Ptr<Packet> p){
     Ptr<Packet> Sdu=Create<Packet> ();
     Sdu=m_Nc->RecvAndSave(p);
     if(m_Nc->IfRecvArq()){
-
+      std::vector<Ptr<Packet> > arqPackets;
+      arqPackets=m_Nc->MakeNcArqSendPacket(Sdu);
+      for(auto it=arqPackets.begin();it != arqPackets.end();it++){
+	LtePdcpSapProvider::TransmitPdcpSduParameters paramsArq;
+	paramsArq.lcid=m_lcid;
+	paramsArq.rnti=m_rnti;
+	paramsArq.pdcpSdu=* it;
+	DoTransmitPdcpSdu(paramsArq);
+      }
     }else{
       if(m_Nc->IfTransmitSdu()){
 	LtePdcpSapUser::ReceivePdcpSduParameters params;
@@ -379,7 +387,15 @@ LtePdcp::TriggerRecvPdcpSdu(Ptr<Packet> p){
       }
       if(m_Nc->IfNcSendArq()){
 	  std::vector <Ptr<Packet>> ArqPackets;
-	  ArqPackets=m_Nc->NcSendArq();
+	  ArqPackets=m_Nc->NcSendArqReq();
+	  for(auto it=ArqPackets.begin();it != ArqPackets.end();it++){
+	    LtePdcpSapProvider::TransmitPdcpSduParameters paramsArq;
+	    paramsArq.lcid=m_lcid;
+	    paramsArq.rnti=m_rnti;
+	    paramsArq.pdcpSdu=* it;
+	    DoTransmitPdcpSdu (paramsArq);
+
+	  }
       }
     }
   }else{

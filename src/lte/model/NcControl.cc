@@ -98,7 +98,7 @@ NcControl::MakeRedundancePacket ()
     Coeff = Coeff | (bit << (63-i));
   }
   ncheader.SetCoeff(Coeff);
-  if(it->second.m_ncVector.size()==m_encodingBlockSize){
+  if(it->second.m_ncVector.size()+1==m_encodingBlockSize){
     ncheader.SetPolling(1);
   }
 
@@ -133,12 +133,15 @@ NcControl::RecvAndSave (Ptr<Packet> p)
   p->RemoveHeader(ncheader);
 
   if(ncheader.GetDorC()==1){
+    p->AddHeader(ncheader);
     m_IfRecvArq=true;
+    return p;
   }else{
     m_IfRecvArq=false;
   }
 
   if(ncheader.GetPolling()==1){
+    NS_LOG_DEBUG ("---recv polling packet");
     m_IfSendArq=true;
   }else{
     m_IfSendArq=false;
@@ -339,8 +342,9 @@ NcControl::MakeStatusReport (uint64_t groupnum)
 
 
 std::vector<Ptr<Packet> >
-NcControl::NcSendArq ()
+NcControl::NcSendArqReq ()
 {
+  NS_LOG_DEBUG ("---send ArqReq");
   //对m_ncVrMs<=i<=ncheader.GetGroupnum()中的每个组号i依次进行处理
   std::vector<Ptr<Packet> > ArqPackets;
   for (uint64_t i=m_ncVrMs; i<=m_groupnum; i++)
@@ -353,6 +357,7 @@ NcControl::NcSendArq ()
       m_ncDecodingBufferList.insert({i,newBuffer});
       it3 = m_ncDecodingBufferList.find(i);
     }
+//    if (!it3->second.m_ncComplete && !it3->second.m_statusReportTimer.IsRunning())
     if (!it3->second.m_ncComplete && !it3->second.m_statusReportTimer.IsRunning())
     {
       if (it3->second.num_statusReport<3)
@@ -395,7 +400,7 @@ NcControl::NcSendArq ()
     m_ncVrMs ++;
     it1 = m_ncDecodingBufferList.find(m_ncVrMs);
   }
-
+  NS_LOG_DEBUG ("ArqReqPackets nums is "<<ArqPackets.size());
   return ArqPackets;
 
 }
@@ -414,6 +419,52 @@ bool
 NcControl::IfRecvArq ()
 {
   return m_IfRecvArq;
+}
+
+std::vector<Ptr<Packet> >
+NcControl::MakeNcArqSendPacket (Ptr<Packet> p)
+{
+  NS_LOG_DEBUG ("made arq packets to send ");
+  NcHeader ncheader;
+  p->RemoveHeader(ncheader);
+
+  std::vector<Ptr<Packet> > arqPackets;
+  auto it = m_ncEncodingBufferList.find(ncheader.GetGroupnum());
+  if(it!=m_ncEncodingBufferList.end())
+  {
+    it->second.NACK_num ++;
+    for(int i=0;i<(m_originalBlockSize-ncheader.GetRank());i++ )
+    {
+      NcHeader reTxheader;
+      if(i==(m_originalBlockSize-1-ncheader.GetRank()))
+      {
+	reTxheader.SetPolling(1);
+      }
+      reTxheader.SetGroupnum(ncheader.GetGroupnum());
+      uint64_t ncCoeff = 0;
+      for (int i=0; i<m_originalBlockSize; i++)
+      {
+	      uint64_t bit = rand()%2;
+	      ncCoeff = ncCoeff | (bit << (63-i));
+      }
+      reTxheader.SetCoeff(ncCoeff);
+      Ptr<Packet> reTxpacket = it->second.m_ncVector[m_originalBlockSize-1].p->Copy();
+      reTxpacket->AddHeader(reTxheader);
+//      txEncodingPacketNum ++;
+//      NcTag nctag(Simulator::Now ());
+//      for (int i=0; i<originalBlockSize; i++)
+//      {
+//	  nctag.seqVector.push_back(it->second.m_ncVector[i].seq);
+//	  nctag.tsVector.push_back(it->second.m_ncVector[i].ts);
+//	  nctag.txTimeVector.push_back(it->second.m_ncVector[i].txTime);
+//      }
+//      nctag.vectorSize = originalBlockSize;
+//      reTxpacket->AddByteTag(nctag);
+      arqPackets.push_back(reTxpacket);
+    }
+  }
+  NS_LOG_DEBUG ("made arq packets to send , num of packets is "<<arqPackets.size());
+  return arqPackets;
 }
 
 };

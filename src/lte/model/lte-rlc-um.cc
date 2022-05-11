@@ -1516,7 +1516,7 @@ LteRlcUm::DoReportBufferStatus (void)
   r.rnti = m_rnti;
   r.lcid = m_lcid;
 //  r.txQueueSize = queueSize;
-  r.txQueueSize = queueSize*2;
+  r.txQueueSize = queueSize;
 //  r.txQueueHolDelay = holDelay.GetMilliSeconds () ;
   r.txQueueHolDelay = holDelay.GetMilliSeconds () *2;
   r.retxQueueSize = 0;

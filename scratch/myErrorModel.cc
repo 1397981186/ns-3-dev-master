@@ -81,7 +81,7 @@ static Ptr<ListPositionAllocator>
 GetGnbPositions (double gNbHeight = 100.0)
 {
   Ptr<ListPositionAllocator> pos = CreateObject<ListPositionAllocator> ();
-  pos->Add (Vector (103, 100, gNbHeight));
+  pos->Add (Vector (116.5, 100, gNbHeight));
 
   return pos;
 }
