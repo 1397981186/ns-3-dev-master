@@ -7,7 +7,7 @@ NS_OBJECT_ENSURE_REGISTERED (NcControl);
 
 NcControl::NcControl():
   m_originalBlockSize (10),
-  m_encodingBlockSize (14),
+  m_encodingBlockSize (12),
   m_ncVrMs(0){
   NS_LOG_LOGIC (this);
 }
@@ -327,7 +327,7 @@ Ptr<Packet>
 NcControl::MakeStatusReport (uint64_t groupnum)
 {
   auto it=m_ncDecodingBufferList.find(groupnum);
-  Ptr<Packet> StatusReport = Create<Packet> (150);
+  Ptr<Packet> StatusReport = Create<Packet> (101);
   NcHeader Statusncheader;
   Statusncheader.SetGroupnum(groupnum);
   Statusncheader.SetDorC(1);
@@ -390,6 +390,7 @@ NcControl::NcSendArqReq ()
 	m_statusReportStatistic[it3->second.num_statusReport+1] ++ ;
 	m_failedGroupNum ++;
 	it3->second.m_ncComplete = true;
+	NS_LOG_DEBUG ("num_statusReport is bigger than 3");
       }
     }
   }

@@ -81,7 +81,7 @@ static Ptr<ListPositionAllocator>
 GetGnbPositions (double gNbHeight = 100.0)
 {
   Ptr<ListPositionAllocator> pos = CreateObject<ListPositionAllocator> ();
-  pos->Add (Vector (116.5, 100, gNbHeight));
+  pos->Add (Vector (100,30, gNbHeight));
 
   return pos;
 }
@@ -121,12 +121,13 @@ main (int argc, char *argv[])
   double ueY = 30.0;
 
   double simTime = 10.0; // 50 seconds: to take statistics
-  uint32_t pktSize = 500;
+  uint32_t pktSize = 1500;
   Time udpAppStartTime = MilliSeconds (1000);
   Time packetInterval = MilliSeconds (20);
   Time updateChannelInterval = MilliSeconds (150);
   bool isUl = false;
   bool ifNc=true;
+//  bool ifNc=false;
   bool ifCopy=false;
 
   std::string errorModel = "ns3::NrEesmIrT2";
