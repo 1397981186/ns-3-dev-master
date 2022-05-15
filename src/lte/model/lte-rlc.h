@@ -54,6 +54,7 @@ class LteRlc : public Object // SimpleRefCount<LteRlc>
   /// allow LteRlcSpecificLteRlcSapProvider<LteRlc> class friend access
   friend class LteRlcSpecificLteRlcSapProvider<LteRlc>;
 public:
+  bool m_toogleFlagRlc=false;//sht add for rlc2 source use
   LteRlc ();
   virtual ~LteRlc ();
   /**
@@ -143,6 +144,7 @@ protected:
   virtual void DoTransmitPdcpPdu2 (Ptr<Packet> p) = 0;
   LteRlcSapUser* m_rlcSapUser; ///< RLC SAP user
   LteRlcSapProvider* m_rlcSapProvider; ///< RLC SAP provider
+
 
   // Interface forwarded by LteMacSapUser
   /**

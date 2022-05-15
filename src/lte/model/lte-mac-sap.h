@@ -97,6 +97,7 @@ public:
 class LteMacSapUser
 {
 public:
+
   virtual ~LteMacSapUser ();
   /**
    * Parameters for LteMacSapUser::NotifyTxOpportunity

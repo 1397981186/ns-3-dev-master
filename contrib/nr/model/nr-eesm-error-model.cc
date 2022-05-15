@@ -25,6 +25,7 @@
 #include <algorithm>
 #include "ns3/enum.h"
 #include "nr-phy-mac-common.h"
+#include <fstream>
 
 namespace ns3 {
 
@@ -328,16 +329,27 @@ NrEesmErrorModel::GetTbBitDecodificationStats (const SpectrumValue& sinr,
   NS_LOG_INFO (" MCS of tx " << +mcs <<
                " Equivalent MCS for PHY abstraction (just for HARQ-IR) " << +mcs_eq);
 
+
+
+  double ccbler = 1.0;
   double errorRate = 1.0;
+  std:: fstream ofs;
   if (C != 1)
-    {
-      double cbler = MappingSinrBler (SINR, mcs_eq, K);
-      errorRate = 1.0 - pow (1.0 - cbler, C);
-    }
+   {
+     double cbler = MappingSinrBler (SINR, mcs_eq, K);
+     errorRate = 1.0 - pow (1.0 - cbler, C);
+     ccbler = pow (1.0 - cbler, C);
+//     ofs.open("errorrate1.txt",std::ios::out | std::ios::app);
+//     ofs<<ccbler<< std::endl;
+//     ofs.close();
+   }
   else
-    {
-      errorRate = MappingSinrBler (SINR, mcs_eq, K);
-    }
+   {
+     errorRate = MappingSinrBler (SINR, mcs_eq, K);
+   }
+
+
+
 
   NS_LOG_DEBUG ("Calculated Error rate " << errorRate);
   NS_ASSERT (GetMcsEcrTable () != nullptr);

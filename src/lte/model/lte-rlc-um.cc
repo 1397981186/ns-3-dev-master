@@ -443,7 +443,8 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
 {
   NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << txOpParams.bytes);
   uint32_t remain=0;
-
+  uint8_t maxOnceTime=0;
+//  m_toogleFlag=false;//sht add for rlc2 source use
   if (txOpParams.bytes <= 2)
     {
       // Stingy MAC: Header fix part is 2 bytes, we need more bytes for the data
@@ -471,12 +472,13 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
   // If only a segment of the packet is taken, then the remaining is given back later
   if ( m_txBuffer.size () == 0 )
     {
-      NS_LOG_DEBUG ("No data pending");
       if(flag==0){
 	remain=txOpParams.bytes+4;//gives to rlc2
+	NS_LOG_DEBUG ("No data pending,give to rlc2 ,remain is "<<remain);
 	return remain;
       }else{
 	remain=0;
+	NS_LOG_DEBUG ("No data pending,give to rlc1 ,set remain=0 ,remain is "<<remain);
 	return remain;
       }
     }
@@ -631,6 +633,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
         }
       else // (firstSegment->GetSize () < m_nextSegmentSize) && (m_txBuffer.size () > 0)
         {
+	  if( maxOnceTime==2){}
 //          NS_LOG_LOGIC ("    IF firstSegment < NextSegmentSize && txBuffer.size > 0");//have source not use
 //          // Add txBuffer.FirstBuffer to DataField
 //          dataFieldAddedSize = firstSegment->GetSize ();
@@ -691,7 +694,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
           m_txBufferSize -= firstSegment->GetSize ();
           m_txBuffer.erase (m_txBuffer.begin ());
           NS_LOG_LOGIC ("        txBufferSize = " << m_txBufferSize );
-          remain=0;
+          remain=nextSegmentSize;
           NS_LOG_DEBUG ("---don't want this happen"<<"    remain = " << remain );
         }
 

@@ -73,6 +73,8 @@ LteRlcSpecificLteMacSapUser::NotifyTxOpportunity (LteMacSapUser::TxOpportunityPa
 {
   uint32_t remain=1;
   remain=m_rlc->DoNotifyTxOpportunity (params,flag);
+//  m_toogleFlagMac=m_rlc->m_toogleFlagRlc
+  //add getm_toogleFlagMac() method at fatherclass
   return remain;
 }
 
