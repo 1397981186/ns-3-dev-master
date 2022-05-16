@@ -331,14 +331,14 @@ NrEesmErrorModel::GetTbBitDecodificationStats (const SpectrumValue& sinr,
 
 
 
-  double ccbler = 1.0;
+//  double ccbler = 1.0;
   double errorRate = 1.0;
   std:: fstream ofs;
   if (C != 1)
    {
      double cbler = MappingSinrBler (SINR, mcs_eq, K);
      errorRate = 1.0 - pow (1.0 - cbler, C);
-     ccbler = pow (1.0 - cbler, C);
+//     ccbler = pow (1.0 - cbler, C);
 //     ofs.open("errorrate1.txt",std::ios::out | std::ios::app);
 //     ofs<<ccbler<< std::endl;
 //     ofs.close();

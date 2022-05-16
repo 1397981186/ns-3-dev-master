@@ -312,10 +312,10 @@ LtePdcp::TriggerDoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters
 //      m_Nc
       ToogleSend(params);
       if(Ncedsize==m_Nc->m_originalBlockSize){
-	if(((m_Nc->m_encodingBlockSize-m_Nc->m_originalBlockSize)%2==0&&m_NcRlcToSend%2==1)
-	    ||((m_Nc->m_encodingBlockSize-m_Nc->m_originalBlockSize)%2==1&&m_NcRlcToSend%2==0)){
-	  m_NcRlcToSend++;
-	}
+//	if(((m_Nc->m_encodingBlockSize-m_Nc->m_originalBlockSize)%2==0&&m_NcRlcToSend%2==1)
+//	    ||((m_Nc->m_encodingBlockSize-m_Nc->m_originalBlockSize)%2==1&&m_NcRlcToSend%2==0)){
+//	  m_NcRlcToSend++;
+//	}
 	for (int var = 0; var < m_Nc->m_encodingBlockSize-m_Nc->m_originalBlockSize; var++) {
 	  LtePdcpSapProvider::TransmitPdcpSduParameters paramsRe;
 	  paramsRe.lcid=params.lcid;

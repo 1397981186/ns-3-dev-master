@@ -97,6 +97,13 @@ public:
 class LteMacSapUser
 {
 public:
+  bool m_toogleFlagMac=false;
+  bool m_noDataFlagMac=false;
+
+  bool getToogleFlagMac(){
+    return m_toogleFlagMac;
+  }
+
 
   virtual ~LteMacSapUser ();
   /**

@@ -55,6 +55,7 @@ class LteRlc : public Object // SimpleRefCount<LteRlc>
   friend class LteRlcSpecificLteRlcSapProvider<LteRlc>;
 public:
   bool m_toogleFlagRlc=false;//sht add for rlc2 source use
+  bool m_noDataFlagRlc=false;//sht add for rlc2 source use
   LteRlc ();
   virtual ~LteRlc ();
   /**

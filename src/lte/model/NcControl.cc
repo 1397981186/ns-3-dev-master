@@ -197,6 +197,7 @@ NcControl::IfDeocde ()
 {
   auto it1=m_ncDecodingBufferList.find(m_groupnum);
   if (!it1->second.m_ncComplete){
+	NS_LOG_DEBUG ("---m_ncVector.size() is "<<it1->second.m_ncVector.size()<<" m_originalBlockSize "<<unsigned(m_originalBlockSize));
     if(it1->second.m_ncVector.size()>=m_originalBlockSize){
 	return true;
     }else{

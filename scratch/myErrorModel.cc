@@ -78,10 +78,10 @@ NS_LOG_COMPONENT_DEFINE ("CttcErrorModelExample");
 
 
 static Ptr<ListPositionAllocator>
-GetGnbPositions (double gNbHeight = 100.0)
+GetGnbPositions (double gNbHeight = 10.0)
 {
   Ptr<ListPositionAllocator> pos = CreateObject<ListPositionAllocator> ();
-  pos->Add (Vector (85,30, gNbHeight));
+  pos->Add (Vector (78,30, gNbHeight));
 
   return pos;
 }
@@ -121,10 +121,10 @@ main (int argc, char *argv[])
   double ueY = 30.0;
 
   double simTime = 10.0; // 50 seconds: to take statistics
-  uint32_t pktSize = 2500;
+  uint32_t pktSize = 1400;
   Time udpAppStartTime = MilliSeconds (1000);
-//  Time packetInterval = MicroSeconds (100);
-  Time packetInterval = MilliSeconds (10);
+  Time packetInterval = MicroSeconds (100000);
+//  Time packetInterval = MilliSeconds (1);
   Time updateChannelInterval = MilliSeconds (150);
   bool isUl = false;
 //  bool ifNc=true;
