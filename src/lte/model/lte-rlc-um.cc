@@ -441,12 +441,12 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
 uint32_t
 LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams,uint32_t flag)
 {
-  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << txOpParams.bytes);
+  NS_LOG_DEBUG (this << m_rnti << (uint32_t) m_lcid << txOpParams.bytes);
   uint32_t remain=0;
   m_toogleFlagRlc=false;
   m_noDataFlagRlc=false;
 
-  if (txOpParams.bytes <= 2)
+  if (txOpParams.bytes <= 4)
     {
       // Stingy MAC: Header fix part is 2 bytes, we need more bytes for the data
       NS_LOG_DEBUG ("TX opportunity too small = " << txOpParams.bytes);
@@ -485,7 +485,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
 	remain=txOpParams.bytes+4;
 	m_toogleFlagRlc=true;//sht add for rlc2 source use
 	m_noDataFlagRlc=true;
-	NS_LOG_DEBUG ("No data pending,give to rlc1 , ,remain is "<<remain);
+	NS_LOG_DEBUG ("No data pending,give to rlc1 , remain is "<<remain);
 	return remain;
       }
     }
@@ -637,7 +637,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
 	    if(remain<=4){
 	      m_toogleFlagRlc=false;//sht add for rlc2 source use
 	      remain=0;
-	      NS_LOG_DEBUG ("---enough for RLC1 gives to rlc2 but too small to give"<<"    remain = " << remain );
+	      NS_LOG_DEBUG ("---enough for RLC1 gives to rlc2 but too small(<4) to give"<<"    remain = " << remain );
 	    }else{
 	      m_toogleFlagRlc=true;//sht add for rlc2 source use
 	      NS_LOG_DEBUG ("---enough for RLC1 gives to rlc2"<<"    remain = " << remain );
@@ -649,7 +649,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
 	    if(remain<=4){
 	      m_toogleFlagRlc=false;//sht add for rlc2 source use
 	      remain=0;
-	      NS_LOG_DEBUG ("---enough for RLC2 gives to rlc1 but too small to give"<<"    remain = " << remain );
+	      NS_LOG_DEBUG ("---enough for RLC2 gives to rlc1 but too small(4) to give"<<"    remain = " << remain );
 	    }else{
 	      m_toogleFlagRlc=true;//sht add for rlc2 source use
 	      NS_LOG_DEBUG ("---rlc2 finish "<<"    remain = " << remain );
@@ -682,12 +682,24 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
           NS_LOG_LOGIC ("        Next segment size = " << nextSegmentSize);
           if(flag==0){
 	    remain=nextSegmentSize;
-	    m_toogleFlagRlc=true;//sht add for rlc2 source use
-	    NS_LOG_DEBUG ("---source remain ,rlc1buffer have data but gives to rlc2"<<"    remain = " << remain );
+	    if(remain<=4){
+	      m_toogleFlagRlc=false;//sht add for rlc2 source use
+	      remain=0;
+	      NS_LOG_DEBUG ("---source remain ,rlc1buffer have data but gives to rlc2, but too small(4) to give"<<"    remain = " << remain );
+	    }else{
+	      m_toogleFlagRlc=true;//sht add for rlc2 source use
+	      NS_LOG_DEBUG ("---source remain ,rlc1buffer have data but gives to rlc2"<<"    remain = " << remain );
+	    }
           }else{
-	    remain=nextSegmentSize;
-	    m_toogleFlagRlc=true;//sht add for rlc2 source use
-	    NS_LOG_DEBUG ("---source remain ,rlc2buffer have data but gives to rlc1"<<"    remain = " << remain );
+  	    remain=nextSegmentSize;
+	    if(remain<=4){
+	      m_toogleFlagRlc=false;//sht add for rlc2 source use
+	      remain=0;
+	      NS_LOG_DEBUG ("---source remain ,rlc2buffer have data but gives to rlc1, but too small(4) to give"<<"    remain = " << remain );
+	    }else{
+	      m_toogleFlagRlc=true;//sht add for rlc2 source use
+	      NS_LOG_DEBUG ("---source remain ,rlc2buffer have data but gives to rlc1"<<"    remain = " << remain );
+	    }
           }
 	  break;
 //          NS_LOG_LOGIC ("    IF firstSegment < NextSegmentSize && txBuffer.size > 0");//have source not use
@@ -818,7 +830,7 @@ LteRlcUm::DoNotifyHarqDeliveryFailure ()
 void
 LteRlcUm::DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams)
 {
-  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << rxPduParams.p->GetSize ()<<rxPduParams.lcid);
+  NS_LOG_DEBUG (this << m_rnti << (uint32_t) m_lcid << rxPduParams.p->GetSize ()<<rxPduParams.lcid);
   if(rxPduParams.lcid>=99){
     rxPduParams.lcid=rxPduParams.lcid-99;
   }

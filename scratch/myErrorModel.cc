@@ -81,7 +81,7 @@ static Ptr<ListPositionAllocator>
 GetGnbPositions (double gNbHeight = 10.0)
 {
   Ptr<ListPositionAllocator> pos = CreateObject<ListPositionAllocator> ();
-  pos->Add (Vector (78,30, gNbHeight));
+  pos->Add (Vector (85,30, gNbHeight));
 
   return pos;
 }
@@ -123,9 +123,10 @@ main (int argc, char *argv[])
   double simTime = 10.0; // 50 seconds: to take statistics
   uint32_t pktSize = 1400;
   Time udpAppStartTime = MilliSeconds (1000);
-  Time packetInterval = MicroSeconds (100000);
+  Time packetInterval = MicroSeconds (100);
 //  Time packetInterval = MilliSeconds (1);
-  Time updateChannelInterval = MilliSeconds (150);
+//  Time updateChannelInterval = MilliSeconds (150);
+  Time updateChannelInterval = MicroSeconds (80);
   bool isUl = false;
 //  bool ifNc=true;
   bool ifNc=false;
@@ -157,12 +158,14 @@ main (int argc, char *argv[])
   cmd.Parse (argc, argv);
 //  LogComponentEnable("NrMacSchedulerNs3", LOG_LEVEL_LOGIC);
 //  LogComponentEnable("NrGnbPhy", LOG_LEVEL_LOGIC);
-  LogComponentEnable("UdpClient", LOG_LEVEL_LOGIC);
+//  LogComponentEnable("UdpClient", LOG_LEVEL_LOGIC);
   LogComponentEnable("NrUeMac", LOG_LEVEL_DEBUG);
   LogComponentEnable("BwpManagerGnb", LOG_LEVEL_DEBUG);
-  LogComponentEnable("LteRlcUm", LOG_LEVEL_FUNCTION);
+  LogComponentEnable("LteRlcUm", LOG_LEVEL_DEBUG);
   LogComponentEnable("LtePdcp", LOG_LEVEL_FUNCTION);
   LogComponentEnable("NcControl", LOG_LEVEL_DEBUG);
+  LogComponentEnable("NrSpectrumPhy", LOG_LEVEL_DEBUG);
+  LogComponentEnable("UdpServer", LOG_LEVEL_DEBUG);
 
 
   uint32_t packets = (simTime - udpAppStartTime.GetSeconds ()) / packetInterval.GetSeconds ();
@@ -395,7 +398,7 @@ main (int argc, char *argv[])
   // start UDP server and client apps
   sinkApps.Start (udpAppStartTime);
   txApps.Start (udpAppStartTime);
-  sinkApps.Stop (Seconds (simTime));
+  sinkApps.Stop (Seconds (simTime+0.5));
   txApps.Stop (Seconds (simTime));
 
   // attach UEs to the closest eNB
@@ -404,7 +407,7 @@ main (int argc, char *argv[])
   // enable the traces provided by the nr module
   //nrHelper->EnableTraces();
 
-  Simulator::Stop (Seconds (simTime));
+  Simulator::Stop (Seconds (simTime+0.5));
 
   auto start = std::chrono::steady_clock::now ();
 
