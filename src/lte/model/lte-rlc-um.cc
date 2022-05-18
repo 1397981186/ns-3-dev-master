@@ -441,7 +441,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
 uint32_t
 LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams,uint32_t flag)
 {
-  NS_LOG_DEBUG (this << m_rnti << (uint32_t) m_lcid << txOpParams.bytes);
+  NS_LOG_DEBUG ("--RLC DoNotifyTxOpportunity "<<this <<" m_rnti "<<m_rnti<<" m_lcid " << (unsigned int) m_lcid <<" txOpParams.bytes "<< txOpParams.bytes<<" m_txBuffer size "<<m_txBuffer.size ());
   uint32_t remain=0;
   m_toogleFlagRlc=false;
   m_noDataFlagRlc=false;
@@ -652,7 +652,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
 	      NS_LOG_DEBUG ("---enough for RLC2 gives to rlc1 but too small(4) to give"<<"    remain = " << remain );
 	    }else{
 	      m_toogleFlagRlc=true;//sht add for rlc2 source use
-	      NS_LOG_DEBUG ("---rlc2 finish "<<"    remain = " << remain );
+	      NS_LOG_DEBUG ("---enough for RLC2 gives to rlc1 "<<"    remain = " << remain );
 	    }
           }
         }
@@ -830,7 +830,7 @@ LteRlcUm::DoNotifyHarqDeliveryFailure ()
 void
 LteRlcUm::DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams)
 {
-  NS_LOG_DEBUG (this << m_rnti << (uint32_t) m_lcid << rxPduParams.p->GetSize ()<<rxPduParams.lcid);
+  NS_LOG_DEBUG ("RLC DoReceivePdu "<<this << " m_rnti "<<m_rnti << " m_lcid "<<(uint32_t) m_lcid <<" rxPduParams.p->GetSize () " <<rxPduParams.p->GetSize ()<<" rxPduParams.lcid "<<rxPduParams.lcid);
   if(rxPduParams.lcid>=99){
     rxPduParams.lcid=rxPduParams.lcid-99;
   }

@@ -81,7 +81,7 @@ static Ptr<ListPositionAllocator>
 GetGnbPositions (double gNbHeight = 10.0)
 {
   Ptr<ListPositionAllocator> pos = CreateObject<ListPositionAllocator> ();
-  pos->Add (Vector (85,30, gNbHeight));
+  pos->Add (Vector (40,30, gNbHeight));
 
   return pos;
 }
@@ -120,13 +120,14 @@ main (int argc, char *argv[])
   double bandwidthBand = 100e6;
   double ueY = 30.0;
 
-  double simTime = 10.0; // 50 seconds: to take statistics
-  uint32_t pktSize = 1400;
+  double simTime = 2.0; // 50 seconds: to take statistics
+//  double simTime = 10.0; // 50 seconds: to take statistics
+  uint32_t pktSize = 1024;
   Time udpAppStartTime = MilliSeconds (1000);
-  Time packetInterval = MicroSeconds (100);
+  Time packetInterval = MicroSeconds (10);
 //  Time packetInterval = MilliSeconds (1);
 //  Time updateChannelInterval = MilliSeconds (150);
-  Time updateChannelInterval = MicroSeconds (80);
+  Time updateChannelInterval = MicroSeconds (8);
   bool isUl = false;
 //  bool ifNc=true;
   bool ifNc=false;
@@ -177,6 +178,8 @@ main (int argc, char *argv[])
    */
   Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize",
                       UintegerValue (999999999));
+//  Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize",
+//                      UintegerValue (1024*1024));
 
   Config::SetDefault ("ns3::NrAmc::ErrorModelType", TypeIdValue (TypeId::LookupByName (errorModel)));
   Config::SetDefault ("ns3::NrAmc::AmcModel", EnumValue (NrAmc::ShannonModel));  // NOT USED in this example. MCS is fixed.
