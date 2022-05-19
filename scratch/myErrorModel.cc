@@ -81,7 +81,7 @@ static Ptr<ListPositionAllocator>
 GetGnbPositions (double gNbHeight = 10.0)
 {
   Ptr<ListPositionAllocator> pos = CreateObject<ListPositionAllocator> ();
-  pos->Add (Vector (40,30, gNbHeight));
+  pos->Add (Vector (20,30, gNbHeight));
 
   return pos;
 }
@@ -120,18 +120,28 @@ main (int argc, char *argv[])
   double bandwidthBand = 100e6;
   double ueY = 30.0;
 
-  double simTime = 2.0; // 50 seconds: to take statistics
-//  double simTime = 10.0; // 50 seconds: to take statistics
+//  double simTime = 2.0; // 50 seconds: to take statistics
+  double simTime = 10.0; // 50 seconds: to take statistics
   uint32_t pktSize = 1024;
   Time udpAppStartTime = MilliSeconds (1000);
-  Time packetInterval = MicroSeconds (10);
-//  Time packetInterval = MilliSeconds (1);
-//  Time updateChannelInterval = MilliSeconds (150);
-  Time updateChannelInterval = MicroSeconds (8);
+  uint32_t pktInterval=40;
+  uint32_t updateChannelIntervalMicro=pktInterval*0.8;
+  Time packetInterval = MicroSeconds (pktInterval);
+  Time updateChannelInterval = MicroSeconds (updateChannelIntervalMicro);
+
+  double byteSpeed = pktSize*(1000000/pktInterval);
+  std::cout<<"Speed = "<<8*byteSpeed/1024/1024<<" Mbps"<<std::endl;
+  std::cout<<"pktInterval = "<<pktInterval<<" MicroSeconds"<<" updateChannelIntervalMicro "<<updateChannelIntervalMicro<<" MicroSeconds "<<std::endl;
+
   bool isUl = false;
+
 //  bool ifNc=true;
   bool ifNc=false;
   bool ifCopy=false;
+
+//  uint32_t packets = (simTime - udpAppStartTime.GetSeconds ()) / packetInterval.GetSeconds ();
+  uint32_t packets = 50000;
+  NS_ABORT_IF (packets == 0);
 
   std::string errorModel = "ns3::NrEesmIrT2";
 
@@ -169,17 +179,14 @@ main (int argc, char *argv[])
   LogComponentEnable("UdpServer", LOG_LEVEL_DEBUG);
 
 
-  uint32_t packets = (simTime - udpAppStartTime.GetSeconds ()) / packetInterval.GetSeconds ();
-  NS_ABORT_IF (packets == 0);
-
   /*
    * Default values for the simulation. We are progressively removing all
    * the instances of SetDefault, but we need it for legacy code (LTE)
    */
-  Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize",
-                      UintegerValue (999999999));
 //  Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize",
-//                      UintegerValue (1024*1024));
+//                      UintegerValue (999999999));
+  Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize",
+                      UintegerValue (1024*1024));
 
   Config::SetDefault ("ns3::NrAmc::ErrorModelType", TypeIdValue (TypeId::LookupByName (errorModel)));
   Config::SetDefault ("ns3::NrAmc::AmcModel", EnumValue (NrAmc::ShannonModel));  // NOT USED in this example. MCS is fixed.
