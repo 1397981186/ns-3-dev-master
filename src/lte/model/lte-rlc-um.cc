@@ -99,7 +99,14 @@ LteRlcUm::DoTransmitPdcpPdu (Ptr<Packet> p)
       p->AddPacketTag (tag);
 
       NS_LOG_LOGIC ("Tx Buffer: New packet added");
-      m_txBuffer.push_back (TxPdu (p, Simulator::Now ()));
+      if(m_NcArqAddTop==1){
+	auto it =m_txBuffer.begin();
+	it++;
+	m_txBuffer.insert(it,TxPdu (p, Simulator::Now ()));
+	NS_LOG_DEBUG("ADD to queue head");
+      }else{
+	m_txBuffer.push_back (TxPdu (p, Simulator::Now ()));
+      }
       m_txBufferSize += p->GetSize ();
       NS_LOG_LOGIC ("NumOfBuffers = " << m_txBuffer.size() );
       NS_LOG_LOGIC ("txBufferSize = " << m_txBufferSize);
@@ -161,6 +168,7 @@ void
 LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams)
 {
   NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << txOpParams.bytes);
+  NS_LOG_DEBUG ("---UeRLC DoNotifyTxOpportunity "<<this <<" txOpParams.bytes "<< txOpParams.bytes<<" m_txBuffer size "<<m_txBuffer.size ());
 
   if (txOpParams.bytes <= 2)
     {

@@ -236,6 +236,7 @@ LtePdcp::DoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters params
   txParams.rnti = m_rnti;
   txParams.lcid = m_lcid;
   txParams.pdcpPdu = p;
+  txParams.NcArqAddTop=params.NcArqAddTop;
 
   m_rlcSapProvider->TransmitPdcpPdu (txParams);
 
@@ -272,6 +273,7 @@ LtePdcp::DoTransmitPdcpSdu2 (LtePdcpSapProvider::TransmitPdcpSduParameters param
   txParams.rnti = m_rnti;
   txParams.lcid = m_lcid;
   txParams.pdcpPdu = p;
+  txParams.NcArqAddTop=params.NcArqAddTop;
 
   m_rlcSapProvider2->TransmitPdcpPdu2 (txParams);
 }
@@ -362,6 +364,8 @@ LtePdcp::TriggerRecvPdcpSdu(Ptr<Packet> p){
 	paramsArq.lcid=m_lcid;
 	paramsArq.rnti=m_rnti;
 	paramsArq.pdcpSdu=* it;
+	paramsArq.NcArqAddTop=1;
+	NS_LOG_DEBUG("---set NcArqAddTop = = 1");
 	DoTransmitPdcpSdu(paramsArq);
       }
     }else{
@@ -412,6 +416,11 @@ void
 LtePdcp::DoReceivePdu (Ptr<Packet> p)
 {
   NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << p->GetSize ());
+  if(p->GetSize ()!=542&&p->GetSize ()!=563){
+      NS_LOG_DEBUG("not 542/563, drop");
+
+  }else{
+
 
   // Receiver timestamp
   PdcpTag pdcpTag;
@@ -431,6 +440,7 @@ LtePdcp::DoReceivePdu (Ptr<Packet> p)
     }
 
   TriggerRecvPdcpSdu(p);
+  }
 }
 
 

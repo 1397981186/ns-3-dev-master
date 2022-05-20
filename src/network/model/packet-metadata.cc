@@ -699,6 +699,7 @@ PacketMetadata::RemoveHeader (const Header &header, uint32_t size)
       if (m_enableChecking)
         {
           NS_FATAL_ERROR ("Removing unexpected header.");
+//          NS_LOG_DEBUG("Removing unexpected header.");
         }
       return;
     }
@@ -709,6 +710,7 @@ PacketMetadata::RemoveHeader (const Header &header, uint32_t size)
       if (m_enableChecking)
         {
           NS_FATAL_ERROR ("Removing incomplete header.");
+//          NS_LOG_DEBUG("Removing incomplete header.");
         }
       return;
     }

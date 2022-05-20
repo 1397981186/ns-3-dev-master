@@ -81,7 +81,7 @@ static Ptr<ListPositionAllocator>
 GetGnbPositions (double gNbHeight = 10.0)
 {
   Ptr<ListPositionAllocator> pos = CreateObject<ListPositionAllocator> ();
-  pos->Add (Vector (20,30, gNbHeight));
+  pos->Add (Vector (105,30, gNbHeight));
 
   return pos;
 }
@@ -111,7 +111,7 @@ PrintRxPkt (std::string context, Ptr<const Packet> pkt)
 int
 main (int argc, char *argv[])
 {
-  uint32_t mcs = 13;
+  uint32_t mcs = 15;
   const uint8_t gNbNum = 1;
   const uint8_t ueNum = 1;
   double totalTxPower = 4;
@@ -121,10 +121,10 @@ main (int argc, char *argv[])
   double ueY = 30.0;
 
 //  double simTime = 2.0; // 50 seconds: to take statistics
-  double simTime = 10.0; // 50 seconds: to take statistics
-  uint32_t pktSize = 1024;
+  double simTime = 6.0; // 50 seconds: to take statistics
+  uint32_t pktSize = 512;
   Time udpAppStartTime = MilliSeconds (1000);
-  uint32_t pktInterval=40;
+  uint32_t pktInterval=10;
   uint32_t updateChannelIntervalMicro=pktInterval*0.8;
   Time packetInterval = MicroSeconds (pktInterval);
   Time updateChannelInterval = MicroSeconds (updateChannelIntervalMicro);
@@ -135,12 +135,12 @@ main (int argc, char *argv[])
 
   bool isUl = false;
 
-//  bool ifNc=true;
-  bool ifNc=false;
+  bool ifNc=true;
+//  bool ifNc=false;
   bool ifCopy=false;
 
 //  uint32_t packets = (simTime - udpAppStartTime.GetSeconds ()) / packetInterval.GetSeconds ();
-  uint32_t packets = 50000;
+  uint32_t packets = 40000;
   NS_ABORT_IF (packets == 0);
 
   std::string errorModel = "ns3::NrEesmIrT2";
@@ -177,6 +177,7 @@ main (int argc, char *argv[])
   LogComponentEnable("NcControl", LOG_LEVEL_DEBUG);
   LogComponentEnable("NrSpectrumPhy", LOG_LEVEL_DEBUG);
   LogComponentEnable("UdpServer", LOG_LEVEL_DEBUG);
+  LogComponentEnable("PacketMetadata", LOG_LEVEL_DEBUG);
 
 
   /*

@@ -45,6 +45,7 @@ public:
     Ptr<Packet> pdcpSdu;  /**< the RRC PDU */
     uint16_t    rnti; /**< the C-RNTI identifying the UE */
     uint8_t     lcid; /**< the logical channel id corresponding to the sending RLC instance */
+    uint8_t     NcArqAddTop=0;
   };
 
   /**

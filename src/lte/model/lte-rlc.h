@@ -56,6 +56,7 @@ class LteRlc : public Object // SimpleRefCount<LteRlc>
 public:
   bool m_toogleFlagRlc=false;//sht add for rlc2 source use
   bool m_noDataFlagRlc=false;//sht add for rlc2 source use
+  uint8_t m_NcArqAddTop=0;
   LteRlc ();
   virtual ~LteRlc ();
   /**
