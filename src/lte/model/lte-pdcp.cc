@@ -366,7 +366,8 @@ LtePdcp::TriggerRecvPdcpSdu(Ptr<Packet> p){
 	paramsArq.pdcpSdu=* it;
 	paramsArq.NcArqAddTop=1;
 	NS_LOG_DEBUG("---set NcArqAddTop = = 1");
-	DoTransmitPdcpSdu(paramsArq);
+	ToogleSend(paramsArq);
+//	DoTransmitPdcpSdu(paramsArq);
       }
     }else{
       if(m_Nc->IfTransmitSdu()){
@@ -389,6 +390,7 @@ LtePdcp::TriggerRecvPdcpSdu(Ptr<Packet> p){
 	  }
 
       }
+      m_Nc->stopArqTimer();
       if(m_Nc->IfNcSendArq()){
 	  std::vector <Ptr<Packet>> ArqPackets;
 	  ArqPackets=m_Nc->NcSendArqReq();
@@ -397,6 +399,7 @@ LtePdcp::TriggerRecvPdcpSdu(Ptr<Packet> p){
 	    paramsArq.lcid=m_lcid;
 	    paramsArq.rnti=m_rnti;
 	    paramsArq.pdcpSdu=* it;
+	    paramsArq.NcArqAddTop=0;
 	    DoTransmitPdcpSdu (paramsArq);
 
 	  }
@@ -416,32 +419,37 @@ void
 LtePdcp::DoReceivePdu (Ptr<Packet> p)
 {
   NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << p->GetSize ());
-  if(p->GetSize ()!=542&&p->GetSize ()!=563){
-      NS_LOG_DEBUG("not 542/563, drop");
+  if(p->GetSize ()!=542&&p->GetSize ()!=563&&p->GetSize ()!=125){
+      NS_LOG_DEBUG("not 542/563/125, drop");
 
   }else{
+    // Receiver timestamp
+    PdcpTag pdcpTag;
+    Time delay;
+    p->FindFirstMatchingByteTag (pdcpTag);
+    delay = Simulator::Now() - pdcpTag.GetSenderTimestamp ();
+    m_rxPdu(m_rnti, m_lcid, p->GetSize (), delay.GetNanoSeconds ());
 
+    uint32_t size;
+    LtePdcpHeader pdcpHeader;
+    size=p->RemoveHeader (pdcpHeader);//sht add ,but dont know this happen
+    if(size!=0){
 
-  // Receiver timestamp
-  PdcpTag pdcpTag;
-  Time delay;
-  p->FindFirstMatchingByteTag (pdcpTag);
-  delay = Simulator::Now() - pdcpTag.GetSenderTimestamp ();
-  m_rxPdu(m_rnti, m_lcid, p->GetSize (), delay.GetNanoSeconds ());
+      NS_LOG_LOGIC ("PDCP header: " << pdcpHeader);
 
-  LtePdcpHeader pdcpHeader;
-  p->RemoveHeader (pdcpHeader);
-  NS_LOG_LOGIC ("PDCP header: " << pdcpHeader);
+      m_rxSequenceNumber = pdcpHeader.GetSequenceNumber () + 1;
+      if (m_rxSequenceNumber > m_maxPdcpSn)
+	{
+	  m_rxSequenceNumber = 0;
+	}
 
-  m_rxSequenceNumber = pdcpHeader.GetSequenceNumber () + 1;
-  if (m_rxSequenceNumber > m_maxPdcpSn)
-    {
-      m_rxSequenceNumber = 0;
+      TriggerRecvPdcpSdu(p);
+    }else{
+	NS_LOG_DEBUG("size0, drop");
+      }
     }
-
-  TriggerRecvPdcpSdu(p);
-  }
 }
+
 
 
 void

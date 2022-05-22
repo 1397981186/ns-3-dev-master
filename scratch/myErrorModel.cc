@@ -114,7 +114,8 @@ main (int argc, char *argv[])
   uint32_t mcs = 15;
   const uint8_t gNbNum = 1;
   const uint8_t ueNum = 1;
-  double totalTxPower = 4;
+  double totalGnbTxPower = 4;
+  double totalUeTxPower = 8;
   uint16_t numerologyBwp = 4;
   double centralFrequencyBand = 28e9;
   double bandwidthBand = 100e6;
@@ -124,7 +125,7 @@ main (int argc, char *argv[])
   double simTime = 6.0; // 50 seconds: to take statistics
   uint32_t pktSize = 512;
   Time udpAppStartTime = MilliSeconds (1000);
-  uint32_t pktInterval=10;
+  uint32_t pktInterval=15;
   uint32_t updateChannelIntervalMicro=pktInterval*0.8;
   Time packetInterval = MicroSeconds (pktInterval);
   Time updateChannelInterval = MicroSeconds (updateChannelIntervalMicro);
@@ -291,7 +292,7 @@ main (int argc, char *argv[])
   nrHelper->SetGnbDlAmcAttribute ("AmcModel", EnumValue (NrAmc::ShannonModel));
   nrHelper->SetGnbUlAmcAttribute ("AmcModel", EnumValue (NrAmc::ShannonModel));
 
-  nrHelper->SetUePhyAttribute ("TxPower", DoubleValue (totalTxPower));
+  nrHelper->SetUePhyAttribute ("TxPower", DoubleValue (totalUeTxPower));
 
   uint32_t bwpId = 0;
 
@@ -316,7 +317,7 @@ main (int argc, char *argv[])
   // Get the first netdevice (enbNetDev.Get (0)) and the first bandwidth part (0)
   // and set the attribute.
   nrHelper->GetGnbPhy (gnbNetDev.Get (0), 0)->SetAttribute ("Numerology", UintegerValue (numerologyBwp));
-  nrHelper->GetGnbPhy (gnbNetDev.Get (0), 0)->SetAttribute ("TxPower", DoubleValue (totalTxPower));
+  nrHelper->GetGnbPhy (gnbNetDev.Get (0), 0)->SetAttribute ("TxPower", DoubleValue (totalGnbTxPower));
 
   // When all the configuration is done, explicitly call UpdateConfig ()
 

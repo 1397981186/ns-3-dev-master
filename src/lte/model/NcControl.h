@@ -50,6 +50,7 @@ public:
   uint8_t m_encodingBlockSize;
   std::map<uint64_t,NcEncodingBuffer> m_ncEncodingBufferList;
   uint64_t m_groupnum = 0;
+  uint64_t m_MaxRecvGroupnum = 0;
   std::vector < ncPara > m_ncVector; //ncBuffer
 
 //recv use
@@ -91,9 +92,11 @@ public:
   std::vector <Ptr<Packet>> NcDecode();
   bool IfNcSendArq();
   uint8_t CalulateDecodingRank(uint64_t groupnum);
-  Ptr<Packet> MakeStatusReport(uint64_t groupnum);
+  void MakeStatusReport(uint64_t groupnum, std::vector<Ptr<Packet> > &ArqPackets);
+//  Ptr<Packet> MakeSendPackets(uint64_t groupnum);
+
   std::vector <Ptr<Packet>> NcSendArqReq();
-  void ExpireStatusReportTimer( uint64_t groupnum);
+  void ExpireStatusReportTimer( uint64_t groupnum,std::vector<Ptr<Packet> > &ArqPackets);
   bool m_IfTransmitSduFlag=false;
   uint64_t m_rxOriginalPacketNum = 0;
   uint64_t m_packetStatistic[5] = {0,0,0,0,0};
@@ -104,10 +107,13 @@ public:
   bool m_IfRecvArq;
   uint64_t m_ncVrMs;   //尚未完整接受的最小组号
   uint64_t m_failedGroupNum = 0;
-  Time m_statusReportTimerValue = MilliSeconds(40.0);
+//  Time m_statusReportTimerValue = MilliSeconds(40.0);
+  Time m_statusReportTimerValue = MicroSeconds(50000.0);
   bool IfRecvArq();
 //  uint64_t m_Arqgroupnum = 0;
   std::vector <Ptr<Packet>> MakeNcArqSendPacket(Ptr<Packet> p);
+
+  void stopArqTimer();
 
 
 

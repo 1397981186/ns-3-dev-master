@@ -7,7 +7,7 @@ NS_OBJECT_ENSURE_REGISTERED (NcControl);
 
 NcControl::NcControl():
   m_originalBlockSize (10),
-  m_encodingBlockSize (12),
+  m_encodingBlockSize (11),
   m_ncVrMs(0){
   NS_LOG_LOGIC (this);
 }
@@ -158,6 +158,7 @@ NcControl::RecvAndSave (Ptr<Packet> p)
     para.m_coff.push_back(static_cast<double>((ncCoeff>>k) & 1));
   }
   m_groupnum=ncheader.GetGroupnum();
+  m_MaxRecvGroupnum=std::max(m_MaxRecvGroupnum,m_groupnum);
   auto it1=m_ncDecodingBufferList.find(m_groupnum);
   NS_LOG_DEBUG ("---recv group num---  "<<ncheader.GetGroupnum());
   if(it1==m_ncDecodingBufferList.end())
@@ -324,23 +325,46 @@ NcControl::IfNcSendArq ()
   return m_IfSendArq;
 }
 
-Ptr<Packet>
-NcControl::MakeStatusReport (uint64_t groupnum)
+void
+NcControl::MakeStatusReport (uint64_t groupnum,std::vector<Ptr<Packet> > &ArqPackets)
 {
   auto it=m_ncDecodingBufferList.find(groupnum);
-  Ptr<Packet> StatusReport = Create<Packet> (101);
+  Ptr<Packet> StatusReport = Create<Packet> (102);
   NcHeader Statusncheader;
   Statusncheader.SetGroupnum(groupnum);
   Statusncheader.SetDorC(1);
   Statusncheader.SetRank(it->second.m_rank);
-  StatusReport->AddHeader(Statusncheader)	;
+  StatusReport->AddHeader(Statusncheader);
+  ArqPackets.push_back(StatusReport);
   it->second.num_statusReport ++;
+
   it->second.m_statusReportTimer = Simulator::Schedule (m_statusReportTimerValue,
-								  &NcControl::ExpireStatusReportTimer, this, groupnum);
-  return StatusReport;
+								  &NcControl::ExpireStatusReportTimer, this, groupnum,ArqPackets);
+//  return StatusReport;
 }
 
 
+//void
+//NcControl::MakeStatusReport (uint64_t groupnum)
+//{
+//  auto it=m_ncDecodingBufferList.find(groupnum);
+//  it->second.m_statusReportTimer = Simulator::Schedule (m_statusReportTimerValue,
+//								  &NcControl::ExpireStatusReportTimer, this, groupnum);
+//}
+//
+//Ptr<Packet>
+//NcControl::MakeSendPackets (uint64_t groupnum)
+//{
+//    auto it=m_ncDecodingBufferList.find(groupnum);
+//    Ptr<Packet> StatusReport = Create<Packet> (101);
+//    NcHeader Statusncheader;
+//    Statusncheader.SetGroupnum(groupnum);
+//    Statusncheader.SetDorC(1);
+//    Statusncheader.SetRank(it->second.m_rank);
+//    StatusReport->AddHeader(Statusncheader)	;
+//    it->second.num_statusReport ++;
+//    return StatusReport;
+//}
 
 std::vector<Ptr<Packet> >
 NcControl::NcSendArqReq ()
@@ -348,8 +372,11 @@ NcControl::NcSendArqReq ()
   NS_LOG_DEBUG ("---send ArqReq");
   //对m_ncVrMs<=i<=ncheader.GetGroupnum()中的每个组号i依次进行处理
   std::vector<Ptr<Packet> > ArqPackets;
-  for (uint64_t i=m_ncVrMs; i<=m_groupnum; i++)
+  uint8_t cnt=0;
+//  for (uint64_t i=m_ncVrMs; i<=m_groupnum; i++)
+  for (uint64_t i=m_ncVrMs; i<=m_MaxRecvGroupnum; i++)
   {
+    NS_LOG_DEBUG ("---it at i "<< i);
     //将it3指向第i组的解码buffer
     auto it3=m_ncDecodingBufferList.find(i);
     if (it3==m_ncDecodingBufferList.end())
@@ -358,13 +385,16 @@ NcControl::NcSendArqReq ()
       m_ncDecodingBufferList.insert({i,newBuffer});
       it3 = m_ncDecodingBufferList.find(i);
     }
-//    if (!it3->second.m_ncComplete && !it3->second.m_statusReportTimer.IsRunning())
     if (!it3->second.m_ncComplete && !it3->second.m_statusReportTimer.IsRunning())
+//    if (!it3->second.m_ncComplete )
     {
       if (it3->second.num_statusReport<3)
       {
 	CalulateDecodingRank(i);
-	ArqPackets.push_back(MakeStatusReport(i));
+//	ArqPackets.push_back(MakeSendPackets(i));
+	MakeStatusReport(i,ArqPackets);
+	cnt++;
+	NS_LOG_DEBUG ("---add arq req at i "<< i);
 	/*
 	if (m_cellId==1)
 	{
@@ -394,26 +424,27 @@ NcControl::NcSendArqReq ()
 	NS_LOG_DEBUG ("num_statusReport is bigger than 3");
       }
     }
+    if(cnt==3){break;}
   }
   // 将m_ncVrMs置为ncCompelte=1的连续的最小组号+1
   auto it1 = m_ncDecodingBufferList.find(m_ncVrMs);
   while (it1!=m_ncDecodingBufferList.end() && it1->second.m_ncComplete)
   {
-    m_ncVrMs ++;
+    m_ncVrMs++;
     it1 = m_ncDecodingBufferList.find(m_ncVrMs);
   }
-  NS_LOG_DEBUG ("ArqReqPackets nums is "<<ArqPackets.size());
+  NS_LOG_DEBUG ("m_ncVrMs now is "<<m_ncVrMs<<" ArqReqPackets nums is "<<ArqPackets.size());
   return ArqPackets;
 
 }
 
 void
-NcControl::ExpireStatusReportTimer (uint64_t groupnum)
+NcControl::ExpireStatusReportTimer (uint64_t groupnum,std::vector<Ptr<Packet> > &ArqPackets)
 {
   auto it = m_ncDecodingBufferList.find(groupnum);
   if (it->second.num_statusReport<3)
   {
-      MakeStatusReport(groupnum);
+      MakeStatusReport(groupnum,ArqPackets);
   }
 }
 
@@ -429,6 +460,7 @@ NcControl::MakeNcArqSendPacket (Ptr<Packet> p)
   NS_LOG_DEBUG ("made arq packets to send ");
   NcHeader ncheader;
   p->RemoveHeader(ncheader);
+  NS_LOG_DEBUG (" arq group num is "<<ncheader.GetGroupnum()<<" arq rank is "<<unsigned(ncheader.GetRank()));
 
   std::vector<Ptr<Packet> > arqPackets;
   auto it = m_ncEncodingBufferList.find(ncheader.GetGroupnum());
@@ -467,6 +499,17 @@ NcControl::MakeNcArqSendPacket (Ptr<Packet> p)
   }
   NS_LOG_DEBUG ("made arq packets to send , num of packets is "<<arqPackets.size());
   return arqPackets;
+}
+
+
+void
+NcControl::stopArqTimer ()
+{
+  auto it1=m_ncDecodingBufferList.find(m_groupnum);
+  if (it1->second.m_statusReportTimer.IsRunning())
+  {
+	  it1->second.m_statusReportTimer.Cancel();
+  }
 }
 
 };

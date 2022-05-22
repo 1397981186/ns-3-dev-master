@@ -101,7 +101,7 @@ LteRlcUm::DoTransmitPdcpPdu (Ptr<Packet> p)
       NS_LOG_LOGIC ("Tx Buffer: New packet added");
       if(m_NcArqAddTop==1){
 	auto it =m_txBuffer.begin();
-	it++;
+	if(m_txBufferSize!=0){it++;}
 	m_txBuffer.insert(it,TxPdu (p, Simulator::Now ()));
 	NS_LOG_DEBUG("ADD to queue head");
       }else{
@@ -139,7 +139,14 @@ LteRlcUm::DoTransmitPdcpPdu2 (Ptr<Packet> p)
       p->AddPacketTag (tag);
 
       NS_LOG_LOGIC ("Tx Buffer: New packet added");
-      m_txBuffer.push_back (TxPdu (p, Simulator::Now ()));
+      if(m_NcArqAddTop==1){
+	auto it =m_txBuffer.begin();
+	if(m_txBufferSize!=0){it++;}
+	m_txBuffer.insert(it,TxPdu (p, Simulator::Now ()));
+	NS_LOG_DEBUG("ADD to queue head");
+      }else{
+	m_txBuffer.push_back (TxPdu (p, Simulator::Now ()));
+      }
       m_txBufferSize += p->GetSize ();
       NS_LOG_LOGIC ("NumOfBuffers = " << m_txBuffer.size() );
       NS_LOG_LOGIC ("txBufferSize = " << m_txBufferSize);

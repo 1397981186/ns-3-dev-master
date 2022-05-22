@@ -164,6 +164,7 @@ protected:
   LtePdcpSapProvider* m_pdcpSapProvider; ///< PDCP SAP provider
 
   NcControl* m_Nc;
+  bool m_IfUe=false;
   /**
    * Interface provided to lower RLC entity
    *
