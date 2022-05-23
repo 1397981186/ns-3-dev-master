@@ -310,6 +310,7 @@ LtePdcp::TriggerDoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters
 	//start Nc
       m_Nc->HelloWorld();
       params.pdcpSdu=m_Nc->SendSaveAndSetTime(params.pdcpSdu);
+      params.NcArqAddTop=0;
       uint32_t Ncedsize=m_Nc->GetNcedSize();
 //      m_Nc
       ToogleSend(params);
@@ -323,6 +324,7 @@ LtePdcp::TriggerDoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters
 	  paramsRe.lcid=params.lcid;
 	  paramsRe.rnti=params.rnti;
 	  paramsRe.pdcpSdu=m_Nc->MakeRedundancePacket();
+	  paramsRe.NcArqAddTop=0;
 	  Ncedsize++;
 	  ToogleSend(paramsRe);
 	}

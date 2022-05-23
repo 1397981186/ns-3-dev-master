@@ -108,7 +108,10 @@ public:
   uint64_t m_ncVrMs;   //尚未完整接受的最小组号
   uint64_t m_failedGroupNum = 0;
 //  Time m_statusReportTimerValue = MilliSeconds(40.0);
-  Time m_statusReportTimerValue = MicroSeconds(50000.0);
+  Time m_statusReportTimerValue = MicroSeconds(80000.0);
+//  Time m_statusReportTimerValue1 = MicroSeconds(100000.0);
+//  Time m_statusReportTimerValue2 = MicroSeconds(200000.0);
+//  Time m_statusReportTimerValue3 = MicroSeconds(200000.0);
   bool IfRecvArq();
 //  uint64_t m_Arqgroupnum = 0;
   std::vector <Ptr<Packet>> MakeNcArqSendPacket(Ptr<Packet> p);

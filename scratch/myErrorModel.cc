@@ -125,7 +125,7 @@ main (int argc, char *argv[])
   double simTime = 6.0; // 50 seconds: to take statistics
   uint32_t pktSize = 512;
   Time udpAppStartTime = MilliSeconds (1000);
-  uint32_t pktInterval=15;
+  uint32_t pktInterval=4;
   uint32_t updateChannelIntervalMicro=pktInterval*0.8;
   Time packetInterval = MicroSeconds (pktInterval);
   Time updateChannelInterval = MicroSeconds (updateChannelIntervalMicro);
@@ -136,12 +136,12 @@ main (int argc, char *argv[])
 
   bool isUl = false;
 
-  bool ifNc=true;
-//  bool ifNc=false;
+//  bool ifNc=true;
+  bool ifNc=false;
   bool ifCopy=false;
 
 //  uint32_t packets = (simTime - udpAppStartTime.GetSeconds ()) / packetInterval.GetSeconds ();
-  uint32_t packets = 40000;
+  uint32_t packets = 50000;
   NS_ABORT_IF (packets == 0);
 
   std::string errorModel = "ns3::NrEesmIrT2";
@@ -185,10 +185,10 @@ main (int argc, char *argv[])
    * Default values for the simulation. We are progressively removing all
    * the instances of SetDefault, but we need it for legacy code (LTE)
    */
-//  Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize",
-//                      UintegerValue (999999999));
   Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize",
-                      UintegerValue (1024*1024));
+                      UintegerValue (999999999));
+//  Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize",
+//                      UintegerValue (1024*1024));
 
   Config::SetDefault ("ns3::NrAmc::ErrorModelType", TypeIdValue (TypeId::LookupByName (errorModel)));
   Config::SetDefault ("ns3::NrAmc::AmcModel", EnumValue (NrAmc::ShannonModel));  // NOT USED in this example. MCS is fixed.
@@ -432,12 +432,15 @@ main (int argc, char *argv[])
   uint32_t cont = 0;
   for (auto & v : packetsTime)
     {
-      if ( v < 100000 )
-        {
-          sum += v;
-          cont++;
-        }
+//      if ( v < 100000 )
+//        {
+//          sum += v;
+//          cont++;
+//        }
+      sum += v;
+      cont++;
     }
+
   std::cout << "Packets received: " << packetsTime.size () << std::endl;
   std::cout << "Counter (packets not affected by reordering): " << +cont << std::endl;
 

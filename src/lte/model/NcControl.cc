@@ -7,7 +7,7 @@ NS_OBJECT_ENSURE_REGISTERED (NcControl);
 
 NcControl::NcControl():
   m_originalBlockSize (10),
-  m_encodingBlockSize (11),
+  m_encodingBlockSize (12),
   m_ncVrMs(0){
   NS_LOG_LOGIC (this);
 }
@@ -139,10 +139,11 @@ NcControl::RecvAndSave (Ptr<Packet> p)
   }else{
     m_IfRecvArq=false;
   }
-
+  m_groupnum=ncheader.GetGroupnum();
   if(ncheader.GetPolling()==1){
     NS_LOG_DEBUG ("---recv polling packet");
     m_IfSendArq=true;
+    m_MaxRecvGroupnum=std::max(m_MaxRecvGroupnum,m_groupnum);
   }else{
     m_IfSendArq=false;
   }
@@ -157,8 +158,8 @@ NcControl::RecvAndSave (Ptr<Packet> p)
   {
     para.m_coff.push_back(static_cast<double>((ncCoeff>>k) & 1));
   }
-  m_groupnum=ncheader.GetGroupnum();
-  m_MaxRecvGroupnum=std::max(m_MaxRecvGroupnum,m_groupnum);
+
+
   auto it1=m_ncDecodingBufferList.find(m_groupnum);
   NS_LOG_DEBUG ("---recv group num---  "<<ncheader.GetGroupnum());
   if(it1==m_ncDecodingBufferList.end())
@@ -339,7 +340,8 @@ NcControl::MakeStatusReport (uint64_t groupnum,std::vector<Ptr<Packet> > &ArqPac
   it->second.num_statusReport ++;
 
   it->second.m_statusReportTimer = Simulator::Schedule (m_statusReportTimerValue,
-								  &NcControl::ExpireStatusReportTimer, this, groupnum,ArqPackets);
+								    &NcControl::ExpireStatusReportTimer, this, groupnum,ArqPackets);
+
 //  return StatusReport;
 }
 
@@ -374,9 +376,10 @@ NcControl::NcSendArqReq ()
   std::vector<Ptr<Packet> > ArqPackets;
   uint8_t cnt=0;
 //  for (uint64_t i=m_ncVrMs; i<=m_groupnum; i++)
+  NS_LOG_DEBUG ("---it at i "<< m_ncVrMs);
   for (uint64_t i=m_ncVrMs; i<=m_MaxRecvGroupnum; i++)
   {
-    NS_LOG_DEBUG ("---it at i "<< i);
+
     //将it3指向第i组的解码buffer
     auto it3=m_ncDecodingBufferList.find(i);
     if (it3==m_ncDecodingBufferList.end())
@@ -388,6 +391,7 @@ NcControl::NcSendArqReq ()
     if (!it3->second.m_ncComplete && !it3->second.m_statusReportTimer.IsRunning())
 //    if (!it3->second.m_ncComplete )
     {
+      NS_LOG_DEBUG ("---it at i "<< i);
       if (it3->second.num_statusReport<3)
       {
 	CalulateDecodingRank(i);
@@ -442,6 +446,7 @@ void
 NcControl::ExpireStatusReportTimer (uint64_t groupnum,std::vector<Ptr<Packet> > &ArqPackets)
 {
   auto it = m_ncDecodingBufferList.find(groupnum);
+
   if (it->second.num_statusReport<3)
   {
       MakeStatusReport(groupnum,ArqPackets);

@@ -118,15 +118,15 @@ LteRlcSpecificLteRlcSapProvider<C>::LteRlcSpecificLteRlcSapProvider ()
 template <class C>
 void LteRlcSpecificLteRlcSapProvider<C>::TransmitPdcpPdu (TransmitPdcpPduParameters params)
 {
-  m_rlc->DoTransmitPdcpPdu (params.pdcpPdu);
   m_rlc->m_NcArqAddTop=params.NcArqAddTop;
+  m_rlc->DoTransmitPdcpPdu (params.pdcpPdu);
 }
 
 template <class C>
 void LteRlcSpecificLteRlcSapProvider<C>::TransmitPdcpPdu2 (TransmitPdcpPduParameters params)
 {
-  m_rlc->DoTransmitPdcpPdu2 (params.pdcpPdu);
   m_rlc->m_NcArqAddTop=params.NcArqAddTop;
+  m_rlc->DoTransmitPdcpPdu2 (params.pdcpPdu);
 }
 
 /// LteRlcSpecificLteRlcSapUser class
