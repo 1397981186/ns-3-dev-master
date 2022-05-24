@@ -185,10 +185,10 @@ main (int argc, char *argv[])
    * Default values for the simulation. We are progressively removing all
    * the instances of SetDefault, but we need it for legacy code (LTE)
    */
-  Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize",
-                      UintegerValue (999999999));
 //  Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize",
-//                      UintegerValue (1024*1024));
+//                      UintegerValue (999999999));
+  Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize",
+                      UintegerValue (1024*256));
 
   Config::SetDefault ("ns3::NrAmc::ErrorModelType", TypeIdValue (TypeId::LookupByName (errorModel)));
   Config::SetDefault ("ns3::NrAmc::AmcModel", EnumValue (NrAmc::ShannonModel));  // NOT USED in this example. MCS is fixed.

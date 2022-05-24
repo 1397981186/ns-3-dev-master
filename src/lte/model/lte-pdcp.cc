@@ -355,7 +355,6 @@ LtePdcp::TriggerDoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters
 void
 LtePdcp::TriggerRecvPdcpSdu(Ptr<Packet> p){
   if(m_NcEnable&&p->GetSize()>100){
-
     Ptr<Packet> Sdu=Create<Packet> ();
     Sdu=m_Nc->RecvAndSave(p);
     if(m_Nc->IfRecvArq()){
@@ -407,6 +406,9 @@ LtePdcp::TriggerRecvPdcpSdu(Ptr<Packet> p){
 	  }
       }
     }
+  }else if(m_CopyEnable){
+
+
   }else{
     LtePdcpSapUser::ReceivePdcpSduParameters params;
     params.pdcpSdu = p;
