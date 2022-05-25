@@ -122,10 +122,10 @@ main (int argc, char *argv[])
   double ueY = 30.0;
 
 //  double simTime = 2.0; // 50 seconds: to take statistics
-  double simTime = 6.0; // 50 seconds: to take statistics
+  double simTime = 1.6; // 50 seconds: to take statistics
   uint32_t pktSize = 512;
   Time udpAppStartTime = MilliSeconds (1000);
-  uint32_t pktInterval=4;
+  uint32_t pktInterval=40;
   uint32_t updateChannelIntervalMicro=pktInterval*0.8;
   Time packetInterval = MicroSeconds (pktInterval);
   Time updateChannelInterval = MicroSeconds (updateChannelIntervalMicro);
@@ -138,10 +138,11 @@ main (int argc, char *argv[])
 
 //  bool ifNc=true;
   bool ifNc=false;
-  bool ifCopy=false;
+//  bool ifCopy=false;
+  bool ifCopy=true;
 
-//  uint32_t packets = (simTime - udpAppStartTime.GetSeconds ()) / packetInterval.GetSeconds ();
-  uint32_t packets = 50000;
+  uint32_t packets = (simTime - udpAppStartTime.GetSeconds ()) / packetInterval.GetSeconds ();
+//  uint32_t packets = 50000;
   NS_ABORT_IF (packets == 0);
 
   std::string errorModel = "ns3::NrEesmIrT2";
@@ -176,6 +177,7 @@ main (int argc, char *argv[])
   LogComponentEnable("LteRlcUm", LOG_LEVEL_DEBUG);
   LogComponentEnable("LtePdcp", LOG_LEVEL_FUNCTION);
   LogComponentEnable("NcControl", LOG_LEVEL_DEBUG);
+  LogComponentEnable("CopyControl", LOG_LEVEL_DEBUG);
   LogComponentEnable("NrSpectrumPhy", LOG_LEVEL_DEBUG);
   LogComponentEnable("UdpServer", LOG_LEVEL_DEBUG);
   LogComponentEnable("PacketMetadata", LOG_LEVEL_DEBUG);
@@ -408,9 +410,10 @@ main (int argc, char *argv[])
     }
 
   // start UDP server and client apps
+  // ul false,ue is sink
   sinkApps.Start (udpAppStartTime);
   txApps.Start (udpAppStartTime);
-  sinkApps.Stop (Seconds (simTime+0.5));
+  sinkApps.Stop (Seconds (simTime+0.000));
   txApps.Stop (Seconds (simTime));
 
   // attach UEs to the closest eNB
@@ -419,7 +422,7 @@ main (int argc, char *argv[])
   // enable the traces provided by the nr module
   //nrHelper->EnableTraces();
 
-  Simulator::Stop (Seconds (simTime+0.5));
+  Simulator::Stop (Seconds (simTime));
 
   auto start = std::chrono::steady_clock::now ();
 

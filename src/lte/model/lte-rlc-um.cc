@@ -89,7 +89,7 @@ LteRlcUm::DoDispose ()
 void
 LteRlcUm::DoTransmitPdcpPdu (Ptr<Packet> p)
 {
-  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << p->GetSize ());
+  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << p->GetSize ()<<" time "<<Simulator::Now ().GetNanoSeconds());
 
   if (m_txBufferSize + p->GetSize () <= m_maxTxBufferSize)
     {
@@ -129,7 +129,7 @@ LteRlcUm::DoTransmitPdcpPdu (Ptr<Packet> p)
 void
 LteRlcUm::DoTransmitPdcpPdu2 (Ptr<Packet> p)
 {
-  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << p->GetSize ());
+  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << p->GetSize ()<<" time "<<Simulator::Now ().GetNanoSeconds());
 
   if (m_txBufferSize + p->GetSize () <= m_maxTxBufferSize)
     {
@@ -456,7 +456,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
 uint32_t
 LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams,uint32_t flag)
 {
-  NS_LOG_DEBUG ("--RLC DoNotifyTxOpportunity "<<this <<" m_rnti "<<m_rnti<<" m_lcid " << (unsigned int) m_lcid <<" txOpParams.bytes "<< txOpParams.bytes<<" m_txBuffer size "<<m_txBuffer.size ());
+  NS_LOG_DEBUG ("--RLC DoNotifyTxOpportunity "<<this <<" m_rnti "<<m_rnti<<" m_lcid " << (unsigned int) m_lcid <<" txOpParams.bytes "<< txOpParams.bytes<<" m_txBuffer size "<<m_txBuffer.size ()<<" time "<<Simulator::Now ().GetNanoSeconds());
   uint32_t remain=0;
   m_toogleFlagRlc=false;
   m_noDataFlagRlc=false;
@@ -845,7 +845,7 @@ LteRlcUm::DoNotifyHarqDeliveryFailure ()
 void
 LteRlcUm::DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams)
 {
-  NS_LOG_DEBUG ("RLC DoReceivePdu "<<this << " m_rnti "<<m_rnti << " m_lcid "<<(uint32_t) m_lcid <<" rxPduParams.p->GetSize () " <<rxPduParams.p->GetSize ()<<" rxPduParams.lcid "<<rxPduParams.lcid);
+  NS_LOG_DEBUG ("RLC DoReceivePdu "<<this << " m_rnti "<<m_rnti << " m_lcid "<<(uint32_t) m_lcid <<" rxPduParams.p->GetSize () " <<rxPduParams.p->GetSize ()<<" rxPduParams.lcid "<<rxPduParams.lcid<<" time "<<Simulator::Now ().GetNanoSeconds());
   if(rxPduParams.lcid>=99){
     rxPduParams.lcid=rxPduParams.lcid-99;
   }

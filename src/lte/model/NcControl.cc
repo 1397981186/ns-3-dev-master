@@ -25,7 +25,7 @@ NcControl::SendSaveAndSetTime (Ptr<Packet> p)
  *seqTs udp ipv4 nc pdcp
  *
  */
-  NS_LOG_DEBUG ("packet  "<<p->ToString());
+//  NS_LOG_DEBUG ("packet  "<<p->ToString());
 
   //get header information
 //  LtePdcpHeader pdcpheader;

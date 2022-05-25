@@ -29,6 +29,7 @@
 #include "ns3/lte-pdcp-sap.h"
 #include "ns3/lte-rlc-sap.h"
 #include "NcControl.h"
+#include "CopyControl.h"
 #include "ns3/lte-nc-header.h"
 
 namespace ns3 {
@@ -164,6 +165,7 @@ protected:
   LtePdcpSapProvider* m_pdcpSapProvider; ///< PDCP SAP provider
 
   NcControl* m_Nc;
+  CopyControl* m_Copy;
   bool m_IfUe=false;
   /**
    * Interface provided to lower RLC entity

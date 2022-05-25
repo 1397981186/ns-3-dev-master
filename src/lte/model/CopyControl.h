@@ -90,12 +90,12 @@ public:
   bool IfTransmitSdu();
   bool IfDeocde();
   std::vector <Ptr<Packet>> NcDecode();
-  bool IfNcSendArq();
+  bool IfCopySendArq();
   uint8_t CalulateDecodingRank(uint64_t groupnum);
   void MakeStatusReport(uint64_t groupnum, std::vector<Ptr<Packet> > &ArqPackets);
 //  Ptr<Packet> MakeSendPackets(uint64_t groupnum);
 
-  std::vector <Ptr<Packet>> NcSendArqReq();
+  std::vector <Ptr<Packet>> CopySendArqReq();
   void ExpireStatusReportTimer( uint64_t groupnum,std::vector<Ptr<Packet> > &ArqPackets);
   bool m_IfTransmitSduFlag=false;
   uint64_t m_rxOriginalPacketNum = 0;
@@ -107,6 +107,7 @@ public:
   bool m_IfRecvArq;
   uint64_t m_ncVrMs;   //尚未完整接受的最小组号
   uint64_t m_failedGroupNum = 0;
+  uint32_t m_pollingInterval=10;
 //  Time m_statusReportTimerValue = MilliSeconds(40.0);
   Time m_statusReportTimerValue = MicroSeconds(80000.0);
 //  Time m_statusReportTimerValue1 = MicroSeconds(100000.0);
@@ -114,7 +115,7 @@ public:
 //  Time m_statusReportTimerValue3 = MicroSeconds(200000.0);
   bool IfRecvArq();
 //  uint64_t m_Arqgroupnum = 0;
-  std::vector <Ptr<Packet>> MakeNcArqSendPacket(Ptr<Packet> p);
+  std::vector <Ptr<Packet>> MakeCopyArqSendPacket(Ptr<Packet> p);
 
   void stopArqTimer();
 
