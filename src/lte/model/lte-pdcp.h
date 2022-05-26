@@ -91,6 +91,7 @@ public:
   void SetLteRlcSapProvider (LteRlcSapProvider * s);
   //sht
   void SetLteRlcSapProvider2 (LteRlcSapProvider * s);
+
   void NcPdcpARQ(Ptr<Packet> p);
 
   /**
@@ -161,6 +162,7 @@ protected:
   virtual void TriggerDoTransmitPdcpSdu(LtePdcpSapProvider::TransmitPdcpSduParameters params);
   void TriggerRecvPdcpSdu(Ptr<Packet> p);
   void ToogleSend(LtePdcpSapProvider::TransmitPdcpSduParameters params);
+  void CopyArqSendOnce(uint64_t ArqGroupNum,Ptr<Packet> p,CopyControl* m_Copy);
   LtePdcpSapUser* m_pdcpSapUser; ///< PDCP SAP user
   LtePdcpSapProvider* m_pdcpSapProvider; ///< PDCP SAP provider
 

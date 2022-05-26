@@ -122,7 +122,7 @@ main (int argc, char *argv[])
   double ueY = 30.0;
 
 //  double simTime = 2.0; // 50 seconds: to take statistics
-  double simTime = 1.6; // 50 seconds: to take statistics
+  double simTime = 1.8; // 50 seconds: to take statistics
   uint32_t pktSize = 512;
   Time udpAppStartTime = MilliSeconds (1000);
   uint32_t pktInterval=40;

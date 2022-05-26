@@ -175,7 +175,7 @@ void
 LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams)
 {
   NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << txOpParams.bytes);
-  NS_LOG_DEBUG ("---UeRLC DoNotifyTxOpportunity "<<this <<" txOpParams.bytes "<< txOpParams.bytes<<" m_txBuffer size "<<m_txBuffer.size ());
+  NS_LOG_DEBUG ("---UeRLC DoNotifyTxOpportunity "<<this <<" txOpParams.bytes "<< txOpParams.bytes<<" m_txBuffer size "<<m_txBuffer.size ()<<" time "<<Simulator::Now ().GetNanoSeconds());
 
   if (txOpParams.bytes <= 2)
     {

@@ -5,6 +5,7 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("CopyControl");
 NS_OBJECT_ENSURE_REGISTERED (CopyControl);
 
+
 CopyControl::CopyControl():
   m_originalBlockSize (1),
   m_encodingBlockSize (2),
@@ -174,8 +175,19 @@ CopyControl::RecvAndSave (Ptr<Packet> p)
     }else{
       m_IfSendArq=false;
     }
+  }else if(it1->second.m_noReceive){
+    m_IfTransmitSduFlag=true;
+    m_pollingInterval=10;
+    if(m_groupnum%m_pollingInterval==0){
+      m_IfSendArq=true;
+    }else{
+      m_IfSendArq=false;
+    }
+    it1->second.m_ncComplete=true;
+    it1->second.m_noReceive=false;
   }else{
     m_IfTransmitSduFlag=false;
+    m_IfSendArq=false;
   }
 
 
@@ -213,28 +225,24 @@ CopyControl::IfCopySendArq ()
 void
 CopyControl::MakeStatusReport (uint64_t groupnum,std::vector<Ptr<Packet> > &ArqPackets)
 {
-  auto it=m_ncDecodingBufferList.find(groupnum);
-  Ptr<Packet> StatusReport = Create<Packet> (102);
+//  auto it=m_ncDecodingBufferList.find(groupnum);
+  Ptr<Packet> StatusReport = Create<Packet> (1);
   NcHeader Statusncheader;
   Statusncheader.SetGroupnum(groupnum);
   Statusncheader.SetDorC(1);
 //  Statusncheader.SetRank(it->second.m_rank);
   StatusReport->AddHeader(Statusncheader);
   ArqPackets.push_back(StatusReport);
-  it->second.num_statusReport ++;
-
-  it->second.m_statusReportTimer = Simulator::Schedule (m_statusReportTimerValue,
-								    &CopyControl::ExpireStatusReportTimer, this, groupnum,ArqPackets);
-
+//  it->second.num_statusReport ++;
 //  return StatusReport;
 }
 
-std::vector<Ptr<Packet> >
-CopyControl::CopySendArqReq ()
+void
+CopyControl::CopySendArqReq (std::vector<uint64_t>&ArqGroupNums, std::vector<Ptr<Packet> > &ArqPackets)
 {
   NS_LOG_DEBUG ("---send copy ArqReq");
   //对m_ncVrMs<=i<=ncheader.GetGroupnum()中的每个组号i依次进行处理
-  std::vector<Ptr<Packet> > ArqPackets;
+//  std::vector<Ptr<Packet> > ArqPackets;
   uint8_t cnt=0;
 //  for (uint64_t i=m_ncVrMs; i<=m_groupnum; i++)
   NS_LOG_DEBUG ("---it at i "<< m_ncVrMs);
@@ -248,6 +256,8 @@ CopyControl::CopySendArqReq ()
       NcDecodingBuffer newBuffer;
       m_ncDecodingBufferList.insert({i,newBuffer});
       it3 = m_ncDecodingBufferList.find(i);
+      it3->second.m_noReceive=true;
+
     }
     if (!it3->second.m_ncComplete && !it3->second.m_statusReportTimer.IsRunning())
 //    if (!it3->second.m_ncComplete )
@@ -257,6 +267,7 @@ CopyControl::CopySendArqReq ()
       {
 //	CalulateDecodingRank(i);
 //	ArqPackets.push_back(MakeSendPackets(i));
+	ArqGroupNums.push_back(i);
 	MakeStatusReport(i,ArqPackets);
 	cnt++;
 	NS_LOG_DEBUG ("---add arq req at i "<< i);
@@ -279,7 +290,6 @@ CopyControl::CopySendArqReq ()
     it1 = m_ncDecodingBufferList.find(m_ncVrMs);
   }
   NS_LOG_DEBUG ("m_ncVrMs now is "<<m_ncVrMs<<" ArqReqPackets nums is "<<ArqPackets.size());
-  return ArqPackets;
 
 }
 
@@ -290,6 +300,7 @@ CopyControl::ExpireStatusReportTimer (uint64_t groupnum,std::vector<Ptr<Packet> 
 
   if (it->second.num_statusReport<3)
   {
+      NS_LOG_DEBUG(" group num is "<<groupnum<<" arq num is "<<(unsigned)it->second.num_statusReport);
       MakeStatusReport(groupnum,ArqPackets);
   }
 }

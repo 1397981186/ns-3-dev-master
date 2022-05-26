@@ -63,6 +63,7 @@ public:
     uint8_t m_rank = 0;
     bool m_statusReportSent = false;
     bool m_ncComplete = false;
+    bool m_noReceive= false;
     uint8_t num_statusReport = 0;
     EventId m_statusReportTimer;
     std::vector<uint8_t> deliverdSN;
@@ -95,7 +96,7 @@ public:
   void MakeStatusReport(uint64_t groupnum, std::vector<Ptr<Packet> > &ArqPackets);
 //  Ptr<Packet> MakeSendPackets(uint64_t groupnum);
 
-  std::vector <Ptr<Packet>> CopySendArqReq();
+  void CopySendArqReq(std::vector<uint64_t>&ArqGroupNums, std::vector<Ptr<Packet> > &ArqPackets);
   void ExpireStatusReportTimer( uint64_t groupnum,std::vector<Ptr<Packet> > &ArqPackets);
   bool m_IfTransmitSduFlag=false;
   uint64_t m_rxOriginalPacketNum = 0;
