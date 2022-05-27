@@ -95,7 +95,7 @@ public:
   void MakeStatusReport(uint64_t groupnum, std::vector<Ptr<Packet> > &ArqPackets);
 //  Ptr<Packet> MakeSendPackets(uint64_t groupnum);
 
-  std::vector <Ptr<Packet>> NcSendArqReq();
+  void NcSendArqReq(std::vector <uint64_t> &ArqGroupNums,std::vector <Ptr<Packet>> &ArqPackets);
   void ExpireStatusReportTimer( uint64_t groupnum,std::vector<Ptr<Packet> > &ArqPackets);
   bool m_IfTransmitSduFlag=false;
   uint64_t m_rxOriginalPacketNum = 0;

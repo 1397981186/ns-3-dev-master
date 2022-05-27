@@ -162,7 +162,12 @@ protected:
   virtual void TriggerDoTransmitPdcpSdu(LtePdcpSapProvider::TransmitPdcpSduParameters params);
   void TriggerRecvPdcpSdu(Ptr<Packet> p);
   void ToogleSend(LtePdcpSapProvider::TransmitPdcpSduParameters params);
-  void CopyArqSendOnce(uint64_t ArqGroupNum,Ptr<Packet> p,CopyControl* m_Copy);
+  void CopyArqReqSendOnce(uint64_t ArqGroupNum,Ptr<Packet> p,CopyControl* m_Copy);
+  void NcArqReqSendOnce(uint64_t ArqGroupNum,Ptr<Packet> p,NcControl* m_Nc);
+  void CopyExpireStatusReportTimer (uint64_t ArqGroupNum,Ptr<Packet> p,CopyControl* m_Copy);
+  void NcExpireStatusReportTimer (uint64_t ArqGroupNum,Ptr<Packet> p,NcControl* m_Nc);
+  Time m_statusReportTimerValuePdcpCopy=MicroSeconds(50000.0);
+  Time m_statusReportTimerValuePdcpNc=MicroSeconds(50000.0);
   LtePdcpSapUser* m_pdcpSapUser; ///< PDCP SAP user
   LtePdcpSapProvider* m_pdcpSapProvider; ///< PDCP SAP provider
 

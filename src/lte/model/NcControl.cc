@@ -330,17 +330,17 @@ void
 NcControl::MakeStatusReport (uint64_t groupnum,std::vector<Ptr<Packet> > &ArqPackets)
 {
   auto it=m_ncDecodingBufferList.find(groupnum);
-  Ptr<Packet> StatusReport = Create<Packet> (102);
+  Ptr<Packet> StatusReport = Create<Packet> (1);
   NcHeader Statusncheader;
   Statusncheader.SetGroupnum(groupnum);
   Statusncheader.SetDorC(1);
   Statusncheader.SetRank(it->second.m_rank);
   StatusReport->AddHeader(Statusncheader);
   ArqPackets.push_back(StatusReport);
-  it->second.num_statusReport ++;
+//  it->second.num_statusReport ++;
 
-  it->second.m_statusReportTimer = Simulator::Schedule (m_statusReportTimerValue,
-								    &NcControl::ExpireStatusReportTimer, this, groupnum,ArqPackets);
+//  it->second.m_statusReportTimer = Simulator::Schedule (m_statusReportTimerValue,
+//								    &NcControl::ExpireStatusReportTimer, this, groupnum,ArqPackets);
 
 //  return StatusReport;
 }
@@ -368,12 +368,12 @@ NcControl::MakeStatusReport (uint64_t groupnum,std::vector<Ptr<Packet> > &ArqPac
 //    return StatusReport;
 //}
 
-std::vector<Ptr<Packet> >
-NcControl::NcSendArqReq ()
+void
+NcControl::NcSendArqReq (std::vector <uint64_t> &ArqGroupNums,std::vector <Ptr<Packet>> &ArqPackets)
 {
   NS_LOG_DEBUG ("---send ArqReq");
   //对m_ncVrMs<=i<=ncheader.GetGroupnum()中的每个组号i依次进行处理
-  std::vector<Ptr<Packet> > ArqPackets;
+//  std::vector<Ptr<Packet> > ArqPackets;
   uint8_t cnt=0;
 //  for (uint64_t i=m_ncVrMs; i<=m_groupnum; i++)
   NS_LOG_DEBUG ("---it at i "<< m_ncVrMs);
@@ -397,6 +397,7 @@ NcControl::NcSendArqReq ()
 	CalulateDecodingRank(i);
 //	ArqPackets.push_back(MakeSendPackets(i));
 	MakeStatusReport(i,ArqPackets);
+	ArqGroupNums.push_back(i);
 	cnt++;
 	NS_LOG_DEBUG ("---add arq req at i "<< i);
 	/*
@@ -438,7 +439,7 @@ NcControl::NcSendArqReq ()
     it1 = m_ncDecodingBufferList.find(m_ncVrMs);
   }
   NS_LOG_DEBUG ("m_ncVrMs now is "<<m_ncVrMs<<" ArqReqPackets nums is "<<ArqPackets.size());
-  return ArqPackets;
+//  return ArqPackets;
 
 }
 

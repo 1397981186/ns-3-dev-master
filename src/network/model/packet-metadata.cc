@@ -679,7 +679,8 @@ PacketMetadata::DoAddHeader (uint32_t uid, uint32_t size)
   uint16_t written = AddSmall (&item);
   UpdateHead (written);
 }
-void 
+
+int
 PacketMetadata::RemoveHeader (const Header &header, uint32_t size)
 {
   uint32_t uid = header.GetInstanceTypeId ().GetUid () << 1;
@@ -688,7 +689,7 @@ PacketMetadata::RemoveHeader (const Header &header, uint32_t size)
   if (!m_enable) 
     {
       m_metadataSkipped = true;
-      return;
+      return 1;
     }
   struct PacketMetadata::SmallItem item;
   struct PacketMetadata::ExtraItem extraItem;
@@ -698,10 +699,12 @@ PacketMetadata::RemoveHeader (const Header &header, uint32_t size)
     {
       if (m_enableChecking)
         {
-          NS_FATAL_ERROR ("Removing unexpected header.");
-//          NS_LOG_DEBUG("Removing unexpected header.");
+//          NS_FATAL_ERROR ("Removing unexpected header.");
+          NS_LOG_DEBUG("Removing unexpected header. drop");
+//          size=0;
+	  return 0;
+
         }
-      return;
     }
   else if (item.typeUid != uid &&
            (extraItem.fragmentStart != 0 ||
@@ -709,10 +712,11 @@ PacketMetadata::RemoveHeader (const Header &header, uint32_t size)
     {
       if (m_enableChecking)
         {
-          NS_FATAL_ERROR ("Removing incomplete header.");
-//          NS_LOG_DEBUG("Removing incomplete header.");
+//          NS_FATAL_ERROR ("Removing incomplete header.");
+          NS_LOG_DEBUG("Removing incomplete header. drop");
+//          size=0;
+          return 0;
         }
-      return;
     }
   if (m_head + read == m_used)
     {
@@ -728,6 +732,7 @@ PacketMetadata::RemoveHeader (const Header &header, uint32_t size)
       m_head = item.next;
     }
   NS_ASSERT (IsStateOk ());
+  return 1;
 }
 void 
 PacketMetadata::AddTrailer (const Trailer &trailer, uint32_t size)

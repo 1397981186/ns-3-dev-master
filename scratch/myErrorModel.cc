@@ -136,10 +136,10 @@ main (int argc, char *argv[])
 
   bool isUl = false;
 
-//  bool ifNc=true;
-  bool ifNc=false;
-//  bool ifCopy=false;
-  bool ifCopy=true;
+  bool ifNc=true;
+//  bool ifNc=false;
+  bool ifCopy=false;
+//  bool ifCopy=true;
 
   uint32_t packets = (simTime - udpAppStartTime.GetSeconds ()) / packetInterval.GetSeconds ();
 //  uint32_t packets = 50000;

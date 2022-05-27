@@ -191,7 +191,7 @@ private:
    * \param header header to remove
    * \param size header serialized size
    */
-  void RemoveHeader (Header const &header, uint32_t size);
+  int RemoveHeader (Header const &header, uint32_t size);
 
   /**
    * Add a trailer
