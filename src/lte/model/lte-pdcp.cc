@@ -406,7 +406,7 @@ LtePdcp::NcExpireStatusReportTimer (uint64_t ArqGroupNum,Ptr<Packet> p,NcControl
 
   if (it->second.num_statusReport<3)
   {
-      NS_LOG_DEBUG("CopyExpireStatusReportTimer group num is "<<ArqGroupNum<<" arq num is "<<(unsigned)it->second.num_statusReport<<" time "<<Simulator::Now ().GetNanoSeconds());
+      NS_LOG_DEBUG("NcExpireStatusReportTimer group num is "<<ArqGroupNum<<" arq num is "<<(unsigned)it->second.num_statusReport<<" time "<<Simulator::Now ().GetNanoSeconds());
       NcArqReqSendOnce(ArqGroupNum,p,m_Nc);
   }
 }
