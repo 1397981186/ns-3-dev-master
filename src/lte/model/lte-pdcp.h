@@ -28,6 +28,9 @@
 
 #include "ns3/lte-pdcp-sap.h"
 #include "ns3/lte-rlc-sap.h"
+#include "NcControl.h"
+#include "CopyControl.h"
+#include "ns3/lte-nc-header.h"
 
 namespace ns3 {
 
@@ -41,7 +44,9 @@ class LtePdcp : public Object // SimpleRefCount<LtePdcp>
   /// allow LtePdcpSpecificLtePdcpSapProvider<LtePdcp> class friend access
   friend class LtePdcpSpecificLtePdcpSapProvider<LtePdcp>;
 public:
+
   LtePdcp ();
+
   virtual ~LtePdcp ();
   /**
    * \brief Get the type ID.
@@ -86,6 +91,7 @@ public:
   void SetLteRlcSapProvider (LteRlcSapProvider * s);
   //sht
   void SetLteRlcSapProvider2 (LteRlcSapProvider * s);
+
   void NcPdcpARQ(Ptr<Packet> p);
 
   /**
@@ -153,9 +159,21 @@ protected:
    */
   virtual void DoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters params);
   virtual void DoTransmitPdcpSdu2 (LtePdcpSapProvider::TransmitPdcpSduParameters params);
+  virtual void TriggerDoTransmitPdcpSdu(LtePdcpSapProvider::TransmitPdcpSduParameters params);
+  void TriggerRecvPdcpSdu(Ptr<Packet> p);
+  void ToogleSend(LtePdcpSapProvider::TransmitPdcpSduParameters params);
+  void CopyArqReqSendOnce(uint64_t ArqGroupNum,Ptr<Packet> p,CopyControl* m_Copy);
+  void NcArqReqSendOnce(uint64_t ArqGroupNum,Ptr<Packet> p,NcControl* m_Nc);
+  void CopyExpireStatusReportTimer (uint64_t ArqGroupNum,Ptr<Packet> p,CopyControl* m_Copy);
+  void NcExpireStatusReportTimer (uint64_t ArqGroupNum,Ptr<Packet> p,NcControl* m_Nc);
+  Time m_statusReportTimerValuePdcpCopy=MicroSeconds(50000.0);
+  Time m_statusReportTimerValuePdcpNc=MicroSeconds(50000.0);
   LtePdcpSapUser* m_pdcpSapUser; ///< PDCP SAP user
   LtePdcpSapProvider* m_pdcpSapProvider; ///< PDCP SAP provider
 
+  NcControl* m_Nc;
+  CopyControl* m_Copy;
+  bool m_IfUe=false;
   /**
    * Interface provided to lower RLC entity
    *
@@ -198,6 +216,10 @@ private:
    * Constants. See section 7.2 in TS 36.323
    */
   static const uint16_t m_maxPdcpSn = 4095;
+
+  bool m_NcEnable;
+  bool m_CopyEnable;
+  uint32_t m_NcRlcToSend=0;
 
 };
 

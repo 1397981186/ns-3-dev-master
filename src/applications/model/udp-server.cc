@@ -203,6 +203,7 @@ UdpServer::HandleRead (Ptr<Socket> socket)
 
           m_lossCounter.NotifyReceived (currentSequenceNumber);
           m_received++;
+          NS_LOG_DEBUG("-----packet received at udp ,all num is "<<m_received);
         }
     }
 }

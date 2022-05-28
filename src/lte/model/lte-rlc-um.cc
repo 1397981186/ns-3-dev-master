@@ -89,7 +89,7 @@ LteRlcUm::DoDispose ()
 void
 LteRlcUm::DoTransmitPdcpPdu (Ptr<Packet> p)
 {
-  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << p->GetSize ());
+  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << p->GetSize ()<<" time "<<Simulator::Now ().GetNanoSeconds());
 
   if (m_txBufferSize + p->GetSize () <= m_maxTxBufferSize)
     {
@@ -99,7 +99,14 @@ LteRlcUm::DoTransmitPdcpPdu (Ptr<Packet> p)
       p->AddPacketTag (tag);
 
       NS_LOG_LOGIC ("Tx Buffer: New packet added");
-      m_txBuffer.push_back (TxPdu (p, Simulator::Now ()));
+      if(m_NcArqAddTop==1){
+	auto it =m_txBuffer.begin();
+	if(m_txBufferSize!=0){it++;}
+	m_txBuffer.insert(it,TxPdu (p, Simulator::Now ()));
+	NS_LOG_DEBUG("ADD to queue head");
+      }else{
+	m_txBuffer.push_back (TxPdu (p, Simulator::Now ()));
+      }
       m_txBufferSize += p->GetSize ();
       NS_LOG_LOGIC ("NumOfBuffers = " << m_txBuffer.size() );
       NS_LOG_LOGIC ("txBufferSize = " << m_txBufferSize);
@@ -122,7 +129,7 @@ LteRlcUm::DoTransmitPdcpPdu (Ptr<Packet> p)
 void
 LteRlcUm::DoTransmitPdcpPdu2 (Ptr<Packet> p)
 {
-  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << p->GetSize ());
+  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << p->GetSize ()<<" time "<<Simulator::Now ().GetNanoSeconds());
 
   if (m_txBufferSize + p->GetSize () <= m_maxTxBufferSize)
     {
@@ -132,7 +139,14 @@ LteRlcUm::DoTransmitPdcpPdu2 (Ptr<Packet> p)
       p->AddPacketTag (tag);
 
       NS_LOG_LOGIC ("Tx Buffer: New packet added");
-      m_txBuffer.push_back (TxPdu (p, Simulator::Now ()));
+      if(m_NcArqAddTop==1){
+	auto it =m_txBuffer.begin();
+	if(m_txBufferSize!=0){it++;}
+	m_txBuffer.insert(it,TxPdu (p, Simulator::Now ()));
+	NS_LOG_DEBUG("ADD to queue head");
+      }else{
+	m_txBuffer.push_back (TxPdu (p, Simulator::Now ()));
+      }
       m_txBufferSize += p->GetSize ();
       NS_LOG_LOGIC ("NumOfBuffers = " << m_txBuffer.size() );
       NS_LOG_LOGIC ("txBufferSize = " << m_txBufferSize);
@@ -161,6 +175,7 @@ void
 LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams)
 {
   NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << txOpParams.bytes);
+  NS_LOG_DEBUG ("---UeRLC DoNotifyTxOpportunity "<<this <<" txOpParams.bytes "<< txOpParams.bytes<<" m_txBuffer size "<<m_txBuffer.size ()<<" time "<<Simulator::Now ().GetNanoSeconds());
 
   if (txOpParams.bytes <= 2)
     {
@@ -441,18 +456,22 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
 uint32_t
 LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams,uint32_t flag)
 {
-  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << txOpParams.bytes);
+  NS_LOG_DEBUG ("--RLC DoNotifyTxOpportunity "<<this <<" m_rnti "<<m_rnti<<" m_lcid " << (unsigned int) m_lcid <<" txOpParams.bytes "<< txOpParams.bytes<<" m_txBuffer size "<<m_txBuffer.size ()<<" time "<<Simulator::Now ().GetNanoSeconds());
   uint32_t remain=0;
+  m_toogleFlagRlc=false;
+  m_noDataFlagRlc=false;
 
-  if (txOpParams.bytes <= 2)
+  if (txOpParams.bytes <= 4)
     {
       // Stingy MAC: Header fix part is 2 bytes, we need more bytes for the data
-      NS_LOG_LOGIC ("TX opportunity too small = " << txOpParams.bytes);
+      NS_LOG_DEBUG ("TX opportunity too small = " << txOpParams.bytes);
       if(flag==0){
 	remain=0;
+	m_toogleFlagRlc=false;//sht add for rlc2 source use
 	return remain;
       }else{
 	remain=2;
+	m_toogleFlagRlc=false;//sht add for rlc2 source use
 	return remain;//do nothing remain state
       }
     }
@@ -471,12 +490,17 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
   // If only a segment of the packet is taken, then the remaining is given back later
   if ( m_txBuffer.size () == 0 )
     {
-      NS_LOG_LOGIC ("No data pending");
       if(flag==0){
-	remain=txOpParams.bytes;//gives to rlc2
+	remain=txOpParams.bytes+4;//gives to rlc2
+	m_toogleFlagRlc=true;//sht add for rlc2 source use
+	m_noDataFlagRlc=true;
+	NS_LOG_DEBUG ("No data pending,give to rlc2 ,remain is "<<remain);
 	return remain;
       }else{
-	remain=0;
+	remain=txOpParams.bytes+4;
+	m_toogleFlagRlc=true;//sht add for rlc2 source use
+	m_noDataFlagRlc=true;
+	NS_LOG_DEBUG ("No data pending,give to rlc1 , remain is "<<remain);
 	return remain;
       }
     }
@@ -586,10 +610,12 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
           // break;
           if(flag==2){
             remain=2;//give a not 0 number
-            NS_LOG_LOGIC ("---still not enough for RLC2"<<"    remain = " << remain );
+            m_toogleFlagRlc=false;//sht add for rlc2 source use
+            NS_LOG_DEBUG ("---still not enough for RLC2"<<"    remain = " << remain );
           }else{
-	    remain=1;
-	    NS_LOG_LOGIC ("---not enough for RLC1"<<"    remain = " << remain );
+	    remain=0;
+	    m_toogleFlagRlc=false;//sht add for rlc2 source use
+	    NS_LOG_DEBUG ("---not enough for RLC1"<<"    remain = " << remain );
           }
         }
       else if ( (nextSegmentSize - firstSegment->GetSize () <= 2) || (m_txBuffer.size () == 0) )//451-1022 1037-530
@@ -623,10 +649,26 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
           // break;
           if(flag==0){
 	    remain=nextSegmentSize;
-	    NS_LOG_LOGIC ("---enough for RLC1 gives to rlc2"<<"    remain = " << remain );
+	    if(remain<=4){
+	      m_toogleFlagRlc=false;//sht add for rlc2 source use
+	      remain=0;
+	      NS_LOG_DEBUG ("---enough for RLC1 gives to rlc2 but too small(<4) to give"<<"    remain = " << remain );
+	    }else{
+	      m_toogleFlagRlc=true;//sht add for rlc2 source use
+	      NS_LOG_DEBUG ("---enough for RLC1 gives to rlc2"<<"    remain = " << remain );
+	    }
+//	    m_toogleFlagRlc=true;//sht add for rlc2 source use
+//	    NS_LOG_DEBUG ("---enough for RLC1 gives to rlc2"<<"    remain = " << remain );
           }else{
-            remain=0;
-	    NS_LOG_LOGIC ("---rlc2 finish "<<"    remain = " << remain );
+            remain=nextSegmentSize;
+	    if(remain<=4){
+	      m_toogleFlagRlc=false;//sht add for rlc2 source use
+	      remain=0;
+	      NS_LOG_DEBUG ("---enough for RLC2 gives to rlc1 but too small(4) to give"<<"    remain = " << remain );
+	    }else{
+	      m_toogleFlagRlc=true;//sht add for rlc2 source use
+	      NS_LOG_DEBUG ("---enough for RLC2 gives to rlc1 "<<"    remain = " << remain );
+	    }
           }
         }
       else // (firstSegment->GetSize () < m_nextSegmentSize) && (m_txBuffer.size () > 0)
@@ -636,14 +678,14 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
           dataFieldAddedSize = firstSegment->GetSize ();
           dataFieldTotalSize += dataFieldAddedSize;
           dataField.push_back (firstSegment);
+          firstSegment = 0;
 
-          // ExtensionBit (Next_Segment - 1) = 1
-          rlcHeader.PushExtensionBit (LteRlcHeader::E_LI_FIELDS_FOLLOWS);
+          // ExtensionBit (Next_Segment - 1) = 0
+          rlcHeader.PushExtensionBit (LteRlcHeader::DATA_FIELD_FOLLOWS);
 
-          // LengthIndicator (Next_Segment)  = txBuffer.FirstBuffer.length()
-          rlcHeader.PushLengthIndicator (firstSegment->GetSize ());
+          // no LengthIndicator for the last one
 
-          nextSegmentSize -= ((nextSegmentId % 2) ? (2) : (1)) + dataFieldAddedSize;
+          nextSegmentSize -= dataFieldAddedSize;
           nextSegmentId++;
 
           NS_LOG_LOGIC ("        SDUs in TxBuffer  = " << m_txBuffer.size ());
@@ -653,19 +695,63 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
               NS_LOG_LOGIC ("        First SDU size    = " << m_txBuffer.begin()->m_pdu->GetSize ());
             }
           NS_LOG_LOGIC ("        Next segment size = " << nextSegmentSize);
-          NS_LOG_LOGIC ("        Remove SDU from TxBuffer");
-
-          // (more segments)
-          firstSegment = m_txBuffer.begin ()->m_pdu->Copy ();
-          firstSegmentTime = m_txBuffer.begin ()->m_waitingSince;
-          m_txBufferSize -= firstSegment->GetSize ();
-          m_txBuffer.erase (m_txBuffer.begin ());
-          NS_LOG_LOGIC ("        txBufferSize = " << m_txBufferSize );
-          remain=0;
-          NS_LOG_LOGIC ("---don't want this happen"<<"    remain = " << remain );
+          if(flag==0){
+	    remain=nextSegmentSize;
+	    if(remain<=4){
+	      m_toogleFlagRlc=false;//sht add for rlc2 source use
+	      remain=0;
+	      NS_LOG_DEBUG ("---source remain ,rlc1buffer have data but gives to rlc2, but too small(4) to give"<<"    remain = " << remain );
+	    }else{
+	      m_toogleFlagRlc=true;//sht add for rlc2 source use
+	      NS_LOG_DEBUG ("---source remain ,rlc1buffer have data but gives to rlc2"<<"    remain = " << remain );
+	    }
+          }else{
+  	    remain=nextSegmentSize;
+	    if(remain<=4){
+	      m_toogleFlagRlc=false;//sht add for rlc2 source use
+	      remain=0;
+	      NS_LOG_DEBUG ("---source remain ,rlc2buffer have data but gives to rlc1, but too small(4) to give"<<"    remain = " << remain );
+	    }else{
+	      m_toogleFlagRlc=true;//sht add for rlc2 source use
+	      NS_LOG_DEBUG ("---source remain ,rlc2buffer have data but gives to rlc1"<<"    remain = " << remain );
+	    }
+          }
+	  break;
+//          NS_LOG_LOGIC ("    IF firstSegment < NextSegmentSize && txBuffer.size > 0");//have source not use
+//          // Add txBuffer.FirstBuffer to DataField
+//          dataFieldAddedSize = firstSegment->GetSize ();
+//          dataFieldTotalSize += dataFieldAddedSize;
+//          dataField.push_back (firstSegment);
+//
+//          // ExtensionBit (Next_Segment - 1) = 1
+//          rlcHeader.PushExtensionBit (LteRlcHeader::E_LI_FIELDS_FOLLOWS);
+//
+//          // LengthIndicator (Next_Segment)  = txBuffer.FirstBuffer.length()
+//          rlcHeader.PushLengthIndicator (firstSegment->GetSize ());
+//
+//          nextSegmentSize -= ((nextSegmentId % 2) ? (2) : (1)) + dataFieldAddedSize;
+//          nextSegmentId++;
+//
+//          NS_LOG_LOGIC ("        SDUs in TxBuffer  = " << m_txBuffer.size ());
+//          if (m_txBuffer.size () > 0)
+//            {
+//              NS_LOG_LOGIC ("        First SDU buffer  = " << m_txBuffer.begin()->m_pdu);
+//              NS_LOG_LOGIC ("        First SDU size    = " << m_txBuffer.begin()->m_pdu->GetSize ());
+//            }
+//          NS_LOG_LOGIC ("        Next segment size = " << nextSegmentSize);
+//          NS_LOG_LOGIC ("        Remove SDU from TxBuffer");
+//
+//          // (more segments)
+//          firstSegment = m_txBuffer.begin ()->m_pdu->Copy ();
+//          firstSegmentTime = m_txBuffer.begin ()->m_waitingSince;
+//          m_txBufferSize -= firstSegment->GetSize ();
+//          m_txBuffer.erase (m_txBuffer.begin ());
+//          NS_LOG_LOGIC ("        txBufferSize = " << m_txBufferSize );
+//          remain=nextSegmentSize;
+//          NS_LOG_DEBUG ("---don't want this happen"<<"    remain = " << remain );
         }
-
-
+//
+//
     }
 
   // Build RLC header
@@ -759,7 +845,7 @@ LteRlcUm::DoNotifyHarqDeliveryFailure ()
 void
 LteRlcUm::DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams)
 {
-  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << rxPduParams.p->GetSize ()<<rxPduParams.lcid);
+  NS_LOG_DEBUG ("RLC DoReceivePdu "<<this << " m_rnti "<<m_rnti << " m_lcid "<<(uint32_t) m_lcid <<" rxPduParams.p->GetSize () " <<rxPduParams.p->GetSize ()<<" rxPduParams.lcid "<<rxPduParams.lcid<<" time "<<Simulator::Now ().GetNanoSeconds());
   if(rxPduParams.lcid>=99){
     rxPduParams.lcid=rxPduParams.lcid-99;
   }
@@ -1486,7 +1572,7 @@ LteRlcUm::DoReportBufferStatus (void)
   r.rnti = m_rnti;
   r.lcid = m_lcid;
 //  r.txQueueSize = queueSize;
-  r.txQueueSize = queueSize*2;
+  r.txQueueSize = queueSize;
 //  r.txQueueHolDelay = holDelay.GetMilliSeconds () ;
   r.txQueueHolDelay = holDelay.GetMilliSeconds () *2;
   r.retxQueueSize = 0;

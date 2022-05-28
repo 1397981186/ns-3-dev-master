@@ -26,6 +26,8 @@
 #include "ns3/lte-pdcp-sap.h"
 #include "ns3/lte-pdcp-tag.h"
 
+
+
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("LtePdcp");
@@ -75,12 +77,16 @@ LtePdcp::LtePdcp ()
     m_rnti (0),
     m_lcid (0),
     m_txSequenceNumber (0),
-    m_rxSequenceNumber (0)
+    m_rxSequenceNumber (0),
+    m_NcEnable(false),
+    m_CopyEnable(false)
 {
   NS_LOG_FUNCTION (this);
   m_pdcpSapProvider = new LtePdcpSpecificLtePdcpSapProvider<LtePdcp> (this);
   m_rlcSapUser = new LtePdcpSpecificLteRlcSapUser (this);
 //  m_rlcSapUser2 = new LtePdcpSpecificLteRlcSapUser (this);
+  m_Nc=new NcControl();
+  m_Copy=new CopyControl();
 }
 
 LtePdcp::~LtePdcp ()
@@ -102,6 +108,16 @@ LtePdcp::GetTypeId (void)
                      "PDU received.",
                      MakeTraceSourceAccessor (&LtePdcp::m_rxPdu),
                      "ns3::LtePdcp::PduRxTracedCallback")
+    .AddAttribute ("NcEnable",
+		     "Nc if open",
+		     BooleanValue (false),
+		     MakeBooleanAccessor (&LtePdcp::m_NcEnable),
+		     MakeBooleanChecker ())
+    .AddAttribute ("CopyEnable",
+		   "Copy if open",
+		   BooleanValue (false),
+		   MakeBooleanAccessor (&LtePdcp::m_CopyEnable),
+		   MakeBooleanChecker ())
     ;
   return tid;
 }
@@ -193,7 +209,7 @@ LtePdcp::SetStatus (Status s)
 void
 LtePdcp::DoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters params)
 {
-  NS_LOG_FUNCTION (this << m_rnti << static_cast <uint16_t> (m_lcid) << params.pdcpSdu->GetSize ());
+  NS_LOG_FUNCTION (this << m_rnti << static_cast <uint16_t> (m_lcid) << params.pdcpSdu->GetSize ()<<" time "<<Simulator::Now ().GetNanoSeconds());
   Ptr<Packet> p = params.pdcpSdu;
   NS_LOG_FUNCTION(this<<"p address"<<&p);
   // Sender timestamp
@@ -221,6 +237,7 @@ LtePdcp::DoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters params
   txParams.rnti = m_rnti;
   txParams.lcid = m_lcid;
   txParams.pdcpPdu = p;
+  txParams.NcArqAddTop=params.NcArqAddTop;
 
   m_rlcSapProvider->TransmitPdcpPdu (txParams);
 
@@ -230,7 +247,7 @@ LtePdcp::DoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters params
 void
 LtePdcp::DoTransmitPdcpSdu2 (LtePdcpSapProvider::TransmitPdcpSduParameters params)
 {
-  NS_LOG_FUNCTION (this << m_rnti << static_cast <uint16_t> (m_lcid) << params.pdcpSdu->GetSize ());
+  NS_LOG_FUNCTION (this << m_rnti << static_cast <uint16_t> (m_lcid) << params.pdcpSdu->GetSize ()<<" time "<<Simulator::Now ().GetNanoSeconds());
   Ptr<Packet> p = params.pdcpSdu;
   NS_LOG_FUNCTION(this<<"p address"<<&p);
   // Sender timestamp
@@ -257,72 +274,373 @@ LtePdcp::DoTransmitPdcpSdu2 (LtePdcpSapProvider::TransmitPdcpSduParameters param
   txParams.rnti = m_rnti;
   txParams.lcid = m_lcid;
   txParams.pdcpPdu = p;
+  txParams.NcArqAddTop=params.NcArqAddTop;
 
   m_rlcSapProvider2->TransmitPdcpPdu2 (txParams);
+}
+
+//Nc main process
+/**
+ * m_Nc->HelloWorld();
+ * m_Nc->SaveAndSetTime(params.pdcpSdu);
+ * if > 10
+ *
+ *
+ *
+ *
+ *
+ */
+void
+LtePdcp::ToogleSend(LtePdcpSapProvider::TransmitPdcpSduParameters params){
+  if(m_NcRlcToSend%2==0){
+	DoTransmitPdcpSdu (params);
+	m_NcRlcToSend++;
+  }else if(m_NcRlcToSend%2==1){
+	DoTransmitPdcpSdu2 (params);
+	m_NcRlcToSend++;
+  }
+}
+
+
+void
+LtePdcp::TriggerDoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters params)
+{
+  if(m_NcEnable){
+//    if(params.pdcpSdu->GetSize()<100){
+//      DoTransmitPdcpSdu (params);//never at here?
+//    }else{
+	//start Nc
+      m_Nc->HelloWorld();
+      params.pdcpSdu=m_Nc->SendSaveAndSetTime(params.pdcpSdu);
+      params.NcArqAddTop=0;
+      uint32_t Ncedsize=m_Nc->GetNcedSize();
+//      m_Nc
+      ToogleSend(params);
+      if(Ncedsize==m_Nc->m_originalBlockSize){
+//	if(((m_Nc->m_encodingBlockSize-m_Nc->m_originalBlockSize)%2==0&&m_NcRlcToSend%2==1)
+//	    ||((m_Nc->m_encodingBlockSize-m_Nc->m_originalBlockSize)%2==1&&m_NcRlcToSend%2==0)){
+//	  m_NcRlcToSend++;
+//	}
+	for (int var = 0; var < m_Nc->m_encodingBlockSize-m_Nc->m_originalBlockSize; var++) {
+	  LtePdcpSapProvider::TransmitPdcpSduParameters paramsRe;
+	  paramsRe.lcid=params.lcid;
+	  paramsRe.rnti=params.rnti;
+	  paramsRe.pdcpSdu=m_Nc->MakeRedundancePacket();
+	  paramsRe.NcArqAddTop=0;
+	  Ncedsize++;
+	  ToogleSend(paramsRe);
+	}
+	if(Ncedsize==m_Nc->m_encodingBlockSize){
+	    m_Nc->m_groupnum++;
+	    m_NcRlcToSend=m_NcRlcToSend%2;
+	}
+//      }
+    }
+  }else if(m_CopyEnable){
+      m_Copy->HelloWorld();
+      params.pdcpSdu=m_Copy->SendSaveAndSetTime(params.pdcpSdu);
+      params.NcArqAddTop=0;
+      DoTransmitPdcpSdu (params);
+
+      LtePdcpSapProvider::TransmitPdcpSduParameters paramsRe;
+      paramsRe.lcid=params.lcid;
+      paramsRe.rnti=params.rnti;
+      paramsRe.pdcpSdu=m_Copy->MakeRedundancePacket();
+      paramsRe.NcArqAddTop=0;
+      DoTransmitPdcpSdu2 (paramsRe);
+
+      m_Copy->m_groupnum++;
+  }else{
+      DoTransmitPdcpSdu (params);
+  }
+}
+
+void
+LtePdcp::CopyArqReqSendOnce(uint64_t ArqGroupNum,Ptr<Packet> p,CopyControl* m_Copy){
+
+  LtePdcpSapProvider::TransmitPdcpSduParameters paramsArq;
+  paramsArq.lcid=m_lcid;
+  paramsArq.rnti=m_rnti;
+  paramsArq.pdcpSdu=p->Copy();
+  paramsArq.NcArqAddTop=0;
+  DoTransmitPdcpSdu (paramsArq);
+  auto it=m_Copy->m_ncDecodingBufferList.find(ArqGroupNum);
+  it->second.num_statusReport ++;
+  NS_LOG_DEBUG("CopyArqReqSendOnce group num is "<<ArqGroupNum<<" arq num is "<<(unsigned)it->second.num_statusReport<<" time "<<Simulator::Now ().GetNanoSeconds());
+  it->second.m_statusReportTimer = Simulator::Schedule (m_statusReportTimerValuePdcpCopy,
+								  &LtePdcp::CopyExpireStatusReportTimer, this, ArqGroupNum,p,m_Copy);
+}
+
+void
+LtePdcp::CopyExpireStatusReportTimer (uint64_t ArqGroupNum,Ptr<Packet> p,CopyControl* m_Copy)
+{
+  auto it = m_Copy->m_ncDecodingBufferList.find(ArqGroupNum);
+
+  if (it->second.num_statusReport<3)
+  {
+      NS_LOG_DEBUG("CopyExpireStatusReportTimer group num is "<<ArqGroupNum<<" arq num is "<<(unsigned)it->second.num_statusReport<<" time "<<Simulator::Now ().GetNanoSeconds());
+      CopyArqReqSendOnce(ArqGroupNum,p,m_Copy);
+  }
+}
+
+void
+LtePdcp::NcArqReqSendOnce(uint64_t ArqGroupNum,Ptr<Packet> p,NcControl* m_Nc){
+
+  LtePdcpSapProvider::TransmitPdcpSduParameters paramsArq;
+  paramsArq.lcid=m_lcid;
+  paramsArq.rnti=m_rnti;
+  paramsArq.pdcpSdu=p->Copy();
+  paramsArq.NcArqAddTop=0;
+  DoTransmitPdcpSdu (paramsArq);
+  auto it=m_Nc->m_ncDecodingBufferList.find(ArqGroupNum);
+  it->second.num_statusReport ++;
+  NS_LOG_DEBUG("NcArqReqSendOnce group num is "<<ArqGroupNum<<" arq num is "<<(unsigned)it->second.num_statusReport<<" time "<<Simulator::Now ().GetNanoSeconds());
+  it->second.m_statusReportTimer = Simulator::Schedule (m_statusReportTimerValuePdcpCopy,
+								  &LtePdcp::CopyExpireStatusReportTimer, this, ArqGroupNum,p,m_Copy);
+}
+
+void
+LtePdcp::NcExpireStatusReportTimer (uint64_t ArqGroupNum,Ptr<Packet> p,NcControl* m_Nc)
+{
+  auto it = m_Nc->m_ncDecodingBufferList.find(ArqGroupNum);
+
+  if (it->second.num_statusReport<3)
+  {
+      NS_LOG_DEBUG("NcExpireStatusReportTimer group num is "<<ArqGroupNum<<" arq num is "<<(unsigned)it->second.num_statusReport<<" time "<<Simulator::Now ().GetNanoSeconds());
+      NcArqReqSendOnce(ArqGroupNum,p,m_Nc);
+  }
+}
+
+void
+LtePdcp::TriggerRecvPdcpSdu(Ptr<Packet> p){
+  /**
+   *
+   * Nc
+   * Sht add
+   *
+   *
+   */
+  if(m_NcEnable){
+    Ptr<Packet> Sdu=Create<Packet> ();
+    Sdu=m_Nc->RecvAndSave(p);
+    if(m_Nc->IfRecvArq()){
+      std::vector<Ptr<Packet> > arqPackets;
+      arqPackets=m_Nc->MakeNcArqSendPacket(Sdu);
+      for(auto it=arqPackets.begin();it != arqPackets.end();it++){
+	LtePdcpSapProvider::TransmitPdcpSduParameters paramsArq;
+	paramsArq.lcid=m_lcid;
+	paramsArq.rnti=m_rnti;
+	paramsArq.pdcpSdu=* it;
+	paramsArq.NcArqAddTop=1;
+	NS_LOG_DEBUG("---set NcArqAddTop = = 1");
+	ToogleSend(paramsArq);
+//	DoTransmitPdcpSdu(paramsArq);
+      }
+    }else{
+      if(m_Nc->IfTransmitSdu()){
+	LtePdcpSapUser::ReceivePdcpSduParameters params;
+	params.pdcpSdu = Sdu;
+	params.rnti = m_rnti;
+	params.lcid = m_lcid;
+	m_pdcpSapUser->ReceivePdcpSdu (params);
+      }
+      if(m_Nc->IfDeocde()){
+	  std::vector <Ptr<Packet>> decodePackets;
+	  decodePackets=m_Nc->NcDecode();
+	  for(auto it =decodePackets.begin();it != decodePackets.end();it ++){
+	      Ptr<Packet> deocdeOne=*it;
+	      LtePdcpSapUser::ReceivePdcpSduParameters params;
+	      params.pdcpSdu = deocdeOne;
+	      params.rnti = m_rnti;
+	      params.lcid = m_lcid;
+	      m_pdcpSapUser->ReceivePdcpSdu (params);
+	  }
+
+      }
+      m_Nc->stopArqTimer();
+      if(m_Nc->IfNcSendArq()){
+//	  std::vector <Ptr<Packet>> ArqPackets;
+//	  ArqPackets=m_Nc->NcSendArqReq();
+//	  for(auto it=ArqPackets.begin();it != ArqPackets.end();it++){
+//	    LtePdcpSapProvider::TransmitPdcpSduParameters paramsArq;
+//	    paramsArq.lcid=m_lcid;
+//	    paramsArq.rnti=m_rnti;
+//	    paramsArq.pdcpSdu=* it;
+//	    paramsArq.NcArqAddTop=0;
+//	    DoTransmitPdcpSdu (paramsArq);
+//
+//	  }
+
+	  std::vector <Ptr<Packet>> ArqPackets;
+	  std::vector <uint64_t> ArqGroupNums;
+
+	  m_Nc->NcSendArqReq(ArqGroupNums,ArqPackets);
+
+//	  for(auto it=ArqPackets.begin();it != ArqPackets.end();it++){
+//	    LtePdcpSapProvider::TransmitPdcpSduParameters paramsArq;
+//	    paramsArq.lcid=m_lcid;
+//	    paramsArq.rnti=m_rnti;
+//	    paramsArq.pdcpSdu=* it;
+//	    paramsArq.NcArqAddTop=0;
+//	    DoTransmitPdcpSdu (paramsArq);
+//	  }
+	  if(ArqPackets.size()!=0){
+	    for(uint32_t i=0;i<=ArqPackets.size()-1;i++){
+		NcArqReqSendOnce(ArqGroupNums[i],ArqPackets[i],m_Nc);
+	    }
+	  }
+
+      }
+    }
+
+   /**
+    *
+    * Copy
+    *
+    *
+    */
+  }else if(m_CopyEnable){
+    Ptr<Packet> Sdu=Create<Packet> ();
+    Sdu=m_Copy->RecvAndSave(p);
+    if(m_Copy->IfRecvArq()){
+      std::vector<Ptr<Packet> > arqPackets;
+      arqPackets=m_Copy->MakeCopyArqSendPacket(Sdu);
+      for(auto it=arqPackets.begin();it != arqPackets.end();it++){
+	LtePdcpSapProvider::TransmitPdcpSduParameters paramsArq;
+	paramsArq.lcid=m_lcid;
+	paramsArq.rnti=m_rnti;
+	paramsArq.pdcpSdu=* it;
+	paramsArq.NcArqAddTop=1;
+	NS_LOG_DEBUG("---set NcArqAddTop = = 1");
+//  	DoTransmitPdcpSdu(paramsArq);
+//	ToogleSend(paramsArq);
+
+	LtePdcpSapProvider::TransmitPdcpSduParameters paramsArq2;
+	paramsArq2.lcid=m_lcid;
+	paramsArq2.rnti=m_rnti;
+	paramsArq2.pdcpSdu=paramsArq.pdcpSdu->Copy();
+//	*(paramsArq2.pdcpSdu)=*(*it);
+	paramsArq2.NcArqAddTop=1;
+	NS_LOG_DEBUG("---set NcArqAddTop = = 1");
+
+  	DoTransmitPdcpSdu(paramsArq);
+  	DoTransmitPdcpSdu2(paramsArq2);
+      }
+    }
+    if(m_Copy->IfTransmitSdu()){
+      LtePdcpSapUser::ReceivePdcpSduParameters params;
+      params.pdcpSdu = Sdu;
+      params.rnti = m_rnti;
+      params.lcid = m_lcid;
+      m_pdcpSapUser->ReceivePdcpSdu (params);
+    }
+    m_Copy->stopArqTimer();
+    if(m_Copy->IfCopySendArq()){
+	  std::vector <Ptr<Packet>> ArqPackets;
+	  std::vector <uint64_t> ArqGroupNums;
+
+	  m_Copy->CopySendArqReq(ArqGroupNums,ArqPackets);
+
+//	  for(auto it=ArqPackets.begin();it != ArqPackets.end();it++){
+//	    LtePdcpSapProvider::TransmitPdcpSduParameters paramsArq;
+//	    paramsArq.lcid=m_lcid;
+//	    paramsArq.rnti=m_rnti;
+//	    paramsArq.pdcpSdu=* it;
+//	    paramsArq.NcArqAddTop=0;
+//	    DoTransmitPdcpSdu (paramsArq);
+//	  }
+	  if(ArqPackets.size()!=0){
+	    for(uint32_t i=0;i<=ArqPackets.size()-1;i++){
+		CopyArqReqSendOnce(ArqGroupNums[i],ArqPackets[i],m_Copy);
+	    }
+	  }
+
+    }
+
+  /**
+   *
+   * normal
+   *
+   */
+  }else{
+    LtePdcpSapUser::ReceivePdcpSduParameters params;
+    params.pdcpSdu = p;
+    params.rnti = m_rnti;
+    params.lcid = m_lcid;
+    m_pdcpSapUser->ReceivePdcpSdu (params);
+  }
+
 }
 
 void
 LtePdcp::DoReceivePdu (Ptr<Packet> p)
 {
-  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << p->GetSize ());
+  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << p->GetSize ()<<" time "<<Simulator::Now ().GetNanoSeconds());
+  if(p->GetSize ()!=542&&p->GetSize ()!=563&&p->GetSize ()!=24){
+      NS_LOG_DEBUG("not 542/563/24, drop");
 
-  // Receiver timestamp
-  PdcpTag pdcpTag;
-  Time delay;
-  p->FindFirstMatchingByteTag (pdcpTag);
-  delay = Simulator::Now() - pdcpTag.GetSenderTimestamp ();
-  m_rxPdu(m_rnti, m_lcid, p->GetSize (), delay.GetNanoSeconds ());
+  }else{
+      // Receiver timestamp
+    PdcpTag pdcpTag;
+    Time delay;
+    p->FindFirstMatchingByteTag (pdcpTag);
+    delay = Simulator::Now() - pdcpTag.GetSenderTimestamp ();
+    m_rxPdu(m_rnti, m_lcid, p->GetSize (), delay.GetNanoSeconds ());
 
-  LtePdcpHeader pdcpHeader;
-  p->RemoveHeader (pdcpHeader);
-  NS_LOG_LOGIC ("PDCP header: " << pdcpHeader);
+    uint32_t size;
+    LtePdcpHeader pdcpHeader;
+    size=p->RemoveHeader (pdcpHeader);//sht add ,but dont know this happen
+    if(size!=0){
 
-  m_rxSequenceNumber = pdcpHeader.GetSequenceNumber () + 1;
-  if (m_rxSequenceNumber > m_maxPdcpSn)
-    {
-      m_rxSequenceNumber = 0;
-    }
+      NS_LOG_LOGIC ("PDCP header: " << pdcpHeader);
 
-  LtePdcpSapUser::ReceivePdcpSduParameters params;
-  params.pdcpSdu = p;
-  params.rnti = m_rnti;
-  params.lcid = m_lcid;
-  m_pdcpSapUser->ReceivePdcpSdu (params);
-//  NcPdcpARQ(p);
+      m_rxSequenceNumber = pdcpHeader.GetSequenceNumber () + 1;
+      if (m_rxSequenceNumber > m_maxPdcpSn)
+	{
+	  m_rxSequenceNumber = 0;
+	}
+
+      TriggerRecvPdcpSdu(p);
+    }else{
+	NS_LOG_DEBUG("size0, drop");
+      }
+  }
 }
 
-void
-LtePdcp::NcPdcpARQ (Ptr<Packet> ARQp){
-  NS_LOG_FUNCTION ("NcPdcpARQ");
-  Ptr<Packet> p = ARQp->Copy();
-  NS_LOG_FUNCTION(this<<"p address"<<&p);
-  // Sender timestamp
-  PdcpTag pdcpTag (Simulator::Now ());
 
-  LtePdcpHeader pdcpHeader;
-  pdcpHeader.SetSequenceNumber (m_txSequenceNumber);
 
-  m_txSequenceNumber++;
-  if (m_txSequenceNumber > m_maxPdcpSn)
-    {
-      m_txSequenceNumber = 0;
-    }
-
-  pdcpHeader.SetDcBit (LtePdcpHeader::DATA_PDU);
-
-  NS_LOG_LOGIC ("PDCP header: " << pdcpHeader);
-  p->AddHeader (pdcpHeader);
-  p->AddByteTag (pdcpTag, 1, pdcpHeader.GetSerializedSize ());
-
-  m_txPdu (m_rnti, m_lcid, p->GetSize ());
-
-  LteRlcSapProvider::TransmitPdcpPduParameters txParams;
-  txParams.rnti = m_rnti;
-  txParams.lcid = m_lcid;
-  txParams.pdcpPdu = p;
-
-  m_rlcSapProvider->TransmitPdcpPdu (txParams);
-}
+//void
+//LtePdcp::NcPdcpARQ (Ptr<Packet> ARQp){
+//  NS_LOG_FUNCTION ("NcPdcpARQ");
+//  Ptr<Packet> p = ARQp->Copy();
+//  NS_LOG_FUNCTION(this<<"p address"<<&p);
+//  // Sender timestamp
+//  PdcpTag pdcpTag (Simulator::Now ());
+//
+//  LtePdcpHeader pdcpHeader;
+//  pdcpHeader.SetSequenceNumber (m_txSequenceNumber);
+//
+//  m_txSequenceNumber++;
+//  if (m_txSequenceNumber > m_maxPdcpSn)
+//    {
+//      m_txSequenceNumber = 0;
+//    }
+//
+//  pdcpHeader.SetDcBit (LtePdcpHeader::DATA_PDU);
+//
+//  NS_LOG_LOGIC ("PDCP header: " << pdcpHeader);
+//  p->AddHeader (pdcpHeader);
+//  p->AddByteTag (pdcpTag, 1, pdcpHeader.GetSerializedSize ());
+//
+//  m_txPdu (m_rnti, m_lcid, p->GetSize ());
+//
+//  LteRlcSapProvider::TransmitPdcpPduParameters txParams;
+//  txParams.rnti = m_rnti;
+//  txParams.lcid = m_lcid;
+//  txParams.pdcpPdu = p;
+//
+//  m_rlcSapProvider->TransmitPdcpPdu (txParams);
+//}
 
 
 } // namespace ns3

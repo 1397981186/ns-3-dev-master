@@ -45,6 +45,7 @@ public:
     Ptr<Packet> pdcpSdu;  /**< the RRC PDU */
     uint16_t    rnti; /**< the C-RNTI identifying the UE */
     uint8_t     lcid; /**< the logical channel id corresponding to the sending RLC instance */
+    uint8_t     NcArqAddTop=0;
   };
 
   /**
@@ -124,17 +125,20 @@ LtePdcpSpecificLtePdcpSapProvider<C>::LtePdcpSpecificLtePdcpSapProvider ()
 template <class C>
 void LtePdcpSpecificLtePdcpSapProvider<C>::TransmitPdcpSdu (TransmitPdcpSduParameters params)
 {
-  TransmitPdcpSduParameters params2;
+//  TransmitPdcpSduParameters params2;
+//
+//  Ptr<Packet> pdcpSdu=Create<Packet> ();
+//  *pdcpSdu=*params.pdcpSdu;
+//
+//  params2.lcid=params.lcid;
+//  params2.rnti=params.rnti;
+//  params2.pdcpSdu=pdcpSdu;
+//
+//
+//  m_pdcp->DoTransmitPdcpSdu (params);
+//  m_pdcp->DoTransmitPdcpSdu2 (params2);
 
-  Ptr<Packet> pdcpSdu=Create<Packet> ();
-  *pdcpSdu=*params.pdcpSdu;
-
-  params2.lcid=params.lcid;
-  params2.rnti=params.rnti;
-  params2.pdcpSdu=pdcpSdu;
-
-  m_pdcp->DoTransmitPdcpSdu (params);
-  m_pdcp->DoTransmitPdcpSdu2 (params2);
+  m_pdcp->TriggerDoTransmitPdcpSdu(params);
 }
 
 

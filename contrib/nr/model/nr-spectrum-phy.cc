@@ -1097,6 +1097,8 @@ NrSpectrumPhy::EndRxData ()
 
       if (GetTBInfo (tbIt).m_isCorrupted)
         {
+	  m_wrongPackets++;
+	  NS_LOG_DEBUG("-------wrong packet once , all num is "<<m_wrongPackets);
           NS_LOG_INFO ("RNTI " << GetRnti (tbIt) << " processId " <<
                        +GetTBInfo(tbIt).m_expected.m_harqProcessId << " size " <<
                        GetTBInfo (tbIt).m_expected.m_tbSize << " mcs " <<
