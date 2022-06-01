@@ -51,6 +51,7 @@ public:
    */
   virtual void DoTransmitPdcpPdu (Ptr<Packet> p);
   virtual void DoTransmitPdcpPdu2 (Ptr<Packet> p);
+  uint64_t m_allSendPduNums=0;
   /**
    * MAC SAP
    *

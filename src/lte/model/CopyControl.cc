@@ -244,9 +244,10 @@ CopyControl::CopySendArqReq (std::vector<uint64_t>&ArqGroupNums, std::vector<Ptr
   //对m_ncVrMs<=i<=ncheader.GetGroupnum()中的每个组号i依次进行处理
 //  std::vector<Ptr<Packet> > ArqPackets;
   uint8_t cnt=0;
-//  for (uint64_t i=m_ncVrMs; i<=m_groupnum; i++)
   NS_LOG_DEBUG ("---it at i "<< m_ncVrMs);
-  for (uint64_t i=m_ncVrMs; i<=m_MaxRecvGroupnum; i++)
+  if(m_groupnum<40){return ;}
+  for (uint64_t i=m_ncVrMs; i<=m_groupnum-40; i++)
+//  for (uint64_t i=m_ncVrMs; i<=m_MaxRecvGroupnum; i++)
   {
 
     //将it3指向第i组的解码buffer
@@ -280,7 +281,7 @@ CopyControl::CopySendArqReq (std::vector<uint64_t>&ArqGroupNums, std::vector<Ptr
 	NS_LOG_DEBUG ("num_statusReport is bigger than 3");
       }
     }
-    if(cnt==3){break;}
+    if(cnt==10){break;}
   }
   // 将m_ncVrMs置为ncCompelte=1的连续的最小组号+1
   auto it1 = m_ncDecodingBufferList.find(m_ncVrMs);

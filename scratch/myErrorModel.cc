@@ -114,18 +114,18 @@ main (int argc, char *argv[])
   uint32_t mcs = 15;
   const uint8_t gNbNum = 1;
   const uint8_t ueNum = 1;
-  double totalGnbTxPower = 4;
+  double totalGnbTxPower = 7.5;
   double totalUeTxPower = 8;
   uint16_t numerologyBwp = 4;
   double centralFrequencyBand = 28e9;
-  double bandwidthBand = 100e6;
+  double bandwidthBand = 200e6;
   double ueY = 30.0;
 
 //  double simTime = 2.0; // 50 seconds: to take statistics
-  double simTime = 1.8; // 50 seconds: to take statistics
+  double simTime = 2; // 50 seconds: to take statistics
   uint32_t pktSize = 512;
   Time udpAppStartTime = MilliSeconds (1000);
-  uint32_t pktInterval=40;
+  uint32_t pktInterval=8;
   uint32_t updateChannelIntervalMicro=pktInterval*0.8;
   Time packetInterval = MicroSeconds (pktInterval);
   Time updateChannelInterval = MicroSeconds (updateChannelIntervalMicro);
@@ -136,13 +136,13 @@ main (int argc, char *argv[])
 
   bool isUl = false;
 
-  bool ifNc=true;
-//  bool ifNc=false;
+//  bool ifNc=true;
+  bool ifNc=false;
   bool ifCopy=false;
 //  bool ifCopy=true;
 
   uint32_t packets = (simTime - udpAppStartTime.GetSeconds ()) / packetInterval.GetSeconds ();
-//  uint32_t packets = 50000;
+//  uint32_t packets = 40000;
   NS_ABORT_IF (packets == 0);
 
   std::string errorModel = "ns3::NrEesmIrT2";
@@ -187,10 +187,10 @@ main (int argc, char *argv[])
    * Default values for the simulation. We are progressively removing all
    * the instances of SetDefault, but we need it for legacy code (LTE)
    */
-//  Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize",
-//                      UintegerValue (999999999));
   Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize",
-                      UintegerValue (1024*256));
+                      UintegerValue (999999999));
+//  Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize",
+//                      UintegerValue (1024*256));
 
   Config::SetDefault ("ns3::NrAmc::ErrorModelType", TypeIdValue (TypeId::LookupByName (errorModel)));
   Config::SetDefault ("ns3::NrAmc::AmcModel", EnumValue (NrAmc::ShannonModel));  // NOT USED in this example. MCS is fixed.
@@ -413,7 +413,7 @@ main (int argc, char *argv[])
   // ul false,ue is sink
   sinkApps.Start (udpAppStartTime);
   txApps.Start (udpAppStartTime);
-  sinkApps.Stop (Seconds (simTime+0.000));
+  sinkApps.Stop (Seconds (simTime+0.04));
   txApps.Stop (Seconds (simTime));
 
   // attach UEs to the closest eNB
@@ -422,7 +422,7 @@ main (int argc, char *argv[])
   // enable the traces provided by the nr module
   //nrHelper->EnableTraces();
 
-  Simulator::Stop (Seconds (simTime));
+  Simulator::Stop (Seconds (simTime+0.04));
 
   auto start = std::chrono::steady_clock::now ();
 

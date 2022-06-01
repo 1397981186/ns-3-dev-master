@@ -213,6 +213,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
   m_txBufferSize -= firstSegment->GetSize ();
   NS_LOG_LOGIC ("txBufferSize      = " << m_txBufferSize );
   m_txBuffer.erase (m_txBuffer.begin ());
+//  m_allSendPduNums++;
 
   while ( firstSegment && (firstSegment->GetSize () > 0) && (nextSegmentSize > 0) )
     {
@@ -261,6 +262,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
               firstSegment->AddPacketTag (oldTag);
 
               m_txBuffer.insert (m_txBuffer.begin (), TxPdu (firstSegment, firstSegmentTime));
+//              m_allSendPduNums--;
               m_txBufferSize += m_txBuffer.begin()->m_pdu->GetSize ();
 
               NS_LOG_LOGIC ("    TX buffer: Give back the remaining segment");
@@ -494,13 +496,13 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
 	remain=txOpParams.bytes+4;//gives to rlc2
 	m_toogleFlagRlc=true;//sht add for rlc2 source use
 	m_noDataFlagRlc=true;
-	NS_LOG_DEBUG ("No data pending,give to rlc2 ,remain is "<<remain);
+	NS_LOG_DEBUG ("No data pending,give to rlc2 ,remain is "<<remain<<" Nums Of transed Pdu "<<m_allSendPduNums);
 	return remain;
       }else{
 	remain=txOpParams.bytes+4;
 	m_toogleFlagRlc=true;//sht add for rlc2 source use
 	m_noDataFlagRlc=true;
-	NS_LOG_DEBUG ("No data pending,give to rlc1 , remain is "<<remain);
+	NS_LOG_DEBUG ("No data pending,give to rlc1 , remain is "<<remain<<" Nums Of transed Pdu "<<m_allSendPduNums);
 	return remain;
       }
     }
@@ -516,6 +518,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
   m_txBufferSize -= firstSegment->GetSize ();
   NS_LOG_LOGIC ("txBufferSize      = " << m_txBufferSize );
   m_txBuffer.erase (m_txBuffer.begin ());
+  m_allSendPduNums++;
 
   while ( firstSegment && (firstSegment->GetSize () > 0) && (nextSegmentSize > 0) )//resource is not enough ,remain=0
     {
@@ -564,6 +567,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
               firstSegment->AddPacketTag (oldTag);
 
               m_txBuffer.insert (m_txBuffer.begin (), TxPdu (firstSegment, firstSegmentTime));
+              m_allSendPduNums--;
               m_txBufferSize += m_txBuffer.begin()->m_pdu->GetSize ();
 
               NS_LOG_LOGIC ("    TX buffer: Give back the remaining segment");
@@ -611,11 +615,11 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
           if(flag==2){
             remain=2;//give a not 0 number
             m_toogleFlagRlc=false;//sht add for rlc2 source use
-            NS_LOG_DEBUG ("---still not enough for RLC2"<<"    remain = " << remain );
+            NS_LOG_DEBUG ("---still not enough for RLC2"<<"    remain = " << remain <<" Nums Of transed Pdu "<<m_allSendPduNums);
           }else{
 	    remain=0;
 	    m_toogleFlagRlc=false;//sht add for rlc2 source use
-	    NS_LOG_DEBUG ("---not enough for RLC1"<<"    remain = " << remain );
+	    NS_LOG_DEBUG ("---not enough for RLC1"<<"    remain = " << remain <<" Nums Of transed Pdu "<<m_allSendPduNums);
           }
         }
       else if ( (nextSegmentSize - firstSegment->GetSize () <= 2) || (m_txBuffer.size () == 0) )//451-1022 1037-530
@@ -652,10 +656,10 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
 	    if(remain<=4){
 	      m_toogleFlagRlc=false;//sht add for rlc2 source use
 	      remain=0;
-	      NS_LOG_DEBUG ("---enough for RLC1 gives to rlc2 but too small(<4) to give"<<"    remain = " << remain );
+	      NS_LOG_DEBUG ("---enough for RLC1 gives to rlc2 but too small(<4) to give"<<"    remain = " << remain <<" Nums Of transed Pdu "<<m_allSendPduNums);
 	    }else{
 	      m_toogleFlagRlc=true;//sht add for rlc2 source use
-	      NS_LOG_DEBUG ("---enough for RLC1 gives to rlc2"<<"    remain = " << remain );
+	      NS_LOG_DEBUG ("---enough for RLC1 gives to rlc2"<<"    remain = " << remain <<" Nums Of transed Pdu "<<m_allSendPduNums);
 	    }
 //	    m_toogleFlagRlc=true;//sht add for rlc2 source use
 //	    NS_LOG_DEBUG ("---enough for RLC1 gives to rlc2"<<"    remain = " << remain );
@@ -664,10 +668,10 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
 	    if(remain<=4){
 	      m_toogleFlagRlc=false;//sht add for rlc2 source use
 	      remain=0;
-	      NS_LOG_DEBUG ("---enough for RLC2 gives to rlc1 but too small(4) to give"<<"    remain = " << remain );
+	      NS_LOG_DEBUG ("---enough for RLC2 gives to rlc1 but too small(4) to give"<<"    remain = " << remain <<" Nums Of transed Pdu "<<m_allSendPduNums);
 	    }else{
 	      m_toogleFlagRlc=true;//sht add for rlc2 source use
-	      NS_LOG_DEBUG ("---enough for RLC2 gives to rlc1 "<<"    remain = " << remain );
+	      NS_LOG_DEBUG ("---enough for RLC2 gives to rlc1 "<<"    remain = " << remain<<" Nums Of transed Pdu "<<m_allSendPduNums );
 	    }
           }
         }
@@ -700,20 +704,20 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
 	    if(remain<=4){
 	      m_toogleFlagRlc=false;//sht add for rlc2 source use
 	      remain=0;
-	      NS_LOG_DEBUG ("---source remain ,rlc1buffer have data but gives to rlc2, but too small(4) to give"<<"    remain = " << remain );
+	      NS_LOG_DEBUG ("---source remain ,rlc1buffer have data but gives to rlc2, but too small(4) to give"<<"    remain = " << remain<<" Nums Of transed Pdu "<<m_allSendPduNums );
 	    }else{
 	      m_toogleFlagRlc=true;//sht add for rlc2 source use
-	      NS_LOG_DEBUG ("---source remain ,rlc1buffer have data but gives to rlc2"<<"    remain = " << remain );
+	      NS_LOG_DEBUG ("---source remain ,rlc1buffer have data but gives to rlc2"<<"    remain = " << remain<<" Nums Of transed Pdu "<<m_allSendPduNums );
 	    }
           }else{
   	    remain=nextSegmentSize;
 	    if(remain<=4){
 	      m_toogleFlagRlc=false;//sht add for rlc2 source use
 	      remain=0;
-	      NS_LOG_DEBUG ("---source remain ,rlc2buffer have data but gives to rlc1, but too small(4) to give"<<"    remain = " << remain );
+	      NS_LOG_DEBUG ("---source remain ,rlc2buffer have data but gives to rlc1, but too small(4) to give"<<"    remain = " << remain <<" Nums Of transed Pdu "<<m_allSendPduNums);
 	    }else{
 	      m_toogleFlagRlc=true;//sht add for rlc2 source use
-	      NS_LOG_DEBUG ("---source remain ,rlc2buffer have data but gives to rlc1"<<"    remain = " << remain );
+	      NS_LOG_DEBUG ("---source remain ,rlc2buffer have data but gives to rlc1"<<"    remain = " << remain<<" Nums Of transed Pdu "<<m_allSendPduNums );
 	    }
           }
 	  break;
