@@ -328,7 +328,12 @@ LtePdcp::TriggerDoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters
 	  paramsRe.pdcpSdu=m_Nc->MakeRedundancePacket();
 	  paramsRe.NcArqAddTop=0;
 	  Ncedsize++;
-	  ToogleSend(paramsRe);
+	  if(var==m_Nc->m_encodingBlockSize-m_Nc->m_originalBlockSize-1){
+	    Simulator::Schedule (MicroSeconds(14000),&LtePdcp::ToogleSend, this, paramsRe);
+	  }else{
+	    ToogleSend(paramsRe);
+	  }
+	  //Simulator::Schedule (m_statusReportTimerValuePdcpCopy,&LtePdcp::CopyExpireStatusReportTimer, this, ArqGroupNum,p,m_Copy);
 	}
 	if(Ncedsize==m_Nc->m_encodingBlockSize){
 	    m_Nc->m_groupnum++;
@@ -576,7 +581,8 @@ void
 LtePdcp::DoReceivePdu (Ptr<Packet> p)
 {
   NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << p->GetSize ()<<" time "<<Simulator::Now ().GetNanoSeconds());
-  if(p->GetSize ()!=542&&p->GetSize ()!=563&&p->GetSize ()!=24){
+//  if(p->GetSize ()!=852&&p->GetSize ()!=563&&p->GetSize ()!=24){
+  if(p->GetSize ()!=873&&p->GetSize ()!=24){
       NS_LOG_DEBUG("not 542/563/24, drop");
 
   }else{

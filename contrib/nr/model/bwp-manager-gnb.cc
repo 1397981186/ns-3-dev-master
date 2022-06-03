@@ -198,6 +198,7 @@ BwpManagerGnb::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txO
 
   std::map<uint8_t, LteMacSapUser*>::iterator lcidIt2 = rntiIt->second.find (txOpParams.lcid+99);
   NS_ASSERT_MSG (lcidIt2 != rntiIt->second.end (), "could not find LCID " << (uint16_t) txOpParams.lcid);
+
 //  if(flagForRlc2==0){
 //    //firt RLC1 then RLC2
 //    //remian from RLC1 means source space,from 2 means data remain to transfer
@@ -232,6 +233,7 @@ BwpManagerGnb::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txO
 //      flagForRlc2=(*lcidIt2).second->NotifyTxOpportunity (txOpParams2,2);
 //      NS_LOG_DEBUG("-------------------remain ForRlc2 is "<<flagForRlc2);
 //  }
+  /**
     bool toogleOfRlc0=true;
     bool toogleOfRlc2=true;
     bool noDataRlc0=false;
@@ -321,6 +323,68 @@ BwpManagerGnb::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txO
             flagForRlc2=remain;
         }
     }
+**/
+//rlc0: flag 0,2   rlc2:flag 1,3
+  uint32_t remain=0;
+  txOpParams.bytes=txOpParams.bytes-1;//for signOfRlc in macHeader
+  if(flagForRlc2==0){
+      uint32_t remain=  (*lcidIt).second->NotifyTxOpportunity (txOpParams,0);
+      if(remain>4){
+	LteMacSapUser::TxOpportunityParameters  txOpParams2;
+	txOpParams2.bytes=remain-3-1;
+	txOpParams2.layer=txOpParams.layer;
+	txOpParams2.harqId=txOpParams.harqId;
+	txOpParams2.componentCarrierId=txOpParams.componentCarrierId;
+	txOpParams2.rnti=txOpParams.rnti;
+	txOpParams2.lcid=txOpParams.lcid;
+	txOpParams2.m_signOfRlc=2;
+	flagForRlc2=(*lcidIt2).second->NotifyTxOpportunity (txOpParams2,3);
+	if(flagForRlc2==0){flagForRlc2=1;}//if size==source,then remain==0,then make it 1
+	if(flagForRlc2!=1){//source give to rlc1 (normal)
+	    txOpParams2.bytes=flagForRlc2-3-1;
+	    txOpParams2.m_signOfRlc=0;
+	    flagForRlc2=(*lcidIt).second->NotifyTxOpportunity (txOpParams2,2);
+	}
+	if(flagForRlc2!=0&&flagForRlc2!=1){//both no data
+	    flagForRlc2=0;
+	}
+      }else if(remain==0||remain==1){
+	flagForRlc2=remain;//once to rlc1 but not enough, give to rlc1 again
+      }else{
+	flagForRlc2=1;
+      }
+  }else if(flagForRlc2==1){
+      txOpParams.m_signOfRlc=2;
+      remain=(*lcidIt2).second->NotifyTxOpportunity (txOpParams,1);
+      if(remain>4){
+	LteMacSapUser::TxOpportunityParameters  txOpParams2;
+	txOpParams2.bytes=remain-3-1;
+	txOpParams2.layer=txOpParams.layer;
+	txOpParams2.harqId=txOpParams.harqId;
+	txOpParams2.componentCarrierId=txOpParams.componentCarrierId;
+	txOpParams2.rnti=txOpParams.rnti;
+	txOpParams2.lcid=txOpParams.lcid;
+	txOpParams2.m_signOfRlc=0;
+	flagForRlc2=(*lcidIt).second->NotifyTxOpportunity (txOpParams2,2);
+	if(flagForRlc2==1){flagForRlc2=0;}
+	if(flagForRlc2!=0){
+	    txOpParams2.bytes=flagForRlc2-3-1;
+	    txOpParams2.m_signOfRlc=2;
+	    flagForRlc2=(*lcidIt2).second->NotifyTxOpportunity (txOpParams2,3);
+	}
+	if(flagForRlc2!=0&&flagForRlc2!=1){//both no data
+	    flagForRlc2=1;
+	}
+
+      }else if(remain==0||remain==1){
+	flagForRlc2=remain;//once to rlc2 but not enough, give to rlc2 again
+      }else{
+	flagForRlc2=0;
+      }
+
+
+  }
+
 
 
 }

@@ -87,6 +87,7 @@ public:
    */
   static TypeId GetTypeId (void);
   uint32_t m_wrongPackets=0;
+  uint64_t m_allTbSize=0;
   /**
    * \brief NrSpectrumPhy constructor
    */

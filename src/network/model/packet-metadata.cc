@@ -650,14 +650,19 @@ PacketMetadata::CreateFragment (uint32_t start, uint32_t end) const
   return fragment;
 }
 
-void 
+bool
 PacketMetadata::AddHeader (const Header &header, uint32_t size)
 {
   NS_LOG_FUNCTION (this << &header << size);
-  NS_ASSERT (IsStateOk ());
-  uint32_t uid = header.GetInstanceTypeId ().GetUid () << 1;
-  DoAddHeader (uid, size);
-  NS_ASSERT (IsStateOk ());
+  if(IsStateOk ()){
+      uint32_t uid = header.GetInstanceTypeId ().GetUid () << 1;
+      DoAddHeader (uid, size);
+      return IsStateOk ();
+  }else{
+      return false;
+  }
+//  NS_ASSERT (IsStateOk ());
+//  NS_ASSERT (IsStateOk ());
 }
 void
 PacketMetadata::DoAddHeader (uint32_t uid, uint32_t size)

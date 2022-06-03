@@ -111,21 +111,23 @@ PrintRxPkt (std::string context, Ptr<const Packet> pkt)
 int
 main (int argc, char *argv[])
 {
-  uint32_t mcs = 15;
+  uint32_t mcs = 12;
   const uint8_t gNbNum = 1;
   const uint8_t ueNum = 1;
-  double totalGnbTxPower = 7.5;
+//  double totalGnbTxPower = 6.929;
+  double totalGnbTxPower = 4;
   double totalUeTxPower = 8;
   uint16_t numerologyBwp = 4;
   double centralFrequencyBand = 28e9;
-  double bandwidthBand = 200e6;
+//  double bandwidthBand = 200e6;
+  double bandwidthBand = 100e6;
   double ueY = 30.0;
 
 //  double simTime = 2.0; // 50 seconds: to take statistics
   double simTime = 2; // 50 seconds: to take statistics
-  uint32_t pktSize = 512;
+  uint32_t pktSize = 822;
   Time udpAppStartTime = MilliSeconds (1000);
-  uint32_t pktInterval=8;
+  uint32_t pktInterval=32;
   uint32_t updateChannelIntervalMicro=pktInterval*0.8;
   Time packetInterval = MicroSeconds (pktInterval);
   Time updateChannelInterval = MicroSeconds (updateChannelIntervalMicro);
@@ -138,8 +140,8 @@ main (int argc, char *argv[])
 
 //  bool ifNc=true;
   bool ifNc=false;
-  bool ifCopy=false;
-//  bool ifCopy=true;
+//  bool ifCopy=false;
+  bool ifCopy=true;
 
   uint32_t packets = (simTime - udpAppStartTime.GetSeconds ()) / packetInterval.GetSeconds ();
 //  uint32_t packets = 40000;
@@ -187,10 +189,10 @@ main (int argc, char *argv[])
    * Default values for the simulation. We are progressively removing all
    * the instances of SetDefault, but we need it for legacy code (LTE)
    */
-  Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize",
-                      UintegerValue (999999999));
 //  Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize",
-//                      UintegerValue (1024*256));
+//                      UintegerValue (999999999));
+  Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize",
+                      UintegerValue (1024*256));
 
   Config::SetDefault ("ns3::NrAmc::ErrorModelType", TypeIdValue (TypeId::LookupByName (errorModel)));
   Config::SetDefault ("ns3::NrAmc::AmcModel", EnumValue (NrAmc::ShannonModel));  // NOT USED in this example. MCS is fixed.

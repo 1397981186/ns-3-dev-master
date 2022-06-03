@@ -185,7 +185,7 @@ private:
    * \param header header to add
    * \param size header serialized size
    */
-  void AddHeader (Header const &header, uint32_t size);
+  bool AddHeader (Header const &header, uint32_t size);
   /**
    * \brief Remove an header
    * \param header header to remove

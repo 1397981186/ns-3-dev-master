@@ -376,8 +376,8 @@ NcControl::NcSendArqReq (std::vector <uint64_t> &ArqGroupNums,std::vector <Ptr<P
 //  std::vector<Ptr<Packet> > ArqPackets;
   uint8_t cnt=0;
   NS_LOG_DEBUG ("---it at i "<< m_ncVrMs);
-  if(m_groupnum<4){return ;}
-  for (uint64_t i=m_ncVrMs; i<=m_groupnum-3; i++)
+  if(m_groupnum<5){return ;}
+  for (uint64_t i=m_ncVrMs; i<=m_groupnum-4; i++)
 //  for (uint64_t i=m_ncVrMs; i<=m_MaxRecvGroupnum; i++)
   {
 
@@ -396,11 +396,17 @@ NcControl::NcSendArqReq (std::vector <uint64_t> &ArqGroupNums,std::vector <Ptr<P
       if (it3->second.num_statusReport<3)
       {
 	CalulateDecodingRank(i);
+	if(it3->second.m_rank<6){
+	    it3->second.m_ncComplete=true;
+	    NS_LOG_DEBUG ("---rank too small ,give up. rank is "<<unsigned( it3->second.m_rank));
+	}else{
+	    MakeStatusReport(i,ArqPackets);
+	    ArqGroupNums.push_back(i);
+	    cnt++;
+	    NS_LOG_DEBUG ("---add arq req at i "<< i);
+	}
 //	ArqPackets.push_back(MakeSendPackets(i));
-	MakeStatusReport(i,ArqPackets);
-	ArqGroupNums.push_back(i);
-	cnt++;
-	NS_LOG_DEBUG ("---add arq req at i "<< i);
+
 	/*
 	if (m_cellId==1)
 	{
@@ -490,7 +496,12 @@ NcControl::MakeNcArqSendPacket (Ptr<Packet> p)
       }
       reTxheader.SetCoeff(ncCoeff);
       Ptr<Packet> reTxpacket = it->second.m_ncVector[m_originalBlockSize-1].p->Copy();
-      reTxpacket->AddHeader(reTxheader);
+      if(!reTxpacket->AddHeader(reTxheader)){
+	  NS_LOG_DEBUG ("---head add wrong");
+      }else{
+	  arqPackets.push_back(reTxpacket);
+
+      }
 //      txEncodingPacketNum ++;
 //      NcTag nctag(Simulator::Now ());
 //      for (int i=0; i<originalBlockSize; i++)
@@ -501,7 +512,6 @@ NcControl::MakeNcArqSendPacket (Ptr<Packet> p)
 //      }
 //      nctag.vectorSize = originalBlockSize;
 //      reTxpacket->AddByteTag(nctag);
-      arqPackets.push_back(reTxpacket);
     }
   }
   NS_LOG_DEBUG ("made arq packets to send , num of packets is "<<arqPackets.size());

@@ -312,7 +312,7 @@ public:
    *
    * \param header a reference to the header to add to this packet.
    */
-  void AddHeader (const Header & header);
+  bool AddHeader (const Header & header);
   /**
    * \brief Deserialize and remove the header from the internal buffer.
    *
