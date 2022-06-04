@@ -81,6 +81,9 @@ public:
    * \return the reference to the "provider" part of the interface
    */
   virtual LteMacSapProvider* GetLteMacSapProvider () = 0;
+  
+  //zjh_add: 纯虚函数，在SimpleUeComponentCarrierManager类文件中创建具体函数
+  virtual std::map <uint8_t, LteMacSapProvider*> GetLteMacSapProvidersMap () = 0;//zjh_add
 
   /**
    * \brief Sets a pointer to SAP interface of MAC instance for the specified carrier.

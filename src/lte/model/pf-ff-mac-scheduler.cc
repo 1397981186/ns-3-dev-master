@@ -913,6 +913,7 @@ PfFfMacScheduler::DoSchedDlTriggerReq (const struct FfMacSchedSapProvider::Sched
       // all the RBGs are already allocated -> exit
       if ((ret.m_buildDataList.size () > 0) || (ret.m_buildRarList.size () > 0))
         {
+          NS_LOG_INFO ("zjh_mark 3: at PfFfMacScheduler");//zjh_add
           m_schedSapUser->SchedDlConfigInd (ret);
         }
       return;
@@ -1233,7 +1234,7 @@ PfFfMacScheduler::DoSchedDlTriggerReq (const struct FfMacSchedSapProvider::Sched
       NS_LOG_INFO (this << " UE average throughput " << (*itStats).second.lastAveragedThroughput);
       (*itStats).second.lastTtiBytesTrasmitted = 0;
     }
-
+  NS_LOG_INFO ("zjh_mark 4: at PfFfMacScheduler");//zjh_add
   m_schedSapUser->SchedDlConfigInd (ret);
 
 

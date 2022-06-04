@@ -405,6 +405,14 @@ LteUeRrc::SetLteMacSapProvider (LteMacSapProvider * s)
   m_macSapProvider = s;
 }
 
+//zjh_new:
+void
+LteUeRrc::SetLteMacSapProvider_leg (LteMacSapProvider * s)
+{
+  NS_LOG_FUNCTION (this << s);
+  m_macSapProvider_leg = s;
+}
+
 void
 LteUeRrc::SetLteCcmRrcSapProvider (LteUeCcmRrcSapProvider * s)
 {
@@ -526,7 +534,8 @@ void
 LteUeRrc::DoInitialize (void)
 {
   NS_LOG_FUNCTION (this);
-
+  //NS_LOG_INFO ("LteUeRrc::DoInitialize");//zjh_add: it's not used!
+  
   // setup the UE side of SRB0
   uint8_t lcid = 0;
 
@@ -535,19 +544,11 @@ LteUeRrc::DoInitialize (void)
   rlc->SetRnti (m_rnti);
   rlc->SetLcId (lcid);
 
-  //sht
-  Ptr<LteRlc> rlc2 = CreateObject<LteRlcTm> ()->GetObject<LteRlc> ();
-  rlc2->SetLteMacSapProvider (m_macSapProvider);
-  rlc2->SetRnti (m_rnti);
-  rlc2->SetLcId (lcid);
-
   m_srb0 = CreateObject<LteSignalingRadioBearerInfo> ();
   m_srb0->m_rlc = rlc;
-  m_srb0->m_rlc2 = rlc2;
   m_srb0->m_srbIdentity = 0;
   LteUeRrcSapUser::SetupParameters ueParams;
   ueParams.srb0SapProvider = m_srb0->m_rlc->GetLteRlcSapProvider ();
-  ueParams.srb0SapProvider = m_srb0->m_rlc2->GetLteRlcSapProvider ();
   ueParams.srb1SapProvider = 0;
   m_rrcSapUser->Setup (ueParams);
 
@@ -588,13 +589,14 @@ LteUeRrc::InitializeSap (void)
 void
 LteUeRrc::DoSendData (Ptr<Packet> packet, uint8_t bid)
 {
-  NS_LOG_FUNCTION (this << packet);
-
+  NS_LOG_FUNCTION (this << packet);//zjh_com
+  //NS_LOG_INFO (this << " LteUeRrc::DoSendData");//zjh_add
   uint8_t drbid = Bid2Drbid (bid);
-
+  NS_LOG_INFO (this << " LteUeRrc::DoSendData bid = " << (uint16_t)bid << " drbid = " << (uint16_t)drbid);//znr_add
+  
   if (drbid != 0)
     {
-      std::map<uint8_t, Ptr<LteDataRadioBearerInfo> >::iterator it =   m_drbMap.find (drbid);
+      std::map<uint8_t, Ptr<LteDataRadioBearerInfo> >::iterator it =   m_drbMap.find (drbid);//znr_note: 测试drbid+2
       NS_ASSERT_MSG (it != m_drbMap.end (), "could not find bearer with drbid == " << drbid);
 
       LtePdcpSapProvider::TransmitPdcpSduParameters params;
@@ -659,7 +661,6 @@ LteUeRrc::DoSetTemporaryCellRnti (uint16_t rnti)
   NS_LOG_FUNCTION (this << rnti);
   m_rnti = rnti;
   m_srb0->m_rlc->SetRnti (m_rnti);
-  m_srb0->m_rlc2->SetRnti (m_rnti);
   m_cphySapProvider.at (0)->SetRnti (m_rnti);
 }
 
@@ -974,8 +975,6 @@ LteUeRrc::DoCompleteSetup (LteUeRrcSapProvider::CompleteSetupParameters params)
 {
   NS_LOG_FUNCTION (this << " RNTI " << m_rnti);
   m_srb0->m_rlc->SetLteRlcSapUser (params.srb0SapUser);
-  //sht
-  m_srb0->m_rlc2->SetLteRlcSapUser (params.srb0SapUser);
   if (m_srb1)
     {
       m_srb1->m_pdcp->SetLtePdcpSapUser (params.srb1SapUser);
@@ -1036,6 +1035,7 @@ void
 LteUeRrc::DoRecvRrcConnectionSetup (LteRrcSap::RrcConnectionSetup msg)
 {
   NS_LOG_FUNCTION (this << " RNTI " << m_rnti);
+  NS_LOG_INFO (this << " LteUeRrc::DoRecvRrcConnectionSetup");//zjh_add
   switch (m_state)
     {
       case IDLE_CONNECTING:
@@ -1066,7 +1066,8 @@ void
 LteUeRrc::DoRecvRrcConnectionReconfiguration (LteRrcSap::RrcConnectionReconfiguration msg)
 {
   NS_LOG_FUNCTION (this << " RNTI " << m_rnti);
-  NS_LOG_INFO ("DoRecvRrcConnectionReconfiguration haveNonCriticalExtension:" << msg.haveNonCriticalExtension);
+  NS_LOG_INFO (this << " LteUeRrc::DoRecvRrcConnectionReconfiguration");//zjh_add
+  NS_LOG_INFO ("DoRecvRrcConnectionReconfiguration haveNonCriticalExtension:" << msg.haveNonCriticalExtension);//zjh_add
   switch (m_state)
     {
       case CONNECTED_NORMALLY:
@@ -1092,7 +1093,6 @@ LteUeRrc::DoRecvRrcConnectionReconfiguration (LteRrcSap::RrcConnectionReconfigur
             m_cphySapProvider.at (0)->ConfigureUplink (mci.carrierFreq.ulCarrierFreq, mci.carrierBandwidth.ulBandwidth);
             m_rnti = msg.mobilityControlInfo.newUeIdentity;
             m_srb0->m_rlc->SetRnti (m_rnti);
-            m_srb0->m_rlc2->SetRnti (m_rnti);
             NS_ASSERT_MSG (mci.haveRachConfigDedicated, "handover is only supported with non-contention-based random access procedure");
             m_cmacSapProvider.at (0)->StartNonContentionBasedRandomAccessProcedure (m_rnti, mci.rachConfigDedicated.raPreambleIndex, mci.rachConfigDedicated.raPrachMaskIndex);
             m_cphySapProvider.at (0)->SetRnti (m_rnti);
@@ -1112,7 +1112,7 @@ LteUeRrc::DoRecvRrcConnectionReconfiguration (LteRrcSap::RrcConnectionReconfigur
             if (msg.haveNonCriticalExtension)
               {
                 NS_LOG_DEBUG (this << "RNTI " << m_rnti << " Handover. Configuring secondary carriers");
-                ApplyRadioResourceConfigDedicatedSecondaryCarrier (msg.nonCriticalExtension);
+                ApplyRadioResourceConfigDedicatedSecondaryCarrier (msg.nonCriticalExtension);//zjh_note: 是否使用此函数注册副载波？？？
               }
 
             if (msg.haveMeasConfig)
@@ -1132,7 +1132,7 @@ LteUeRrc::DoRecvRrcConnectionReconfiguration (LteRrcSap::RrcConnectionReconfigur
               }
             if (msg.haveRadioResourceConfigDedicated)
               {
-                ApplyRadioResourceConfigDedicated (msg.radioResourceConfigDedicated);
+                ApplyRadioResourceConfigDedicated (msg.radioResourceConfigDedicated);//zjh_note:完成无线资源注册
               }
             if (msg.haveMeasConfig)
               {
@@ -1355,8 +1355,10 @@ LteUeRrc::EvaluateCellForSelection ()
 void
 LteUeRrc::ApplyRadioResourceConfigDedicatedSecondaryCarrier (LteRrcSap::NonCriticalExtensionConfiguration nonCec)
 {
+  //zjh_note: 函数作用是为连接辅助小区配置参数？？？ 暂不修改，采用先从ApplyRadioResourceConfigDedicated入手方法？？？
   NS_LOG_FUNCTION (this);
-
+  NS_LOG_INFO (this << " LteUeRrc::ApplyRadioResourceConfigDedicatedSecondaryCarrier");//zjh_add
+  
   m_sCellToAddModList = nonCec.sCellsToAddModList;
 
   for (std::list<LteRrcSap::SCellToAddMod>::iterator it = nonCec.sCellsToAddModList.begin (); it != nonCec.sCellsToAddModList.end (); it++)
@@ -1394,6 +1396,8 @@ void
 LteUeRrc::ApplyRadioResourceConfigDedicated (LteRrcSap::RadioResourceConfigDedicated rrcd)
 {
   NS_LOG_FUNCTION (this);
+  NS_LOG_INFO (this << " LteUeRrc::ApplyRadioResourceConfigDedicated");//zjh_add
+  
   const struct LteRrcSap::PhysicalConfigDedicated& pcd = rrcd.physicalConfigDedicated;
 
   if (pcd.haveAntennaInfoDedicated)
@@ -1423,31 +1427,37 @@ LteUeRrc::ApplyRadioResourceConfigDedicated (LteRrcSap::RadioResourceConfigDedic
                          "unexpected state " << ToString (m_state));
           NS_ASSERT_MSG (stamIt->srbIdentity == 1, "only SRB1 supported");
 
+          //zjh_note: 逻辑信道1用于传输SRB1
           const uint8_t lcid = 1; // fixed LCID for SRB1
+          //const uint8_t lcid_leg = 2; // fixed LCID for SRB1
 
           Ptr<LteRlc> rlc = CreateObject<LteRlcAm> ();
           rlc->SetLteMacSapProvider (m_macSapProvider);
           rlc->SetRnti (m_rnti);
           rlc->SetLcId (lcid);
-
-          //sht
-          Ptr<LteRlc> rlc2 = CreateObject<LteRlcAm> ();
-          rlc2->SetLteMacSapProvider (m_macSapProvider);
-          rlc2->SetRnti (m_rnti);
-          rlc2->SetLcId (lcid);
+          
+          //zjh_note: 测试无效，暂屏蔽
+          //zjh_note: 在Ue端控制面配置第二通路？？？（注：原CC设计之上只有1个pdcp、rlc，单用cc不需要在此处控制面配置？？？）
+          //Ptr<LteRlc> rlc_leg = CreateObject<LteRlcAm> ();//zjh_add
+          //rlc_leg->SetLteMacSapProvider (m_macSapProvider_leg);//zjh_add
+          //rlc_leg->SetRnti (m_rnti);//zjh_add
+          //rlc_leg->SetLcId (lcid_leg);//zjh_add
 
           Ptr<LtePdcp> pdcp = CreateObject<LtePdcp> ();
           pdcp->SetRnti (m_rnti);
           pdcp->SetLcId (lcid);
+          //pdcp->SetLcId_leg (lcid_leg);//zjh_add
           pdcp->SetLtePdcpSapUser (m_drbPdcpSapUser);
-          pdcp->SetLteRlcSapProvider (rlc->GetLteRlcSapProvider ());
-          pdcp->SetLteRlcSapProvider2 (rlc2->GetLteRlcSapProvider ());
+          pdcp->SetLteRlcSapProvider (rlc->GetLteRlcSapProvider ());         
+          //pdcp->SetLteRlcSapProvider_leg (rlc_leg->GetLteRlcSapProvider ());//zjh_add
+          
           rlc->SetLteRlcSapUser (pdcp->GetLteRlcSapUser ());
-          rlc2->SetLteRlcSapUser (pdcp->GetLteRlcSapUser ());
-
+          //rlc_leg->SetLteRlcSapUser (pdcp->GetLteRlcSapUser_leg ());//zjh_add
+                   
           m_srb1 = CreateObject<LteSignalingRadioBearerInfo> ();
           m_srb1->m_rlc = rlc;
-          m_srb1->m_rlc2 = rlc2;
+          //m_srb1->m_rlc = rlc_leg;//zjh_note: 控制面需要两个rlc？？？
+          
           m_srb1->m_pdcp = pdcp;
           m_srb1->m_srbIdentity = 1;
           m_srb1CreatedTrace (m_imsi, m_cellId, m_rnti);
@@ -1462,14 +1472,18 @@ LteUeRrc::ApplyRadioResourceConfigDedicated (LteRrcSap::RadioResourceConfigDedic
           lcConfig.prioritizedBitRateKbps = stamIt->logicalChannelConfig.prioritizedBitRateKbps;
           lcConfig.bucketSizeDurationMs = stamIt->logicalChannelConfig.bucketSizeDurationMs;
           lcConfig.logicalChannelGroup = stamIt->logicalChannelConfig.logicalChannelGroup;
+          
           LteMacSapUser* msu = m_ccmRrcSapProvider->ConfigureSignalBearer (lcid, lcConfig, rlc->GetLteMacSapUser ());
+          //LteMacSapUser* msu_leg = m_ccmRrcSapProvider->ConfigureSignalBearer (lcid_leg, lcConfig, rlc_leg->GetLteMacSapUser ());//zjh_add
+          
           m_cmacSapProvider.at (0)->AddLc (lcid, lcConfig, msu);
+          //m_cmacSapProvider.at (1)->AddLc (lcid_leg, lcConfig, msu_leg);//zjh_add
+          
           ++stamIt;
           NS_ASSERT_MSG (stamIt == rrcd.srbToAddModList.end (), "at most one SrbToAdd supported");
 
           LteUeRrcSapUser::SetupParameters ueParams;
           ueParams.srb0SapProvider = m_srb0->m_rlc->GetLteRlcSapProvider ();
-          ueParams.srb0SapProvider2 = m_srb0->m_rlc2->GetLteRlcSapProvider ();
           ueParams.srb1SapProvider = m_srb1->m_pdcp->GetLtePdcpSapProvider ();
           m_rrcSapUser->Setup (ueParams);
         }
@@ -1519,44 +1533,61 @@ LteUeRrc::ApplyRadioResourceConfigDedicated (LteRrcSap::RadioResourceConfigDedic
 
           ObjectFactory rlcObjectFactory;
           rlcObjectFactory.SetTypeId (rlcTypeId);
+
           Ptr<LteRlc> rlc = rlcObjectFactory.Create ()->GetObject<LteRlc> ();
           rlc->SetLteMacSapProvider (m_macSapProvider);
           rlc->SetRnti (m_rnti);
           rlc->SetLcId (dtamIt->logicalChannelIdentity);
-
-          Ptr<LteRlc> rlc2 = rlcObjectFactory.Create ()->GetObject<LteRlc> ();
-          rlc2->SetLteMacSapProvider (m_macSapProvider);
-          rlc2->SetRnti (m_rnti);
-          rlc2->SetLcId (dtamIt->logicalChannelIdentity);
-
+                  
           Ptr<LteDataRadioBearerInfo> drbInfo = CreateObject<LteDataRadioBearerInfo> ();
           drbInfo->m_rlc = rlc;
-          drbInfo->m_rlc2 = rlc2;
           drbInfo->m_epsBearerIdentity = dtamIt->epsBearerIdentity;
           drbInfo->m_logicalChannelIdentity = dtamIt->logicalChannelIdentity;
           drbInfo->m_drbIdentity = dtamIt->drbIdentity;
 
           // we need PDCP only for real RLC, i.e., RLC/UM or RLC/AM
           // if we are using RLC/SM we don't care of anything above RLC
+             
+          Ptr<LtePdcp> pdcp = CreateObject<LtePdcp> ();//zjh_add: 为增加leg，暂且在此处声明创建，方便第1621行调用pdcp
           if (rlcTypeId != LteRlcSm::GetTypeId ())
             {
-              Ptr<LtePdcp> pdcp = CreateObject<LtePdcp> ();
+              //Ptr<LtePdcp> pdcp = CreateObject<LtePdcp> ();//zjh_com
+
               pdcp->SetRnti (m_rnti);
-              pdcp->SetLcId (dtamIt->logicalChannelIdentity);
+              
+              pdcp->SetLcId (dtamIt->logicalChannelIdentity);             
               pdcp->SetLtePdcpSapUser (m_drbPdcpSapUser);
               pdcp->SetLteRlcSapProvider (rlc->GetLteRlcSapProvider ());
-              pdcp->SetLteRlcSapProvider2 (rlc2->GetLteRlcSapProvider ());
               rlc->SetLteRlcSapUser (pdcp->GetLteRlcSapUser ());
-              rlc2->SetLteRlcSapUser (pdcp->GetLteRlcSapUser ());
               drbInfo->m_pdcp = pdcp;
+              
+              /***
+              if(pdcp->GetDuplication())//zjh_add: 关键代码，注册secondary rlc（注意不是secondary carrier，两者有区别，L2与L1？）
+                {              
+                  Ptr<LteRlc> rlc_leg = rlcObjectFactory.Create ()->GetObject<LteRlc> ();//zjh_add
+                  rlc_leg->SetLteMacSapProvider (m_macSapProvider);//zjh_add: 需要指定m_macSapProvider_leg？？？
+                  rlc_leg->SetRnti (m_rnti);//zjh_add
+                  rlc_leg->SetLcId ((++dtamIt)->logicalChannelIdentity);//zjh_add: dtamIt是双向迭代循环器，支持++、--
+
+                  Ptr<LteDataRadioBearerInfo> drbInfo_leg = CreateObject<LteDataRadioBearerInfo> ();//zjh_add
+                  drbInfo_leg->m_rlc = rlc_leg;//zjh_add
+                  drbInfo_leg->m_epsBearerIdentity = dtamIt->epsBearerIdentity;//zjh_add
+                  drbInfo_leg->m_logicalChannelIdentity = dtamIt->logicalChannelIdentity;//zjh_add:wrong
+                  drbInfo_leg->m_drbIdentity = dtamIt->drbIdentity;//zjh_add:wrong              
+
+                  pdcp->SetLcId_leg (dtamIt->logicalChannelIdentity);//zjh_add
+                  pdcp->SetLtePdcpSapUser_leg (m_drbPdcpSapUser);//zjh_add
+                  pdcp->SetLteRlcSapProvider_leg (rlc_leg->GetLteRlcSapProvider ());//zjh_add
+                  rlc_leg->SetLteRlcSapUser (pdcp->GetLteRlcSapUser_leg ());//zjh_add
+                  drbInfo_leg->m_pdcp = pdcp;//zjh_add
+                }
+              ***/
+
             }
-
+          
           m_bid2DrbidMap[dtamIt->epsBearerIdentity] = dtamIt->drbIdentity;
-
           m_drbMap.insert (std::pair<uint8_t, Ptr<LteDataRadioBearerInfo> > (dtamIt->drbIdentity, drbInfo));
-
           m_drbCreatedTrace (m_imsi, m_cellId, m_rnti, dtamIt->drbIdentity);
-
 
           struct LteUeCmacSapProvider::LogicalChannelConfig lcConfig;
           lcConfig.priority = dtamIt->logicalChannelConfig.priority;
@@ -1566,8 +1597,8 @@ LteUeRrc::ApplyRadioResourceConfigDedicated (LteRrcSap::RadioResourceConfigDedic
 
           NS_LOG_DEBUG (this << " UE RRC RNTI " << m_rnti << " Number Of Component Carriers " << m_numberOfComponentCarriers << " lcID " << (uint16_t) dtamIt->logicalChannelIdentity);
           //Call AddLc of UE component carrier manager
-//          std::vector <LteUeCcmRrcSapProvider::LcsConfig> lcOnCcMapping = m_ccmRrcSapProvider->AddLc (dtamIt->logicalChannelIdentity, lcConfig, rlc->GetLteMacSapUser ());
-          std::vector <LteUeCcmRrcSapProvider::LcsConfig> lcOnCcMapping = m_ccmRrcSapProvider->AddLc (dtamIt->logicalChannelIdentity, lcConfig, rlc->GetLteMacSapUser (), rlc2->GetLteMacSapUser ());
+          std::vector <LteUeCcmRrcSapProvider::LcsConfig> lcOnCcMapping = m_ccmRrcSapProvider->AddLc (dtamIt->logicalChannelIdentity, lcConfig, rlc->GetLteMacSapUser ());
+
           NS_LOG_DEBUG ("Size of lcOnCcMapping vector " << lcOnCcMapping.size ());
           std::vector<LteUeCcmRrcSapProvider::LcsConfig>::iterator itLcOnCcMapping = lcOnCcMapping.begin ();
           NS_ASSERT_MSG (itLcOnCcMapping != lcOnCcMapping.end (), "Component carrier manager failed to add LC for data radio bearer");
@@ -1580,10 +1611,67 @@ LteUeRrc::ApplyRadioResourceConfigDedicated (LteRrcSap::RadioResourceConfigDedic
               uint8_t index = itLcOnCcMapping->componentCarrierId;
               LteUeCmacSapProvider::LogicalChannelConfig lcConfigFromCcm = itLcOnCcMapping->lcConfig;
               LteMacSapUser *msu = itLcOnCcMapping->msu;
-              m_cmacSapProvider.at (index)->AddLc (dtamIt->logicalChannelIdentity, lcConfigFromCcm, msu);
+              m_cmacSapProvider.at (index)->AddLc (dtamIt->logicalChannelIdentity, lcConfigFromCcm, msu);//zjh_note: 关键函数
             }
 
           rlc->Initialize ();
+          
+          //zjh_add---
+          //zjh_add: 关键代码，注册secondary rlc（注意不是secondary carrier，两者有区别，L2与L1？）
+          if(pdcp->GetDuplication())//zjh_note: 暂不考虑增加rlcTypeId != LteRlcSm::GetTypeId ()条件
+            {
+              ++dtamIt;
+              Ptr<LteRlc> rlc_leg = rlcObjectFactory.Create ()->GetObject<LteRlc> ();//zjh_add
+              rlc_leg->SetLteMacSapProvider (m_macSapProvider_leg);//zjh_add
+              rlc_leg->SetRnti (m_rnti);//zjh_add
+              rlc_leg->SetLcId (dtamIt->logicalChannelIdentity);//zjh_add: dtamIt是双向迭代循环器，支持++和--运算
+
+              Ptr<LteDataRadioBearerInfo> drbInfo_leg = CreateObject<LteDataRadioBearerInfo> ();//zjh_add
+              drbInfo_leg->m_rlc = rlc_leg;//zjh_add
+              drbInfo_leg->m_epsBearerIdentity = dtamIt->epsBearerIdentity;//zjh_add
+              drbInfo_leg->m_logicalChannelIdentity = dtamIt->logicalChannelIdentity;//zjh_add
+              drbInfo_leg->m_drbIdentity = dtamIt->drbIdentity;//zjh_add            
+              //NS_LOG_INFO("drbInfo_leg->m_drbIdentity = " << (uint16_t)dtamIt->drbIdentity);//znr_add
+
+              pdcp->SetLcId_leg (dtamIt->logicalChannelIdentity);//zjh_add
+              pdcp->SetLtePdcpSapUser_leg (m_drbPdcpSapUser);//zjh_add
+              pdcp->SetLteRlcSapProvider_leg (rlc_leg->GetLteRlcSapProvider ());//zjh_add
+              rlc_leg->SetLteRlcSapUser (pdcp->GetLteRlcSapUser_leg ());//zjh_add
+              drbInfo_leg->m_pdcp = pdcp;//zjh_add
+              
+              m_bid2DrbidMap[dtamIt->epsBearerIdentity] = dtamIt->drbIdentity;
+              m_drbMap.insert (std::pair<uint8_t, Ptr<LteDataRadioBearerInfo> > (dtamIt->drbIdentity, drbInfo_leg));
+              m_drbCreatedTrace (m_imsi, m_cellId, m_rnti, dtamIt->drbIdentity);
+
+              struct LteUeCmacSapProvider::LogicalChannelConfig lcConfig_leg;
+              lcConfig_leg.priority = dtamIt->logicalChannelConfig.priority;
+              lcConfig_leg.prioritizedBitRateKbps = dtamIt->logicalChannelConfig.prioritizedBitRateKbps;
+              lcConfig_leg.bucketSizeDurationMs = dtamIt->logicalChannelConfig.bucketSizeDurationMs;
+              lcConfig_leg.logicalChannelGroup = dtamIt->logicalChannelConfig.logicalChannelGroup;
+
+              NS_LOG_DEBUG (this << " UE RRC RNTI " << m_rnti << " Number Of Component Carriers " << m_numberOfComponentCarriers << " lcID " << (uint16_t) dtamIt->logicalChannelIdentity);
+             
+              //Call AddLc of UE component carrier manager
+              std::vector <LteUeCcmRrcSapProvider::LcsConfig> lcOnCcMapping_leg = m_ccmRrcSapProvider->AddLc (dtamIt->logicalChannelIdentity, lcConfig_leg, rlc_leg->GetLteMacSapUser ());
+
+              NS_LOG_DEBUG ("Size of lcOnCcMapping vector " << lcOnCcMapping_leg.size ());
+              std::vector<LteUeCcmRrcSapProvider::LcsConfig>::iterator itLcOnCcMapping_leg = lcOnCcMapping_leg.begin ();
+              NS_ASSERT_MSG (itLcOnCcMapping_leg != lcOnCcMapping_leg.end (), "Component carrier manager failed to add LC for data radio bearer");
+
+             for (itLcOnCcMapping_leg = lcOnCcMapping_leg.begin (); itLcOnCcMapping_leg != lcOnCcMapping_leg.end (); ++itLcOnCcMapping_leg)
+              {
+                NS_LOG_DEBUG ("RNTI " << m_rnti
+                                    << " LCG id " << (uint16_t) itLcOnCcMapping_leg->lcConfig.logicalChannelGroup
+                                    << " ComponentCarrierId " << (uint16_t) itLcOnCcMapping_leg->componentCarrierId);
+                uint8_t index = itLcOnCcMapping_leg->componentCarrierId;
+                LteUeCmacSapProvider::LogicalChannelConfig lcConfigFromCcm_leg = itLcOnCcMapping_leg->lcConfig;
+                LteMacSapUser *msu_leg = itLcOnCcMapping_leg->msu;
+                m_cmacSapProvider.at (index)->AddLc (dtamIt->logicalChannelIdentity, lcConfigFromCcm_leg, msu_leg);
+              }          
+            rlc_leg->Initialize ();         
+            }
+          //--- zjh_add
+          
         }
       else
         {
@@ -3142,7 +3230,6 @@ LteUeRrc::LeaveConnectedMode ()
   m_cellId = 0;
   m_rnti = 0;
   m_srb0->m_rlc->SetRnti (m_rnti);
-  m_srb0->m_rlc2->SetRnti (m_rnti);
 }
 
 void

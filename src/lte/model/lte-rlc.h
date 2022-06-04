@@ -140,7 +140,7 @@ protected:
    * \param p packet
    */
   virtual void DoTransmitPdcpPdu (Ptr<Packet> p) = 0;
-  virtual void DoTransmitPdcpPdu2 (Ptr<Packet> p) = 0;
+
   LteRlcSapUser* m_rlcSapUser; ///< RLC SAP user
   LteRlcSapProvider* m_rlcSapProvider; ///< RLC SAP provider
 
@@ -208,7 +208,6 @@ public:
   virtual void DoDispose ();
 
   virtual void DoTransmitPdcpPdu (Ptr<Packet> p);
-  virtual void DoTransmitPdcpPdu2 (Ptr<Packet> p);
   virtual void DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams);
   virtual void DoNotifyHarqDeliveryFailure ();
   virtual void DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams);

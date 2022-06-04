@@ -133,9 +133,11 @@ bool
 PacketMetadata::IsStateOk (void) const
 {
   NS_LOG_FUNCTION (this);
+  //NS_LOG_INFO (this << "PacketMetadata::IsStateOk");//znr_add
   bool ok = m_used <= m_data->m_size;
   ok &= IsPointerOk (m_head);
   ok &= IsPointerOk (m_tail);
+  
   uint16_t current = m_head;
   while (ok && current != 0xffff)
     {
@@ -151,6 +153,7 @@ PacketMetadata::IsStateOk (void) const
       if (current != m_tail)
         {
           ok &= IsPointerOk (item.next);
+          //NS_LOG_INFO (this << " current != m_tail ok = " << ok);//znr_add
         }
       if (current == m_tail)
         {

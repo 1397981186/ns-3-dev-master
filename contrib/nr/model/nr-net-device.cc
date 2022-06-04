@@ -228,6 +228,7 @@ NrNetDevice::Receive (Ptr<Packet> p)
 bool
 NrNetDevice::Send (Ptr<Packet> packet, const Address& dest, uint16_t protocolNumber)
 {
+  NS_LOG_FUNCTION (this);//znr-add
   bool ret = DoSend (packet, dest, protocolNumber);
   return ret;
 }

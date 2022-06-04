@@ -204,6 +204,7 @@ nrUeRrcProtocolIdeal::SetEnbRrcSapProvider ()
         }
     }
   NS_ASSERT_MSG (found, " Unable to find gNB with BwpID =" << bwpId);
+  NS_LOG_INFO( " nrUeRrcProtocolIdeal 207");
   m_enbRrcSapProvider = gnbDev->GetRrc ()->GetLteEnbRrcSapProvider ();
   Ptr<NrGnbRrcProtocolIdeal> enbRrcProtocolIdeal = gnbDev->GetRrc ()->GetObject<NrGnbRrcProtocolIdeal> ();
   enbRrcProtocolIdeal->SetUeRrcSapProvider (m_rnti, m_ueRrcSapProvider);

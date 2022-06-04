@@ -482,6 +482,7 @@ NrSpectrumPhy::StartTxDataFrames (const Ptr<PacketBurst>& pb, const std::list<Pt
 
         if (m_channel)
           {
+            NS_LOG_DEBUG(this << " NrSpectrumPhy::StartTxDataFrames");//znr_add
             m_channel->StartTx (txParams);
           }
         else

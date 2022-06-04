@@ -365,7 +365,7 @@ LteUeRrcProtocolReal::DoReceivePdcpSdu (LtePdcpSapUser::ReceivePdcpSduParameters
     case 4:
       params.pdcpSdu->RemoveHeader (rrcConnectionReconfigurationHeader);
       rrcConnectionReconfigurationMsg = rrcConnectionReconfigurationHeader.GetMessage ();
-      m_ueRrcSapProvider->RecvRrcConnectionReconfiguration (rrcConnectionReconfigurationMsg);
+      m_ueRrcSapProvider->RecvRrcConnectionReconfiguration (rrcConnectionReconfigurationMsg);//zjh_add:用户端开始注册
       break;
     case 5:
       params.pdcpSdu->RemoveHeader (rrcConnectionReleaseHeader);

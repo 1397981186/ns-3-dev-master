@@ -77,7 +77,6 @@ protected:
 
 private:
   bool m_cancel;  /**< Has this event been cancelled. */
-
 };
 
 } // namespace ns3

@@ -104,6 +104,7 @@ EpcEnbApplication::EpcEnbApplication (Ptr<Socket> lteSocket, Ptr<Socket> lteSock
 }
 
 
+//znr_note: example使用PointToPointHelper创建epchelper，然后使用AddEnb函数将调用AddS1Interface函数
 void
 EpcEnbApplication::AddS1Interface (Ptr<Socket> s1uSocket, Ipv4Address enbAddress, Ipv4Address sgwAddress)
 {
@@ -224,19 +225,35 @@ EpcEnbApplication::DoInitialContextSetupRequest (uint64_t mmeUeS1Id, uint16_t en
   uint16_t rnti = imsiIt->second;
 
   for (std::list<EpcS1apSapEnb::ErabToBeSetupItem>::iterator erabIt = erabToBeSetupList.begin ();
-       erabIt != erabToBeSetupList.end ();
+       erabIt != erabToBeSetupList.end ();//znr_note: erab Evolved Radio Access Bearer
        ++erabIt)
     {
       // request the RRC to setup a radio bearer
       struct EpcEnbS1SapUser::DataRadioBearerSetupRequestParameters params;
       params.rnti = rnti;
-      params.bearer = erabIt->erabLevelQosParameters;
+      params.bearer = erabIt->erabLevelQosParameters;//znr_note: 此参数不含bear isGbr()
+
+      /*
+      //znr_note: 方案2，pdcp复制修改后，适用cttc-nr-demo.cc（20220430编译版本）
+      //params.bearerId = erabIt->erabId;//znr_com: 问题见lte-enb-rrc.cc, line=423 "bearerId == 0 || bid == bearerId"
+      if( erabIt->erabId == 2 )//znr_add: 关键代码，适应nr双数据承载情况下实现pdcp dup；是否需要其他适应性修改？？？
+        params.bearerId = erabIt->erabId+1;//znr_add: 如此bearerId只有奇数（且与bid不同）他处可能通过需要-1匹配使用？？？
+      else//znr_add
+        params.bearerId = erabIt->erabId;//znr_add
+      //znr_note: 以上为方案2
+      */
+      
+      //znr_note: 方案1，cttc原始状态，pdcp复制修改后，适用cttc-nr-cc-bwp-demo.cc，也可适用cttc-nr-demo.cc（20220603编译版本）
       params.bearerId = erabIt->erabId;
+      //znr_note: 以上为方案1
+
       params.gtpTeid = erabIt->sgwTeid;
-      m_s1SapUser->DataRadioBearerSetupRequest (params);
+      NS_LOG_INFO (this << " EpcEnbApplication m_s1SapUser->DataRadioBearerSetupRequest");//znr_add
+      m_s1SapUser->DataRadioBearerSetupRequest (params);//znr_note: 此处需要做适应性修改 
 
       EpsFlowId_t rbid (rnti, erabIt->erabId);
       // side effect: create entries if not exist
+      //znr_note: 隧道协议双向交互地图
       m_rbidTeidMap[rnti][erabIt->erabId] = params.gtpTeid;
       m_teidRbidMap[params.gtpTeid] = rbid;
     }
@@ -305,21 +322,29 @@ EpcEnbApplication::RecvFromS1uSocket (Ptr<Socket> socket)
   GtpuHeader gtpu;
   packet->RemoveHeader (gtpu);
   uint32_t teid = gtpu.GetTeid ();
-  std::map<uint32_t, EpsFlowId_t>::iterator it = m_teidRbidMap.find (teid);
+  std::map<uint32_t, EpsFlowId_t>::iterator it = m_teidRbidMap.find (teid);//znr_note: 关键参数m_teidRbidMap
   if (it == m_teidRbidMap.end ())
     {
-      NS_LOG_WARN ("UE context at cell id " << m_cellId << " not found, discarding packet");
+      //NS_LOG_WARN ("UE context at cell id " << m_cellId << " not found, discarding packet");//znr_com
+      NS_LOG_INFO ("UE context at cell id " << m_cellId << " not found, discarding packet");//znr_add
     }
   else
     {
       m_rxS1uSocketPktTrace (packet->Copy ());
-      SendToLteSocket (packet, it->second.m_rnti, it->second.m_bid);
+      Ptr<Packet> packet_leg = packet->Copy ();//znr_add
+      SendToLteSocket (packet, it->second.m_rnti, it->second.m_bid);//znr_note: 运行cttc-nr-demo.cc，此处bid不是1，而是2，与之前调用UeManager::SetupDataRadioBearer有所不同，当时第1路是1，第2路是2；但因为相同rnti的lcid 3/4对应pdcp是1个，因此能匹配
+      
+      //znr-note: cttc-nr-demo.cc(20220603版本)属于单数据承载，因此屏蔽以及packet_leg
+      //SendToLteSocket (packet_leg, it->second.m_rnti, it->second.m_bid+2);//znr_add:关键代码，适用cttc-nr-demo.cc(20220430版本)，解决nr gnb多数据承载问题，但是影响LTE，需要增加一个判断，或者修改m_teidRbidMap
     }
 }
 
 void 
 EpcEnbApplication::SendToLteSocket (Ptr<Packet> packet, uint16_t rnti, uint8_t bid)
 {
+  NS_LOG_INFO (this << " EpcEnbApplication::SendToLteSocket");//znr_add
+  NS_LOG_INFO ("               rnti = " << (uint16_t) rnti << " bid = "<< (uint16_t) bid);//znr_add
+  
   NS_LOG_FUNCTION (this << packet << rnti << (uint16_t) bid << packet->GetSize ());  
   EpsBearerTag tag (rnti, bid);
   packet->AddPacketTag (tag);

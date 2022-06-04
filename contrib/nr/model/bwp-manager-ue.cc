@@ -92,22 +92,6 @@ BwpManagerUe::DoAddLc (uint8_t lcId, LteUeCmacSapProvider::LogicalChannelConfig 
   return SimpleUeComponentCarrierManager::DoAddLc (lcId, lcConfig, msu);
 }
 
-//sht
-std::vector<LteUeCcmRrcSapProvider::LcsConfig>
-BwpManagerUe::DoAddLc (uint8_t lcId, LteUeCmacSapProvider::LogicalChannelConfig lcConfig, LteMacSapUser *msu, LteMacSapUser *msu2)
-{
-  NS_LOG_FUNCTION (this);
-
-  NS_LOG_INFO ("For LC ID " << static_cast<uint32_t> (lcId) << " bearer qci " <<
-               static_cast<uint32_t> (lcConfig.priority) <<
-               " from priority " << static_cast<uint32_t> (lcConfig.priority));
-
-  // see lte-enb-rrc.cc:453
-  m_lcToBearerMap.insert (std::make_pair (lcId, static_cast<EpsBearer::Qci> (lcConfig.priority)));
-
-  return SimpleUeComponentCarrierManager::DoAddLc (lcId, lcConfig, msu,msu2);
-}
-
 LteMacSapUser
 *BwpManagerUe::DoConfigureSignalBearer (uint8_t lcId, LteUeCmacSapProvider::LogicalChannelConfig lcConfig, LteMacSapUser *msu)
 {

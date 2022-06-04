@@ -81,16 +81,6 @@ BwpManagerGnb::DoSetupDataRadioBearer (EpsBearer bearer, uint8_t bearerId, uint1
   return lcsConfig;
 }
 
-std::vector<LteCcmRrcSapProvider::LcsConfig>
-BwpManagerGnb::DoSetupDataRadioBearer (EpsBearer bearer, uint8_t bearerId, uint16_t rnti, uint8_t lcid, uint8_t lcGroup, LteMacSapUser* msu, LteMacSapUser* msu2)
-{
-  NS_LOG_FUNCTION (this);
-
-  std::vector<LteCcmRrcSapProvider::LcsConfig> lcsConfig = RrComponentCarrierManager::DoSetupDataRadioBearer (bearer, bearerId, rnti, lcid, lcGroup, msu,msu2);
-  return lcsConfig;
-}
-
-
 uint8_t
 BwpManagerGnb::GetBwpIndex (uint16_t rnti, uint8_t lcid)
 {
@@ -196,27 +186,7 @@ BwpManagerGnb::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txO
   std::map<uint8_t, LteMacSapUser*>::iterator lcidIt = rntiIt->second.find (txOpParams.lcid);
   NS_ASSERT_MSG (lcidIt != rntiIt->second.end (), "could not find LCID " << (uint16_t) txOpParams.lcid);
 
-  std::map<uint8_t, LteMacSapUser*>::iterator lcidIt2 = rntiIt->second.find (txOpParams.lcid+99);
-  NS_ASSERT_MSG (lcidIt2 != rntiIt->second.end (), "could not find LCID " << (uint16_t) txOpParams.lcid);
-
   (*lcidIt).second->NotifyTxOpportunity (txOpParams);
-//  uint32_t bytes;  /**< the number of bytes to transmit */
-//  uint8_t layer; /**<  the layer of transmission (MIMO) */
-//  uint8_t harqId; /**< the HARQ ID */
-//  uint8_t componentCarrierId; /**< the component carrier id */
-//  uint16_t rnti; /**< the C-RNTI identifying the UE */
-//  uint8_t lcid; /**< the logical channel id */
-//  uint16_t  m_signOfRlc {0};
-  LteMacSapUser::TxOpportunityParameters  txOpParams2;
-  txOpParams2.bytes=txOpParams.bytes;
-  txOpParams2.layer=txOpParams.layer;
-  txOpParams2.harqId=txOpParams.harqId;
-  txOpParams2.componentCarrierId=txOpParams.componentCarrierId;
-  txOpParams2.rnti=txOpParams.rnti;
-  txOpParams2.lcid=txOpParams.lcid;
-  txOpParams2.m_signOfRlc=2;
-  (*lcidIt2).second->NotifyTxOpportunity (txOpParams2);
-
 }
 
 

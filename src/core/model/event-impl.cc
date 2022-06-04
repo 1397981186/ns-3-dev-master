@@ -48,7 +48,6 @@ EventImpl::Invoke (void)
   NS_LOG_FUNCTION (this);
   if (!m_cancel)
     {
-
       Notify ();
     }
 }

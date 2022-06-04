@@ -393,12 +393,13 @@ LteEnbRrcProtocolIdeal::DoSendRrcConnectionSetup (uint16_t rnti, LteRrcSap::RrcC
 		       msg);
 }
 
+//zjh_note: Enb端rrc与Ue端rrc建立通信
 void 
 LteEnbRrcProtocolIdeal::DoSendRrcConnectionReconfiguration (uint16_t rnti, LteRrcSap::RrcConnectionReconfiguration msg)
 {
   Simulator::Schedule (RRC_IDEAL_MSG_DELAY, 
 		       &LteUeRrcSapProvider::RecvRrcConnectionReconfiguration,
-		       GetUeRrcSapProvider (rnti), 
+		       GetUeRrcSapProvider (rnti),
 		       msg);
 }
 

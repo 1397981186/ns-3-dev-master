@@ -250,8 +250,8 @@ NrPhy::SetChannelBandwidth (uint16_t channelBandwidth)
 {
   NS_LOG_FUNCTION (this);
 
-  NS_LOG_DEBUG ("SetChannelBandwidth called with channel bandwidth value: "<< channelBandwidth * 100 * 1000 << "Hz, "
-                "and the previous value of channel bandwidth was: " << GetChannelBandwidth () << " Hz");
+  //NS_LOG_DEBUG ("SetChannelBandwidth called with channel bandwidth value: "<< channelBandwidth * 100 * 1000 << "Hz, "//znr_com
+                //"and the previous value of channel bandwidth was: " << GetChannelBandwidth () << " Hz");
 
   if (m_channelBandwidth != channelBandwidth)
     {
@@ -276,12 +276,12 @@ NrPhy::SetNumerology (uint16_t numerology)
     {
       DoUpdateRbNum ();
 
-      NS_LOG_INFO (" Numerology configured:" << GetNumerology () <<
-                   " slots per subframe: " << m_slotsPerSubframe <<
-                   " slot period:" << GetSlotPeriod () <<
-                   " symbol period:" << GetSymbolPeriod () <<
-                   " subcarrier spacing: " << GetSubcarrierSpacing () <<
-                   " number of RBs: " << GetRbNum () );
+      //NS_LOG_INFO (" Numerology configured:" << GetNumerology () <<//znr_com
+                   //" slots per subframe: " << m_slotsPerSubframe <<
+                   //" slot period:" << GetSlotPeriod () <<
+                   //" symbol period:" << GetSymbolPeriod () <<
+                   //" subcarrier spacing: " << GetSubcarrierSpacing () <<
+                   //" number of RBs: " << GetRbNum () );
     }
   else
     {
@@ -357,8 +357,10 @@ NrPhy::SetMacPdu (const Ptr<Packet> &p, const SfnSf & sfn, uint8_t symStart)
       it = m_packetBurstMap.insert (std::make_pair (key, CreateObject<PacketBurst> ())).first;
     }
   it->second->AddPacket (p);
-  NS_LOG_INFO ("Adding a packet for the Packet Burst of " << sfn <<
-               " at sym " << +symStart << std::endl);
+  //NS_LOG_INFO ("Adding a packet for the Packet Burst of " << sfn <<//znr_com
+               //" at sym " << +symStart << std::endl);           
+  NS_LOG_DEBUG (this << " NrPhy::SetMacPdu");//znr_add
+  NS_LOG_DEBUG ("               packet.size = " << (uint16_t) it->second->GetSize ());//znr_add           
 }
 
 void
@@ -550,7 +552,7 @@ NrPhy::DoUpdateRbNum ()
   m_rbNum = static_cast<uint32_t> (realBw / rbWidth);
   NS_ASSERT (GetRbNum () > 0);
 
-  NS_LOG_INFO ("Updated RbNum to " << GetRbNum ());
+  //NS_LOG_INFO ("Updated RbNum to " << GetRbNum ());//znr_com
 
   if (m_spectrumPhy)
     {
@@ -568,7 +570,7 @@ NrPhy::DoUpdateRbNum ()
         {
           NS_LOG_WARN ("Working without channel (i.e., under test)");
         }
-      NS_LOG_INFO ("Noise Power Spectral Density updated");
+      //NS_LOG_INFO ("Noise Power Spectral Density updated");//znr_com
     }
 }
 
@@ -690,7 +692,7 @@ NrPhy::PushBackSlotAllocInfo (const SlotAllocInfo &slotAllocInfo)
 {
   NS_LOG_FUNCTION (this);
 
-  NS_LOG_DEBUG ("setting info for slot " << slotAllocInfo.m_sfnSf);
+  //NS_LOG_DEBUG ("setting info for slot " << slotAllocInfo.m_sfnSf);//znr_com
 
   // That's not so complex, as the list would typically be of 2 or 3 elements.
   bool updated = false;
@@ -698,7 +700,7 @@ NrPhy::PushBackSlotAllocInfo (const SlotAllocInfo &slotAllocInfo)
     {
       if (alloc.m_sfnSf == slotAllocInfo.m_sfnSf)
         {
-          NS_LOG_INFO ("Merging inside existing allocation");
+          //NS_LOG_INFO ("Merging inside existing allocation");//znr_com
           alloc.Merge (slotAllocInfo);
           updated = true;
           break;
@@ -708,7 +710,7 @@ NrPhy::PushBackSlotAllocInfo (const SlotAllocInfo &slotAllocInfo)
     {
       m_slotAllocInfo.push_back (slotAllocInfo);
       m_slotAllocInfo.sort ();
-      NS_LOG_INFO ("Pushing allocation at the end of the list");
+      //NS_LOG_INFO ("Pushing allocation at the end of the list");//znr_com
     }
 
   std::stringstream output;
@@ -717,7 +719,7 @@ NrPhy::PushBackSlotAllocInfo (const SlotAllocInfo &slotAllocInfo)
     {
       output << alloc;
     }
-  NS_LOG_INFO (output.str ());
+  //NS_LOG_INFO (output.str ());//znr_com
 }
 
 void
@@ -754,7 +756,7 @@ NrPhy::PushFrontSlotAllocInfo (const SfnSf &newSfnSf, const SlotAllocInfo &slotA
             }
         }
 
-      NS_LOG_INFO ("Set slot allocation for " << it->m_sfnSf << " to " << currentSfn);
+      //NS_LOG_INFO ("Set slot allocation for " << it->m_sfnSf << " to " << currentSfn);//znr_com
       it->m_sfnSf = currentSfn;
       currentSfn.Add (1);
     }
@@ -765,8 +767,8 @@ NrPhy::PushFrontSlotAllocInfo (const SfnSf &newSfnSf, const SlotAllocInfo &slotA
       old.Decode (sfnMap.at (burstPair.first));
       latest.Decode (burstPair.first);
       m_packetBurstMap.insert (std::make_pair (burstPair.first, burstPair.second));
-      NS_LOG_INFO ("PacketBurst with " << burstPair.second->GetNPackets() <<
-                   "packets for SFN " << old << " now moved to SFN " << latest);
+      //NS_LOG_INFO ("PacketBurst with " << burstPair.second->GetNPackets() <<//znr_com
+                   //"packets for SFN " << old << " now moved to SFN " << latest);
     }
 }
 
