@@ -106,6 +106,7 @@ PrintRxPkt (std::string context, Ptr<const Packet> pkt)
   SeqTsHeader seqTs;
   pkt->PeekHeader (seqTs);
   packetsTime.push_back ((Simulator::Now () - seqTs.GetTs ()).GetMicroSeconds ());
+  NS_LOG_DEBUG(" packet time "<<(Simulator::Now () - seqTs.GetTs ()).GetMicroSeconds ());
 }
 
 int
@@ -123,11 +124,11 @@ main (int argc, char *argv[])
   double bandwidthBand = 100e6;
   double ueY = 30.0;
 
-//  double simTime = 2.0; // 50 seconds: to take statistics
-  double simTime = 2; // 50 seconds: to take statistics
+  double simTime = 4.0; // 50 seconds: to take statistics
+//  double simTime = 1.2; // 50 seconds: to take statistics
   uint32_t pktSize = 822;
   Time udpAppStartTime = MilliSeconds (1000);
-  uint32_t pktInterval=32;
+  uint32_t pktInterval=300;
   uint32_t updateChannelIntervalMicro=pktInterval*0.8;
   Time packetInterval = MicroSeconds (pktInterval);
   Time updateChannelInterval = MicroSeconds (updateChannelIntervalMicro);
@@ -183,16 +184,17 @@ main (int argc, char *argv[])
   LogComponentEnable("NrSpectrumPhy", LOG_LEVEL_DEBUG);
   LogComponentEnable("UdpServer", LOG_LEVEL_DEBUG);
   LogComponentEnable("PacketMetadata", LOG_LEVEL_DEBUG);
+  LogComponentEnable("CttcErrorModelExample", LOG_LEVEL_DEBUG);
 
 
   /*
    * Default values for the simulation. We are progressively removing all
    * the instances of SetDefault, but we need it for legacy code (LTE)
    */
-//  Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize",
-//                      UintegerValue (999999999));
   Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize",
-                      UintegerValue (1024*256));
+                      UintegerValue (999999999));
+//  Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize",
+//                      UintegerValue (1024*256));
 
   Config::SetDefault ("ns3::NrAmc::ErrorModelType", TypeIdValue (TypeId::LookupByName (errorModel)));
   Config::SetDefault ("ns3::NrAmc::AmcModel", EnumValue (NrAmc::ShannonModel));  // NOT USED in this example. MCS is fixed.
@@ -415,7 +417,7 @@ main (int argc, char *argv[])
   // ul false,ue is sink
   sinkApps.Start (udpAppStartTime);
   txApps.Start (udpAppStartTime);
-  sinkApps.Stop (Seconds (simTime+0.04));
+  sinkApps.Stop (Seconds (simTime+0.5));
   txApps.Stop (Seconds (simTime));
 
   // attach UEs to the closest eNB
@@ -424,7 +426,7 @@ main (int argc, char *argv[])
   // enable the traces provided by the nr module
   //nrHelper->EnableTraces();
 
-  Simulator::Stop (Seconds (simTime+0.04));
+  Simulator::Stop (Seconds (simTime+0.5));
 
   auto start = std::chrono::steady_clock::now ();
 

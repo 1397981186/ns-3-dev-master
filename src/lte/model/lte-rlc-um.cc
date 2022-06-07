@@ -854,7 +854,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
   if (txOpParams.bytes <= 4)
     {
       // Stingy MAC: Header fix part is 2 bytes, we need more bytes for the data
-      NS_LOG_DEBUG ("TX opportunity too small = " << txOpParams.bytes);
+      NS_LOG_DEBUG ("TX opportunity too small = " << txOpParams.bytes<<" Nums Of transed Pdu "<<m_allSendPduNums);
       if(flag==0||flag==2){
 	remain=0;
 //	m_toogleFlagRlc=false;//sht add for rlc2 source use
@@ -1137,9 +1137,10 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
               firstSegmentTime = m_txBuffer.begin ()->m_waitingSince;
               m_txBufferSize -= firstSegment->GetSize ();
               m_txBuffer.erase (m_txBuffer.begin ());
+              m_allSendPduNums++;
               NS_LOG_LOGIC ("        txBufferSize = " << m_txBufferSize );
               remain=nextSegmentSize;
-              NS_LOG_DEBUG ("---not finish in this "<<"    remain = " << remain );
+              NS_LOG_DEBUG ("---not finish in this "<<"    remain = " << remain<<" Nums Of transed Pdu "<<m_allSendPduNums );
           }
 
 

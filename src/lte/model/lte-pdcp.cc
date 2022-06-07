@@ -581,7 +581,7 @@ void
 LtePdcp::DoReceivePdu (Ptr<Packet> p)
 {
   NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << p->GetSize ()<<" time "<<Simulator::Now ().GetNanoSeconds());
-//  if(p->GetSize ()!=852&&p->GetSize ()!=563&&p->GetSize ()!=24){
+//  if(p->GetSize ()!=852){
   if(p->GetSize ()!=873&&p->GetSize ()!=24){
       NS_LOG_DEBUG("not 542/563/24, drop");
 

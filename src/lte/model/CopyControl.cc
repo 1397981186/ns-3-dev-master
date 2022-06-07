@@ -245,8 +245,8 @@ CopyControl::CopySendArqReq (std::vector<uint64_t>&ArqGroupNums, std::vector<Ptr
 //  std::vector<Ptr<Packet> > ArqPackets;
   uint8_t cnt=0;
   NS_LOG_DEBUG ("---it at i "<< m_ncVrMs);
-  if(m_groupnum<40){return ;}
-  for (uint64_t i=m_ncVrMs; i<=m_groupnum-40; i++)
+  if(m_groupnum<60){return ;}
+  for (uint64_t i=m_ncVrMs; i<=m_groupnum-60; i++)
 //  for (uint64_t i=m_ncVrMs; i<=m_MaxRecvGroupnum; i++)
   {
 
@@ -281,7 +281,7 @@ CopyControl::CopySendArqReq (std::vector<uint64_t>&ArqGroupNums, std::vector<Ptr
 	NS_LOG_DEBUG ("num_statusReport is bigger than 3");
       }
     }
-    if(cnt==10){break;}
+    if(cnt==20){break;}
   }
   // 将m_ncVrMs置为ncCompelte=1的连续的最小组号+1
   auto it1 = m_ncDecodingBufferList.find(m_ncVrMs);
@@ -328,16 +328,22 @@ CopyControl::MakeCopyArqSendPacket (Ptr<Packet> p)
     NcHeader reTxheader;
     reTxheader.SetGroupnum(ncheader.GetGroupnum());
     Ptr<Packet> reTxpacket = it->second.m_ncVector[m_originalBlockSize-1].p->Copy();
-    reTxpacket->AddHeader(reTxheader);
-    arqPackets.push_back(reTxpacket);
+//    reTxpacket->AddHeader(reTxheader);
+    if(!reTxpacket->AddHeader(reTxheader)){
+	  NS_LOG_DEBUG ("---head add wrong");
+    }else{
+	  arqPackets.push_back(reTxpacket);
+
+//    arqPackets.push_back(reTxpacket);
    }
+  }
   NS_LOG_DEBUG ("made copy arq packets to send , num of packets is "<<arqPackets.size());
   return arqPackets;
 }
 
 
 void
-CopyControl::stopArqTimer ()
+CopyControl::stopArqTimer()
 {
   auto it1=m_ncDecodingBufferList.find(m_groupnum);
   if (it1->second.m_statusReportTimer.IsRunning())
