@@ -39,7 +39,7 @@ LteRlcUm::LteRlcUm ()
     m_vrUr (0),
     m_vrUx (0),
     m_vrUh (0),
-    m_windowSize (512),
+    m_windowSize (4),
     m_expectedSeqNumber (0)
 {
   NS_LOG_FUNCTION (this);
@@ -1105,7 +1105,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
                 }
               NS_LOG_LOGIC ("        Next segment size = " << nextSegmentSize);
               remain=nextSegmentSize;
-              NS_LOG_DEBUG ("---not finish in this "<<"    remain = " << remain );
+              NS_LOG_DEBUG ("---0,1 and not finish in this "<<"    remain = " << remain );
               break;
           }else{
               NS_LOG_LOGIC ("    IF firstSegment < NextSegmentSize && txBuffer.size > 0");//have source not use
@@ -1140,7 +1140,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
               m_allSendPduNums++;
               NS_LOG_LOGIC ("        txBufferSize = " << m_txBufferSize );
               remain=nextSegmentSize;
-              NS_LOG_DEBUG ("---not finish in this "<<"    remain = " << remain<<" Nums Of transed Pdu "<<m_allSendPduNums );
+              NS_LOG_DEBUG ("---2,3 and not finish in this "<<"    remain = " << remain<<" Nums Of transed Pdu "<<m_allSendPduNums );
           }
 
 
