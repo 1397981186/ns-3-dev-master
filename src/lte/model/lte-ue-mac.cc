@@ -333,6 +333,7 @@ LteUeMac::DoTransmitPdu (LteMacSapProvider::TransmitPduParameters params)
 {
   NS_LOG_FUNCTION (this);
   NS_ASSERT_MSG (m_rnti == params.rnti, "RNTI mismatch between RLC and MAC");
+  NS_LOG_INFO(this << " LteUeMac::DoTransmitPdu");//zjh_add
   LteRadioBearerTag tag (params.rnti, params.lcid, 0 /* UE works in SISO mode*/);
   params.pdu->AddPacketTag (tag);
   // store pdu in HARQ buffer
@@ -630,6 +631,7 @@ LteUeMac::DoNotifyConnectionSuccessful ()
 void
 LteUeMac::DoReceivePhyPdu (Ptr<Packet> p)
 {
+  //NS_LOG_INFO ("LteUeMac::DoReceivePhyPdu");//zjh_add
   LteRadioBearerTag tag;
   p->RemovePacketTag (tag);
   if (tag.GetRnti () == m_rnti)
@@ -642,11 +644,13 @@ LteUeMac::DoReceivePhyPdu (Ptr<Packet> p)
           rxPduParams.p = p;
           rxPduParams.rnti = m_rnti;
           rxPduParams.lcid = tag.GetLcid ();
+          NS_LOG_WARN (this << " LteUeMac received packet with lcid " << (uint32_t) tag.GetLcid ());//zjh_add
           it->second.macSapUser->ReceivePdu (rxPduParams);
         }
       else
         {
-          NS_LOG_WARN ("received packet with unknown lcid " << (uint32_t) tag.GetLcid ());
+          //NS_LOG_WARN ("received packet with unknown lcid " << (uint32_t) tag.GetLcid ());//zjh_com
+          NS_LOG_WARN (this << " LteUeMac received packet with unknown lcid " << (uint32_t) tag.GetLcid ());//zjh_add
         }
     }
 }
@@ -655,7 +659,9 @@ LteUeMac::DoReceivePhyPdu (Ptr<Packet> p)
 void
 LteUeMac::DoReceiveLteControlMessage (Ptr<LteControlMessage> msg)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this);//
+  NS_LOG_INFO (this << " LteUeMac::DoReceiveLteControlMessage");//zjh_add
+  
   if (msg->GetMessageType () == LteControlMessage::UL_DCI)
     {
       Ptr<UlDciLteControlMessage> msg2 = DynamicCast<UlDciLteControlMessage> (msg);
@@ -705,7 +711,7 @@ LteUeMac::DoReceiveLteControlMessage (Ptr<LteControlMessage> msg)
           NS_LOG_LOGIC (this << " UE " << m_rnti << ": UL-CQI notified TxOpportunity of " << dci.m_tbSize << " => " << bytesPerActiveLc << " bytes per active LC" << " statusPduMinSize " << statusPduMinSize);
 
           LteMacSapUser::TxOpportunityParameters txOpParams;
-
+          
           for (it = m_lcInfoMap.begin (); it != m_lcInfoMap.end (); it++)
             {
               itBsr = m_ulBsrReceived.find ((*it).first);

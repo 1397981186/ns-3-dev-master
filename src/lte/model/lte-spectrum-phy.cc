@@ -445,7 +445,7 @@ LteSpectrumPhy::StartTxDataFrame (Ptr<PacketBurst> pb, std::list<Ptr<LteControlM
 {
   NS_LOG_FUNCTION (this << pb);
   NS_LOG_LOGIC (this << " state: " << m_state);
-
+   
   m_phyTxStartTrace (pb);
 
   switch (m_state)
@@ -487,6 +487,7 @@ LteSpectrumPhy::StartTxDataFrame (Ptr<PacketBurst> pb, std::list<Ptr<LteControlM
           txParams->ctrlMsgList = ctrlMsgList;
           txParams->cellId = m_cellId;
           m_channel->StartTx (txParams);
+          NS_LOG_INFO (this << " LteSpectrumPhy::StartTxDataFrame m_state = " << m_state);//zjh_add
           m_endTxEvent = Simulator::Schedule (duration, &LteSpectrumPhy::EndTxData, this);
         }
         return false;
@@ -654,6 +655,7 @@ LteSpectrumPhy::EndTxUlSrs ()
 void
 LteSpectrumPhy::StartRx (Ptr<SpectrumSignalParameters> spectrumRxParams)
 {
+  //NS_LOG_INFO ("LteSpectrumPhy::StartRx");//zjh_add
   NS_LOG_FUNCTION (this << spectrumRxParams);
   NS_LOG_LOGIC (this << " state: " << m_state);
 
@@ -667,6 +669,7 @@ LteSpectrumPhy::StartRx (Ptr<SpectrumSignalParameters> spectrumRxParams)
   Ptr<LteSpectrumSignalParametersUlSrsFrame> lteUlSrsRxParams = DynamicCast<LteSpectrumSignalParametersUlSrsFrame> (spectrumRxParams);
   if (lteDataRxParams != 0)
     {
+      //NS_LOG_INFO ("LteSpectrumPhy::StartRx");//zjh_add
       m_interferenceData->AddSignal (rxPsd, duration);
       StartRxData (lteDataRxParams);
     }
@@ -691,6 +694,7 @@ LteSpectrumPhy::StartRx (Ptr<SpectrumSignalParameters> spectrumRxParams)
 void
 LteSpectrumPhy::StartRxData (Ptr<LteSpectrumSignalParametersDataFrame> params)
 {
+  //NS_LOG_INFO ("LteSpectrumPhy::StartRxData");//zjh_add
   NS_LOG_FUNCTION (this);
   switch (m_state)
     {
@@ -739,11 +743,13 @@ LteSpectrumPhy::StartRxData (Ptr<LteSpectrumSignalParametersDataFrame> params)
               if (params->packetBurst)
                 {
                   m_rxPacketBurstList.push_back (params->packetBurst);
+                  //NS_LOG_INFO (this << " LteSpectrumPhy::StartRxData");//zjh_add
+                  //NS_LOG_INFO ("packetBurst.size = " << (uint16_t)params->packetBurst->GetSize ());//zjh_add
                   m_interferenceData->StartRx (params->psd);
 
                   m_phyRxStartTrace (params->packetBurst);
                 }
-              NS_LOG_DEBUG (this << " insert msgs " << params->ctrlMsgList.size ());
+              //NS_LOG_DEBUG (this << " insert msgs " << params->ctrlMsgList.size ());//zjh_com
               m_rxControlMessageList.insert (m_rxControlMessageList.end (), params->ctrlMsgList.begin (), params->ctrlMsgList.end ());
 
               NS_LOG_LOGIC (this << " numSimultaneousRxEvents = " << m_rxPacketBurstList.size ());
@@ -769,6 +775,7 @@ LteSpectrumPhy::StartRxData (Ptr<LteSpectrumSignalParametersDataFrame> params)
 void
 LteSpectrumPhy::StartRxDlCtrl (Ptr<LteSpectrumSignalParametersDlCtrlFrame> lteDlCtrlRxParams)
 {
+  //NS_LOG_INFO ("LteSpectrumPhy::StartRxDlCtrl");//zjh_add
   NS_LOG_FUNCTION (this);
 
   // To check if we're synchronized to this signal, we check
@@ -973,20 +980,20 @@ LteSpectrumPhy::RemoveExpectedTb (uint16_t  rnti)
 void
 LteSpectrumPhy::EndRxData ()
 {
+  //NS_LOG_INFO ("LteSpectrumPhy::EndRxData");//zjh_add
   NS_LOG_FUNCTION (this);
   NS_LOG_LOGIC (this << " state: " << m_state);
-
   NS_ASSERT (m_state == RX_DATA);
 
   // this will trigger CQI calculation and Error Model evaluation
   // as a side effect, the error model should update the error status of all TBs
   m_interferenceData->EndRx ();
-  NS_LOG_DEBUG (this << " No. of burts " << m_rxPacketBurstList.size ());
-  NS_LOG_DEBUG (this << " Expected TBs " << m_expectedTbs.size ());
+  //NS_LOG_DEBUG (this << " No. of burts " << m_rxPacketBurstList.size ());//zjh_com
+  //NS_LOG_DEBUG (this << " Expected TBs " << m_expectedTbs.size ());//zjh_com
   expectedTbs_t::iterator itTb = m_expectedTbs.begin ();
 
   // apply transmission mode gain
-  NS_LOG_DEBUG (this << " txMode " << (uint16_t)m_transmissionMode << " gain " << m_txModeGain.at (m_transmissionMode));
+  //NS_LOG_DEBUG (this << " txMode " << (uint16_t)m_transmissionMode << " gain " << m_txModeGain.at (m_transmissionMode));//zjh_com
   NS_ASSERT (m_transmissionMode < m_txModeGain.size ());
   m_sinrPerceived *= m_txModeGain.at (m_transmissionMode);
 
@@ -1012,7 +1019,7 @@ LteSpectrumPhy::EndRxData ()
           TbStats_t tbStats = LteMiErrorModel::GetTbDecodificationStats (m_sinrPerceived, (*itTb).second.rbBitmap, (*itTb).second.size, (*itTb).second.mcs, harqInfoList);
           (*itTb).second.mi = tbStats.mi;
           (*itTb).second.corrupt = m_random->GetValue () > tbStats.tbler ? false : true;
-          NS_LOG_DEBUG (this << "RNTI " << (*itTb).first.m_rnti << " size " << (*itTb).second.size << " mcs " << (uint32_t)(*itTb).second.mcs << " bitmap " << (*itTb).second.rbBitmap.size () << " layer " << (uint16_t)(*itTb).first.m_layer << " TBLER " << tbStats.tbler << " corrupted " << (*itTb).second.corrupt);
+          //NS_LOG_DEBUG (this << "RNTI " << (*itTb).first.m_rnti << " size " << (*itTb).second.size << " mcs " << (uint32_t)(*itTb).second.mcs << " bitmap " << (*itTb).second.rbBitmap.size () << " layer " << (uint16_t)(*itTb).first.m_layer << " TBLER " << tbStats.tbler << " corrupted " << (*itTb).second.corrupt);//zjh_com
           // fire traces on DL/UL reception PHY stats
           PhyReceptionStatParameters params;
           params.m_timestamp = Simulator::Now ().GetMilliSeconds ();
@@ -1055,7 +1062,7 @@ LteSpectrumPhy::EndRxData ()
           tbId.m_rnti = tag.GetRnti ();
           tbId.m_layer = tag.GetLayer ();
           itTb = m_expectedTbs.find (tbId);
-          NS_LOG_INFO (this << " Packet of " << tbId.m_rnti << " layer " <<  (uint16_t) tag.GetLayer ());
+          //NS_LOG_INFO (this << " Packet of " << tbId.m_rnti << " layer " <<  (uint16_t) tag.GetLayer ());//zjh_com
           if (itTb != m_expectedTbs.end ())
             {
               if (!(*itTb).second.corrupt)
@@ -1085,13 +1092,13 @@ LteSpectrumPhy::EndRxData ()
                       if ((*itTb).second.corrupt)
                         {
                           harqUlInfo.m_receptionStatus = UlInfoListElement_s::NotOk;
-                          NS_LOG_DEBUG (this << " RNTI " << tbId.m_rnti << " send UL-HARQ-NACK");
+                          //NS_LOG_DEBUG (this << " RNTI " << tbId.m_rnti << " send UL-HARQ-NACK");//zjh_com
                           m_harqPhyModule->UpdateUlHarqProcessStatus (tbId.m_rnti, (*itTb).second.mi, (*itTb).second.size, (*itTb).second.size / EffectiveCodingRate [(*itTb).second.mcs]);
                         }
                       else
                         {
                           harqUlInfo.m_receptionStatus = UlInfoListElement_s::Ok;
-                          NS_LOG_DEBUG (this << " RNTI " << tbId.m_rnti << " send UL-HARQ-ACK");
+                          //NS_LOG_DEBUG (this << " RNTI " << tbId.m_rnti << " send UL-HARQ-ACK");//zjh_com
                           m_harqPhyModule->ResetUlHarqProcessStatus (tbId.m_rnti, (*itTb).second.harqProcessId);
                         }
                       if (!m_ltePhyUlHarqFeedbackCallback.IsNull ())
@@ -1111,14 +1118,14 @@ LteSpectrumPhy::EndRxData ()
                           if ((*itTb).second.corrupt)
                             {
                               harqDlInfo.m_harqStatus.at (tbId.m_layer) = DlInfoListElement_s::NACK;
-                              NS_LOG_DEBUG (this << " RNTI " << tbId.m_rnti << " harqId " << (uint16_t)(*itTb).second.harqProcessId << " layer " << (uint16_t)tbId.m_layer << " send DL-HARQ-NACK");
+                              //NS_LOG_DEBUG (this << " RNTI " << tbId.m_rnti << " harqId " << (uint16_t)(*itTb).second.harqProcessId << " layer " << (uint16_t)tbId.m_layer << " send DL-HARQ-NACK");//zjh_com
                               m_harqPhyModule->UpdateDlHarqProcessStatus ((*itTb).second.harqProcessId, tbId.m_layer, (*itTb).second.mi, (*itTb).second.size, (*itTb).second.size / EffectiveCodingRate [(*itTb).second.mcs]);
                             }
                           else
                             {
-
+                              //NS_LOG_INFO ("LteSpectrumPhy::EndRxData");//zjh_add
                               harqDlInfo.m_harqStatus.at (tbId.m_layer) = DlInfoListElement_s::ACK;
-                              NS_LOG_DEBUG (this << " RNTI " << tbId.m_rnti << " harqId " << (uint16_t)(*itTb).second.harqProcessId << " layer " << (uint16_t)tbId.m_layer << " size " << (*itTb).second.size << " send DL-HARQ-ACK");
+                              //NS_LOG_DEBUG (this << " RNTI " << tbId.m_rnti << " harqId " << (uint16_t)(*itTb).second.harqProcessId << " layer " << (uint16_t)tbId.m_layer << " size " << (*itTb).second.size << " send DL-HARQ-ACK");//zjh_com
                               m_harqPhyModule->ResetDlHarqProcessStatus ((*itTb).second.harqProcessId);
                             }
                           harqDlInfoMap.insert (std::pair <uint16_t, DlInfoListElement_s> (tbId.m_rnti, harqDlInfo));
@@ -1128,14 +1135,15 @@ LteSpectrumPhy::EndRxData ()
                           if ((*itTb).second.corrupt)
                             {
                               (*itHarq).second.m_harqStatus.at (tbId.m_layer) = DlInfoListElement_s::NACK;
-                              NS_LOG_DEBUG (this << " RNTI " << tbId.m_rnti << " harqId " << (uint16_t)(*itTb).second.harqProcessId << " layer " << (uint16_t)tbId.m_layer << " size " << (*itHarq).second.m_harqStatus.size () << " send DL-HARQ-NACK");
+                              //NS_LOG_DEBUG (this << " RNTI " << tbId.m_rnti << " harqId " << (uint16_t)(*itTb).second.harqProcessId << " layer " << (uint16_t)tbId.m_layer << " size " << (*itHarq).second.m_harqStatus.size () << " send DL-HARQ-NACK");//zjh_com
                               m_harqPhyModule->UpdateDlHarqProcessStatus ((*itTb).second.harqProcessId, tbId.m_layer, (*itTb).second.mi, (*itTb).second.size, (*itTb).second.size / EffectiveCodingRate [(*itTb).second.mcs]);
                             }
                           else
                             {
+                              //NS_LOG_INFO ("LteSpectrumPhy::EndRxData");//zjh_add
                               NS_ASSERT_MSG (tbId.m_layer < (*itHarq).second.m_harqStatus.size (), " layer " << (uint16_t)tbId.m_layer);
                               (*itHarq).second.m_harqStatus.at (tbId.m_layer) = DlInfoListElement_s::ACK;
-                              NS_LOG_DEBUG (this << " RNTI " << tbId.m_rnti << " harqId " << (uint16_t)(*itTb).second.harqProcessId << " layer " << (uint16_t)tbId.m_layer << " size " << (*itHarq).second.m_harqStatus.size () << " send DL-HARQ-ACK");
+                              //NS_LOG_DEBUG (this << " RNTI " << tbId.m_rnti << " harqId " << (uint16_t)(*itTb).second.harqProcessId << " layer " << (uint16_t)tbId.m_layer << " size " << (*itHarq).second.m_harqStatus.size () << " send DL-HARQ-ACK");//zjh_com
                               m_harqPhyModule->ResetDlHarqProcessStatus ((*itTb).second.harqProcessId);
                             }
                         }
@@ -1149,6 +1157,7 @@ LteSpectrumPhy::EndRxData ()
   std::map <uint16_t, DlInfoListElement_s>::iterator itHarq;
   for (itHarq = harqDlInfoMap.begin (); itHarq != harqDlInfoMap.end (); itHarq++)
     {
+      //NS_LOG_INFO (this << " LteSpectrumPhy m_ltePhyDlHarqFeedbackCallback " );//zjh_add
       if (!m_ltePhyDlHarqFeedbackCallback.IsNull ())
         {
           m_ltePhyDlHarqFeedbackCallback ((*itHarq).second);
@@ -1181,7 +1190,7 @@ LteSpectrumPhy::EndRxDlCtrl ()
   // as a side effect, the error model should update the error status of all TBs
   m_interferenceCtrl->EndRx ();
   // apply transmission mode gain
-  NS_LOG_DEBUG (this << " txMode " << (uint16_t)m_transmissionMode << " gain " << m_txModeGain.at (m_transmissionMode));
+  //NS_LOG_DEBUG (this << " txMode " << (uint16_t)m_transmissionMode << " gain " << m_txModeGain.at (m_transmissionMode));//zjh_com
   NS_ASSERT (m_transmissionMode < m_txModeGain.size ());
   if (m_transmissionMode > 0)
     {
@@ -1194,14 +1203,14 @@ LteSpectrumPhy::EndRxDlCtrl ()
     {
       double  errorRate = LteMiErrorModel::GetPcfichPdcchError (m_sinrPerceived);
       error = m_random->GetValue () > errorRate ? false : true;
-      NS_LOG_DEBUG (this << " PCFICH-PDCCH Decodification, errorRate " << errorRate << " error " << error);
+      //NS_LOG_DEBUG (this << " PCFICH-PDCCH Decodification, errorRate " << errorRate << " error " << error);//zjh_com
     }
 
   if (!error)
     {
       if (!m_ltePhyRxCtrlEndOkCallback.IsNull ())
         {
-          NS_LOG_DEBUG (this << " PCFICH-PDCCH Rxed OK");
+          //NS_LOG_DEBUG (this << " PCFICH-PDCCH Rxed OK");//zjh_com
           m_ltePhyRxCtrlEndOkCallback (m_rxControlMessageList);
         }
     }
@@ -1209,7 +1218,7 @@ LteSpectrumPhy::EndRxDlCtrl ()
     {
       if (!m_ltePhyRxCtrlEndErrorCallback.IsNull ())
         {
-          NS_LOG_DEBUG (this << " PCFICH-PDCCH Error");
+          //NS_LOG_DEBUG (this << " PCFICH-PDCCH Error");//zjh_com
           m_ltePhyRxCtrlEndErrorCallback ();
         }
     }

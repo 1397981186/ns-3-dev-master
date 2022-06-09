@@ -117,7 +117,6 @@ public:
    * algorithm used to split the traffic between the component carriers themself.
    */  
   virtual std::vector<LteCcmRrcSapProvider::LcsConfig> SetupDataRadioBearer (EpsBearer bearer, uint8_t bearerId, uint16_t rnti, uint8_t lcid, uint8_t lcGroup, LteMacSapUser *msu) = 0;
-  virtual std::vector<LteCcmRrcSapProvider::LcsConfig> SetupDataRadioBearer (EpsBearer bearer, uint8_t bearerId, uint16_t rnti, uint8_t lcid, uint8_t lcGroup, LteMacSapUser *msu,LteMacSapUser *msu2) = 0;
 
    /**
    * \brief Release an existing Data Radio Bearer for a Ue in the LteEnbComponentCarrierManager
@@ -239,7 +238,6 @@ public:
   virtual void AddLc (LteEnbCmacSapProvider::LcInfo lcInfo, LteMacSapUser* msu);
   virtual void RemoveUe (uint16_t rnti);
   virtual std::vector<LteCcmRrcSapProvider::LcsConfig> SetupDataRadioBearer (EpsBearer bearer, uint8_t bearerId, uint16_t rnti, uint8_t lcid, uint8_t lcGroup, LteMacSapUser *msu);
-  virtual std::vector<LteCcmRrcSapProvider::LcsConfig> SetupDataRadioBearer (EpsBearer bearer, uint8_t bearerId, uint16_t rnti, uint8_t lcid, uint8_t lcGroup, LteMacSapUser *msu,LteMacSapUser *msu2);
   virtual std::vector<uint8_t> ReleaseDataRadioBearer (uint16_t rnti, uint8_t lcid);
   virtual LteMacSapUser* ConfigureSignalBearer(LteEnbCmacSapProvider::LcInfo lcInfo,  LteMacSapUser* rlcMacSapUser);
 
@@ -281,12 +279,6 @@ template <class C>
 std::vector<LteCcmRrcSapProvider::LcsConfig> MemberLteCcmRrcSapProvider<C>::SetupDataRadioBearer (EpsBearer bearer, uint8_t bearerId, uint16_t rnti, uint8_t lcid, uint8_t lcGroup, LteMacSapUser *msu)
 {
   return m_owner->DoSetupDataRadioBearer (bearer, bearerId, rnti, lcid, lcGroup, msu);
-}
-
-template <class C>
-std::vector<LteCcmRrcSapProvider::LcsConfig> MemberLteCcmRrcSapProvider<C>::SetupDataRadioBearer (EpsBearer bearer, uint8_t bearerId, uint16_t rnti, uint8_t lcid, uint8_t lcGroup, LteMacSapUser *msu,LteMacSapUser *msu2)
-{
-  return m_owner->DoSetupDataRadioBearer (bearer, bearerId, rnti, lcid, lcGroup, msu,msu2);
 }
 
 template <class C>

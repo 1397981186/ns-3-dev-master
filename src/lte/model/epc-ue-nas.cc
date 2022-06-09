@@ -221,7 +221,7 @@ EpcUeNas::Send (Ptr<Packet> packet, uint16_t protocolNumber)
           }
         else
           {
-            m_asSapProvider->SendData (packet, bid); 
+            m_asSapProvider->SendData (packet, bid);//znr_note: 测试bid+2; 暂不开发ue通过bid=4，LCID=5、6回传，如开发还需修改gNb端
             return true;
           }
       }

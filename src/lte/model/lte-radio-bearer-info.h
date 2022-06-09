@@ -49,7 +49,6 @@ public:
   static TypeId GetTypeId (void);
 
   Ptr<LteRlc> m_rlc; ///< RLC
-  Ptr<LteRlc> m_rlc2; ///< RLC2
   Ptr<LtePdcp> m_pdcp; ///< PDCP
 };
 

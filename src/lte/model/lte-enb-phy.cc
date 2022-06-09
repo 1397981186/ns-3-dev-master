@@ -420,6 +420,7 @@ void
 LteEnbPhy::DoSendMacPdu (Ptr<Packet> p)
 {
   NS_LOG_FUNCTION (this);
+  NS_LOG_INFO (this << " LteEnbPhy::DoSendMacPdu");//zjh_add
   SetMacPdu (p);
 }
 
@@ -527,6 +528,7 @@ void
 LteEnbPhy::ReceiveLteControlMessageList (std::list<Ptr<LteControlMessage> > msgList)
 {
   NS_LOG_FUNCTION (this);
+  //NS_LOG_INFO("LteEnbPhy::ReceiveLteControlMessageList");//zjh_add
   std::list<Ptr<LteControlMessage> >::iterator it;
   for (it = msgList.begin (); it != msgList.end (); it++)
     {
@@ -534,12 +536,14 @@ LteEnbPhy::ReceiveLteControlMessageList (std::list<Ptr<LteControlMessage> > msgL
         {
           case LteControlMessage::RACH_PREAMBLE:
             {
+              //NS_LOG_INFO("LteControlMessage::RACH_PREAMBLE");//zjh_add
               Ptr<RachPreambleLteControlMessage> rachPreamble = DynamicCast<RachPreambleLteControlMessage> (*it);
               m_enbPhySapUser->ReceiveRachPreamble (rachPreamble->GetRapId ());
             }
             break;
           case LteControlMessage::DL_CQI:
             {
+              //NS_LOG_INFO("LteControlMessage::DL_CQI");//zjh_add
               Ptr<DlCqiLteControlMessage> dlcqiMsg = DynamicCast<DlCqiLteControlMessage> (*it);
               CqiListElement_s dlcqi = dlcqiMsg->GetDlCqi ();
               // check whether the UE is connected
@@ -551,6 +555,7 @@ LteEnbPhy::ReceiveLteControlMessageList (std::list<Ptr<LteControlMessage> > msgL
             break;
           case LteControlMessage::BSR:
             {
+              NS_LOG_INFO("LteControlMessage::BSR");//zjh_add
               Ptr<BsrLteControlMessage> bsrMsg = DynamicCast<BsrLteControlMessage> (*it);
               MacCeListElement_s bsr = bsrMsg->GetBsr ();
               // check whether the UE is connected
@@ -562,6 +567,7 @@ LteEnbPhy::ReceiveLteControlMessageList (std::list<Ptr<LteControlMessage> > msgL
             break;
           case LteControlMessage::DL_HARQ:
             {
+              //NS_LOG_INFO("LteControlMessage::DL_HARQ");//zjh_add
               Ptr<DlHarqFeedbackLteControlMessage> dlharqMsg = DynamicCast<DlHarqFeedbackLteControlMessage> (*it);
               DlInfoListElement_s dlharq = dlharqMsg->GetDlHarqFeedback ();
               // check whether the UE is connected
@@ -752,7 +758,8 @@ LteEnbPhy::StartSubFrame (void)
   SendControlChannels (ctrlMsg);
 
   // send data frame
-  Ptr<PacketBurst> pb = GetPacketBurst ();
+  Ptr<PacketBurst> pb = GetPacketBurst ();//zjh_com
+  //Ptr<PacketBurst> pb = NULL;//zjh_add
   if (pb)
     {
       Simulator::Schedule (DL_CTRL_DELAY_FROM_SUBFRAME_START, // ctrl frame fixed to 3 symbols

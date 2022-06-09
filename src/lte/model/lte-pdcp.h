@@ -69,8 +69,11 @@ public:
    *
    * \param s the PDCP SAP user to be used by this LTE_PDCP
    */
+   
+  void SetLcId_leg (uint8_t lcId);//zjh_add
+   
   void SetLtePdcpSapUser (LtePdcpSapUser * s);
-
+  void SetLtePdcpSapUser_leg (LtePdcpSapUser * s);//zjh_add
   /**
    *
    *
@@ -84,16 +87,28 @@ public:
    * \param s the RLC SAP Provider to be used by this LTE_PDCP
    */
   void SetLteRlcSapProvider (LteRlcSapProvider * s);
-  //sht
-  void SetLteRlcSapProvider2 (LteRlcSapProvider * s);
 
+
+ /**
+   * zjh_new:
+   *
+   * \param s the second_leg RLC SAP Provider to be used by this LTE_PDCP
+   */
+  void SetLteRlcSapProvider_leg (LteRlcSapProvider * s);
+  
   /**
    *
    *
    * \return the RLC SAP User interface offered to the RLC by this LTE_PDCP
    */
   LteRlcSapUser* GetLteRlcSapUser ();
-//  LteRlcSapUser* GetLteRlcSapUser2 ();
+
+  /**
+   * zjh_new: 
+   *
+   * \return the second RLC SAP User interface offered to the RLC by this LTE_PDCP
+   */
+  LteRlcSapUser* GetLteRlcSapUser_leg ();
 
   /// maximum PDCP SN
   static const uint16_t MAX_PDCP_SN = 4096;
@@ -119,7 +134,20 @@ public:
    * \param s 
    */
   void SetStatus (Status s);
-
+ 
+  /** 
+   * zjh_new: 
+   * \return the current duplication status of the PDCP
+   */
+  bool GetDuplication ();
+   
+  /**
+   * zjh_new: Set the duplication of the PDCP
+   * 
+   * \param onoff 
+   */
+  void SetDuplication (bool onoff);
+  
   /**
    * TracedCallback for PDU transmission event.
    *
@@ -151,8 +179,9 @@ protected:
    * \param params the TransmitPdcpSduParameters
    */
   virtual void DoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters params);
-  virtual void DoTransmitPdcpSdu2 (LtePdcpSapProvider::TransmitPdcpSduParameters params);
+
   LtePdcpSapUser* m_pdcpSapUser; ///< PDCP SAP user
+  LtePdcpSapUser* m_pdcpSapUser_leg; //zjh_add
   LtePdcpSapProvider* m_pdcpSapProvider; ///< PDCP SAP provider
 
   /**
@@ -163,25 +192,28 @@ protected:
   virtual void DoReceivePdu (Ptr<Packet> p);
 
   LteRlcSapUser* m_rlcSapUser; ///< RLC SAP user 
+  LteRlcSapUser* m_rlcSapUser_leg; ///< zjh_new: the second leg LC SAP user 
   LteRlcSapProvider* m_rlcSapProvider; ///< RLC SAP provider
-
-  //-----------------------------sht 0321
-//  LteRlcSapUser* m_rlcSapUser2; ///< RLC SAP user
-  LteRlcSapProvider* m_rlcSapProvider2; ///< RLC SAP provider
+  LteRlcSapProvider* m_rlcSapProvider_leg; ///< zjh_new: the second leg RLC SAP provider
 
   uint16_t m_rnti; ///< RNTI
   uint8_t m_lcid; ///< LCID
+  
+  //uint16_t m_rnti_leg; //zjh_add，暂且使用用一个rnti
+  uint8_t m_lcid_leg; ///zjh_add
 
   /**
    * Used to inform of a PDU delivery to the RLC SAP provider.
    * The parameters are RNTI, LCID and bytes delivered
    */
   TracedCallback<uint16_t, uint8_t, uint32_t> m_txPdu;
+  TracedCallback<uint16_t, uint8_t, uint32_t> m_txPdu_leg;//zjh_add
   /**
    * Used to inform of a PDU reception from the RLC SAP user.
    * The parameters are RNTI, LCID, bytes delivered and delivery delay in nanoseconds. 
    */
   TracedCallback<uint16_t, uint8_t, uint32_t, uint64_t> m_rxPdu;
+  TracedCallback<uint16_t, uint8_t, uint32_t, uint64_t> m_rxPdu_leg;//zjh_add
 
 private:
   /**
@@ -197,7 +229,11 @@ private:
    * Constants. See section 7.2 in TS 36.323
    */
   static const uint16_t m_maxPdcpSn = 4095;
-
+  
+  /**
+   * zjh_new: onoff pdcp duplication, See section 7.1 in TS 38.323
+   */
+  bool m_pdcpDuplication;
 };
 
 

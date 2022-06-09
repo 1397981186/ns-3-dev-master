@@ -47,13 +47,6 @@ main (int argc, char *argv[])
   CommandLine cmd (__FILE__);
   cmd.Parse (argc, argv);
 
-
-  LogComponentEnable ("LteHelper", LOG_LEVEL_INFO);//zjh_add
-  //LogComponentEnable ("LteEnbComponentCarrierManager", LOG_LEVEL_INFO);//zjh_add
-  //LogComponentEnable ("NoOpComponentCarrierManager", LOG_LEVEL_INFO);//zjh_add
-  //LogComponentEnable ("LteUeRrc", LOG_LEVEL_INFO);//zjh_add
-  LogComponentEnable ("LteEnbRrc", LOG_LEVEL_INFO);//zjh_add
-  
   Ptr<LteHelper> lteHelper = CreateObject<LteHelper> ();
   Ptr<PointToPointEpcHelper>  epcHelper = CreateObject<PointToPointEpcHelper> ();
   lteHelper->SetEpcHelper (epcHelper);
@@ -76,10 +69,8 @@ main (int argc, char *argv[])
 
   NodeContainer ueNodes;
   NodeContainer enbNodes;
-  enbNodes.Create (2);//zjh_com
-  ueNodes.Create (2);//zjh_com
-  //enbNodes.Create (1);//zjh_add error
-  //ueNodes.Create (1);//zjh_add error
+  enbNodes.Create (2);
+  ueNodes.Create (2);
 
   // Install Mobility Model
   Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator> ();
@@ -97,8 +88,8 @@ main (int argc, char *argv[])
   internet.Install (ueNodes);
 
   // Install LTE Devices to the nodes
-  NetDeviceContainer enbLteDevs = lteHelper->InstallEnbDevice (enbNodes);//zjh_add: 第79行，enbNodes=2
-  NetDeviceContainer ueLteDevs = lteHelper->InstallUeDevice (ueNodes);//zjh_add: 第80行，ueNodes=2
+  NetDeviceContainer enbLteDevs = lteHelper->InstallEnbDevice (enbNodes);
+  NetDeviceContainer ueLteDevs = lteHelper->InstallUeDevice (ueNodes);
 
   Ipv6InterfaceContainer ueIpIface;
 
@@ -146,42 +137,29 @@ main (int argc, char *argv[])
 
 
   UdpEchoClientHelper echoClient1 (ueIpIface.GetAddress (0,1), 9);
-  //UdpEchoClientHelper echoClient2 (ueIpIface.GetAddress (0,1), 9);//zjh_com
+  UdpEchoClientHelper echoClient2 (ueIpIface.GetAddress (0,1), 9);
 
   echoClient1.SetAttribute ("MaxPackets", UintegerValue (1000));
   echoClient1.SetAttribute ("Interval", TimeValue (Seconds (1.0)));
   echoClient1.SetAttribute ("PacketSize", UintegerValue (1024));
 
-  //echoClient2.SetAttribute ("MaxPackets", UintegerValue (1000));//zjh_com
-  //echoClient2.SetAttribute ("Interval", TimeValue (Seconds (1.0)));//zjh_com
-  //echoClient2.SetAttribute ("PacketSize", UintegerValue (1024));//zjh_com
+  echoClient2.SetAttribute ("MaxPackets", UintegerValue (1000));
+  echoClient2.SetAttribute ("Interval", TimeValue (Seconds (1.0)));
+  echoClient2.SetAttribute ("PacketSize", UintegerValue (1024));
 
   ApplicationContainer clientApps1 = echoClient1.Install (remoteHost);
-  //ApplicationContainer clientApps2 = echoClient2.Install (ueNodes.Get (1));//zjh_com
+  ApplicationContainer clientApps2 = echoClient2.Install (ueNodes.Get (1));
 
 
   clientApps1.Start (Seconds (1.0));
   clientApps1.Stop (Seconds (14.0));
 
-  //clientApps2.Start (Seconds (1.5));//zjh_com
-  //clientApps2.Stop (Seconds (14.5));//zjh_com
+  clientApps2.Start (Seconds (1.5));
+  clientApps2.Stop (Seconds (14.5));
 
   //LogComponentEnable ("UdpEchoClientApplication", LOG_LEVEL_ALL);//zjh_com
   //LogComponentEnable ("UdpEchoServerApplication", LOG_LEVEL_ALL);//zjh_com
-
-  //LogComponentEnable ("SimpleUeComponentCarrierManager", LOG_LEVEL_ALL);//zjh_com
-  LogComponentEnable ("LtePdcp", LOG_LEVEL_INFO);//zjh_add
-  LogComponentEnable ("LteRlcUm", LOG_LEVEL_INFO);//zjh_add
-  //LogComponentEnable ("LteRlc", LOG_LEVEL_FUNCTION);//zjh_add
-  //LogComponentEnable ("LteUeRrc", LOG_LEVEL_INFO);//zjh_add
-  //LogComponentEnable ("LteUeMac", LOG_LEVEL_INFO);//zjh_add
-  //LogComponentEnable ("LteUePhy", LOG_LEVEL_INFO);//zjh_add
-  LogComponentEnable ("LteUeMac", LOG_LEVEL_INFO);//zjh_add
-  //LogComponentEnable ("MultiModelSpectrumChannel", LOG_LEVEL_INFO);//zjh_add
-  //LogComponentEnable ("LteSpectrumPhy", LOG_LEVEL_INFO);//zjh_add
-  LogComponentEnable ("LtePhy", LOG_LEVEL_INFO);//zjh_add
-  //LogComponentEnable ("LteEnbMac", LOG_LEVEL_INFO);//zjh_add
-  //LogComponentEnable ("LteEnbRrc", LOG_LEVEL_INFO);//zjh_add
+  LogComponentEnable ("LteRlc", LOG_LEVEL_ALL);//zjh_add
 
   internet.EnablePcapIpv6 ("LenaIpv6-Ue-Ue-Ue0.pcap", ueNodes.Get (0)->GetId (), 1, true);
   internet.EnablePcapIpv6 ("LenaIpv6-Ue-Ue-Ue1.pcap", ueNodes.Get (1)->GetId (), 1, true);

@@ -54,7 +54,6 @@ public:
    * \return the object TypeId
    */
   static TypeId GetTypeId (void);
-//  TypeId GetTypeId (void);
   virtual TypeId GetInstanceTypeId (void) const;
   virtual uint32_t GetSerializedSize (void) const;
   virtual void Serialize (TagBuffer i) const;
@@ -66,8 +65,7 @@ public:
                  FIRST_SEGMENT  = 2,
                  MIDDLE_SEGMENT = 3,
                  LAST_SEGMENT   = 4,
-				 PDCP_COPY      = 6,
-                 ANY_SEGMENT    = 5, } SduStatus_t; ///< SduStatus_t enumeration
+                 ANY_SEGMENT    = 5 } SduStatus_t; ///< SduStatus_t enumeration
 
 private:
   uint8_t m_sduStatus; ///< SDU status

@@ -920,7 +920,6 @@ public:
   struct SetupParameters
   {
     LteRlcSapProvider* srb0SapProvider; ///< SRB0 SAP provider
-    LteRlcSapProvider* srb0SapProvider2; ///< SRB0 SAP provider
     LtePdcpSapProvider* srb1SapProvider; ///< SRB1 SAP provider
   };
 
@@ -1086,8 +1085,6 @@ public:
   struct SetupUeParameters
   {
     LteRlcSapProvider* srb0SapProvider; ///< SRB0 SAP provider
-    //sht
-    LteRlcSapProvider* srb0SapProvider2; ///< SRB0 SAP provider
     LtePdcpSapProvider* srb1SapProvider; ///< SRB1 SAP provider
   };
 

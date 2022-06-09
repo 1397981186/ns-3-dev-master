@@ -192,6 +192,8 @@ void
 LtePhy::SetMacPdu (Ptr<Packet> p)
 {
   m_packetBurstQueue.at (m_packetBurstQueue.size () - 1)->AddPacket (p);
+  NS_LOG_INFO (this << " LtePhy::SetMacPdu");//zjh_add
+  NS_LOG_INFO ("               m_packetBurstQueue.size = " << (uint16_t)m_packetBurstQueue.at (m_packetBurstQueue.size () - 1)->GetSize ());//zjh_add
 }
 
 Ptr<PacketBurst>
@@ -199,6 +201,8 @@ LtePhy::GetPacketBurst (void)
 {
   if (m_packetBurstQueue.at (0)->GetSize () > 0)
     {
+      NS_LOG_INFO (this << " LtePhy::GetPacketBurst");//zjh_add
+      NS_LOG_INFO ("               m_packetBurstQueue.size = " << (uint16_t)m_packetBurstQueue.at (0)->GetSize ());//zjh_add
       Ptr<PacketBurst> ret = m_packetBurstQueue.at (0)->Copy ();
       m_packetBurstQueue.erase (m_packetBurstQueue.begin ());
       m_packetBurstQueue.push_back (CreateObject <PacketBurst> ());

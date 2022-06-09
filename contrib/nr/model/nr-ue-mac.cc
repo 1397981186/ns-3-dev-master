@@ -576,20 +576,16 @@ NrUeMac::DoReceivePhyPdu (Ptr<Packet> p)
   LteMacSapUser::ReceivePduParameters rxParams;
   rxParams.p = p;
   rxParams.rnti = m_rnti;
-  rxParams.m_signOfRlc=header.GetSignOfRlc();
-  if(rxParams.m_signOfRlc==0){
-      rxParams.lcid = header.GetLcId ();
-  }else{
-      rxParams.lcid = header.GetLcId ()+99;
-  }
-  NS_LOG_FUNCTION ("-----------signOfRlc: "<<rxParams.m_signOfRlc<<"----------");
+  rxParams.lcid = header.GetLcId ();
 
   auto it = m_lcInfoMap.find (header.GetLcId());
+  //NS_LOG_DEBUG (this << " NrUeMac::DoReceivePhyPdu");//znr_add: 与放在i下方f判断中效果相同
 
   // p can be empty. Well, right now no, but when someone will add CE in downlink,
   // then p can be empty.
   if (rxParams.p->GetSize () > 0)
     {
+      NS_LOG_DEBUG (this << " NrUeMac::DoReceivePhyPdu");//znr_add
       it->second.macSapUser->ReceivePdu (rxParams);
     }
 }

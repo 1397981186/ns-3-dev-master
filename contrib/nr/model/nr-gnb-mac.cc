@@ -739,7 +739,7 @@ void
 NrGnbMac::DoReportMacCeToScheduler (MacCeListElement_s bsr)
 {
   NS_LOG_FUNCTION (this);
-  NS_LOG_DEBUG (this << " bsr Size " << (uint16_t) m_ulCeReceived.size ());
+  //NS_LOG_DEBUG (this << " bsr Size " << (uint16_t) m_ulCeReceived.size ());//znr_com
   uint32_t size = 0;
 
   //send to LteCcmMacSapUser
@@ -771,9 +771,9 @@ NrGnbMac::DoReportMacCeToScheduler (MacCeListElement_s bsr)
     }
 
   m_ulCeReceived.push_back (mce);   // this to called when LteUlCcmSapProvider::ReportMacCeToScheduler is called
-  NS_LOG_DEBUG (" Reported by UE " << static_cast<uint32_t> (bsr.m_macCeValue.m_crnti) <<
-                " size " << size << " bsr vector ize after push_back " <<
-                static_cast<uint32_t> (m_ulCeReceived.size ()));
+  //NS_LOG_DEBUG (" Reported by UE " << static_cast<uint32_t> (bsr.m_macCeValue.m_crnti) <<
+                //" size " << size << " bsr vector ize after push_back " <<
+                //static_cast<uint32_t> (m_ulCeReceived.size ()));//znr_com
 }
 
 void
@@ -861,6 +861,7 @@ NrGnbMac::GetNrMacSchedSapUser ()
 void
 NrGnbMac::SetNrMacSchedSapProvider (NrMacSchedSapProvider* ptr)
 {
+  NS_LOG_FUNCTION (this);//znr_add
   m_macSchedSapProvider = ptr;
 }
 
@@ -881,11 +882,11 @@ NrGnbMac::DoUlCqiReport (NrMacSchedSapProvider::SchedUlCqiInfoReqParameters ulcq
 {
   if (ulcqi.m_ulCqi.m_type == UlCqiInfo::PUSCH)
     {
-      NS_LOG_DEBUG (this << " gNB rxed an PUSCH UL-CQI");
+      //NS_LOG_DEBUG (this << " gNB rxed an PUSCH UL-CQI");//znr_com
     }
   else if (ulcqi.m_ulCqi.m_type == UlCqiInfo::SRS)
     {
-      NS_LOG_DEBUG (this << " gNB rxed an SRS UL-CQI");
+      //NS_LOG_DEBUG (this << " gNB rxed an SRS UL-CQI");//znr_com
     }
   NS_LOG_INFO ("*** UL CQI report SINR " << LteFfConverter::fpS11dot3toDouble (ulcqi.m_ulCqi.m_sinr[0]) <<
                " slot: " << m_currentSlot);
@@ -948,11 +949,11 @@ NrGnbMac::DoDlHarqFeedback (const DlHarqInfo &params)
       // discard buffer
       Ptr<PacketBurst> emptyBuf = CreateObject <PacketBurst> ();
       (*it).second.at (params.m_harqProcessId).m_pktBurst = emptyBuf;
-      NS_LOG_DEBUG (this << " HARQ-ACK UE " << params.m_rnti << " harqId " << (uint16_t)params.m_harqProcessId);
+      //NS_LOG_DEBUG (this << " HARQ-ACK UE " << params.m_rnti << " harqId " << (uint16_t)params.m_harqProcessId);//znr_com
     }
   else if (params.m_harqStatus == DlHarqInfo::NACK)
     {
-      NS_LOG_DEBUG (this << " HARQ-NACK UE " << params.m_rnti << " harqId " << (uint16_t)params.m_harqProcessId);
+      //NS_LOG_DEBUG (this << " HARQ-NACK UE " << params.m_rnti << " harqId " << (uint16_t)params.m_harqProcessId);//znr_com
     }
   else
     {
@@ -987,7 +988,7 @@ NrGnbMac::DoTransmitPdu (LteMacSapProvider::TransmitPduParameters params)
 {
   // TB UID passed back along with RLC data as HARQ process ID
   uint32_t tbMapKey = ((params.rnti & 0xFFFF) << 8) | (params.harqProcessId & 0xFF);
-  auto harqIt = m_miDlHarqProcessesPackets.find (params.rnti);
+  auto harqIt = m_miDlHarqProcessesPackets.find (params.rnti);//znr_note: 找到rnti对应的下行harq包
   auto it = m_macPduMap.find (tbMapKey);
 
   if (it == m_macPduMap.end ())
@@ -997,8 +998,8 @@ NrGnbMac::DoTransmitPdu (LteMacSapProvider::TransmitPduParameters params)
 
   NrMacHeaderVs header;
   header.SetLcId (params.lcid);
+  NS_LOG_DEBUG (this << " NrGnbMac::DoTransmitPdu LCID = " << (uint16_t)params.lcid);//znr_add
   header.SetSize (params.pdu->GetSize ());
-  header.SetSignOfRlc(params.m_signOfRlc);
 
   params.pdu->AddHeader (header);
 
@@ -1010,8 +1011,16 @@ NrGnbMac::DoTransmitPdu (LteMacSapProvider::TransmitPduParameters params)
   it->second.m_used += params.pdu->GetSize ();
   NS_ASSERT_MSG (it->second.m_dci->m_tbSize >= it->second.m_used,
                  "DCI OF " << it->second.m_dci->m_tbSize << " total used " << it->second.m_used);
-
-  m_phySapProvider->SendMacPdu (params.pdu, it->second.m_sfnSf, it->second.m_dci->m_symStart);
+  
+  m_phySapProvider->SendMacPdu (params.pdu, it->second.m_sfnSf, it->second.m_dci->m_symStart);//znr-com: 测试多路Phy，暂屏蔽
+  /*
+  //znr_new--- 
+  if( params.lcid == 3 || params.lcid == 5 )
+    m_phySapProvider->SendMacPdu (params.pdu, it->second.m_sfnSf, it->second.m_dci->m_symStart);
+  else
+    NS_LOG_INFO (this << " NrGnbMac::DoTransmitPdu LCID = " << (uint16_t)params.lcid << " 数据丢弃");
+  //---znr-new
+  */
 }
 
 void
@@ -1052,7 +1061,7 @@ NrGnbMac::DoSchedConfigIndication (NrMacSchedSapUser::SchedConfigIndParameters i
   NS_ASSERT (ind.m_sfnSf.GetNumerology () == m_currentSlot.GetNumerology ());
   std::sort (ind.m_slotAllocInfo.m_varTtiAllocInfo.begin (), ind.m_slotAllocInfo.m_varTtiAllocInfo.end ());
 
-  NS_LOG_DEBUG ("Received from scheduler a new allocation: " << ind.m_slotAllocInfo);
+  //NS_LOG_DEBUG ("Received from scheduler a new allocation: " << ind.m_slotAllocInfo);//znr_com
 
   m_phySapProvider->SetSlotAllocInfo (ind.m_slotAllocInfo);
 
@@ -1100,13 +1109,12 @@ NrGnbMac::DoSchedConfigIndication (NrMacSchedSapUser::SchedConfigIndParameters i
               for (unsigned int ipdu = 0; ipdu < rlcPduInfo.size (); ipdu++)
                 {
                   NS_ASSERT_MSG (rntiIt != m_rlcAttached.end (), "could not find RNTI" << rnti);
-                  //在unordered_map中，如果find()没找到要找的key，就返回和end()一样的iterator值。auto rntiIt = m_rlcAttached.find (rnti);
                   std::unordered_map<uint8_t, LteMacSapUser*>::iterator lcidIt = rntiIt->second.find (rlcPduInfo[ipdu].m_lcid);
                   NS_ASSERT_MSG (lcidIt != rntiIt->second.end (), "could not find LCID" << rlcPduInfo[ipdu].m_lcid);
+                  NS_LOG_DEBUG ("NotifyTxOpportunity LCID = " << (uint16_t) rlcPduInfo[ipdu].m_lcid);//znr_add
                   NS_LOG_DEBUG ("Notifying RLC of TX opportunity for TB " << (unsigned int)tbUid << " PDU num " << ipdu << " size " << (unsigned int) rlcPduInfo[ipdu].m_size);
 
-//                  (*lcidIt).second->NotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters ((rlcPduInfo[ipdu].m_size), 0, tbUid, GetBwpId (), rnti, rlcPduInfo[ipdu].m_lcid));
-                  (*lcidIt).second->NotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters ((rlcPduInfo[ipdu].m_size), 0, tbUid, GetBwpId (), rnti, rlcPduInfo[ipdu].m_lcid,0));
+                  (*lcidIt).second->NotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters ((rlcPduInfo[ipdu].m_size), 0, tbUid, GetBwpId (), rnti, rlcPduInfo[ipdu].m_lcid));
                   harqIt->second.at (tbUid).m_lcidList.push_back (rlcPduInfo[ipdu].m_lcid);
                 }
 
@@ -1149,14 +1157,14 @@ NrGnbMac::DoConfigureMac (uint16_t ulBandwidth, uint16_t dlBandwidth)
   uint16_t bw_in_rbg = m_phySapProvider->GetRbNum () / GetNumRbPerRbg ();
   m_bandwidthInRbg = bw_in_rbg;
 
-  NS_LOG_DEBUG ("Mac configured. Attributes:" << std::endl <<
-                "\t NumRbPerRbg: " << m_numRbPerRbg << std::endl <<
-                "\t NumHarqProcess: " << +m_numHarqProcess << std::endl <<
-                "Physical properties: " << std::endl <<
-                "\t Bandwidth provided: " << ulBandwidth * 1000 * 100 << " Hz" << std::endl <<
-                "\t that corresponds to " << bw_in_rbg << " RBG, as we have " <<
-                m_phySapProvider->GetRbNum () << " RB and " << GetNumRbPerRbg () <<
-                " RB per RBG");
+  //NS_LOG_DEBUG ("Mac configured. Attributes:" << std::endl <<
+                //"\t NumRbPerRbg: " << m_numRbPerRbg << std::endl <<
+                //"\t NumHarqProcess: " << +m_numHarqProcess << std::endl <<
+                //"Physical properties: " << std::endl <<
+                //"\t Bandwidth provided: " << ulBandwidth * 1000 * 100 << " Hz" << std::endl <<
+                //"\t that corresponds to " << bw_in_rbg << " RBG, as we have " <<
+                //m_phySapProvider->GetRbNum () << " RB and " << GetNumRbPerRbg () <<
+                //" RB per RBG");//znr_com
 
   NrMacCschedSapProvider::CschedCellConfigReqParameters params;
 
@@ -1278,6 +1286,8 @@ NrGnbMac::DoAddLc (LteEnbCmacSapProvider::LcInfo lcinfo, LteMacSapUser* msu)
   NS_LOG_FUNCTION (this);
 
   LteFlowId_t flow (lcinfo.rnti, lcinfo.lcId);
+  
+  NS_LOG_INFO(this << " add lcId = " << (uint16_t) lcinfo.lcId);//znr-add
 
   std::unordered_map <uint16_t, std::unordered_map<uint8_t, LteMacSapUser*> >::iterator rntiIt = m_rlcAttached.find (lcinfo.rnti);
   NS_ASSERT_MSG (rntiIt != m_rlcAttached.end (), "RNTI not found");

@@ -25,6 +25,8 @@
 #include "ns3/lte-pdcp-header.h"
 #include "ns3/lte-pdcp-sap.h"
 #include "ns3/lte-pdcp-tag.h"
+#include "ns3/lte-rlc-sdu-status-tag.h"//zjh_add
+#include "ns3/packet.h"//zjh_add
 
 namespace ns3 {
 
@@ -71,16 +73,18 @@ NS_OBJECT_ENSURE_REGISTERED (LtePdcp);
 LtePdcp::LtePdcp ()
   : m_pdcpSapUser (0),
     m_rlcSapProvider (0),
-    m_rlcSapProvider2 (0),
+    m_rlcSapProvider_leg (0),//zjh_add
     m_rnti (0),
     m_lcid (0),
+    m_lcid_leg (10),//zjh_add: because ue' lcid_leg can't to set now, so maybe to set 4 for default
     m_txSequenceNumber (0),
-    m_rxSequenceNumber (0)
+    m_rxSequenceNumber (0),
+    m_pdcpDuplication (true)//zjh_add
 {
   NS_LOG_FUNCTION (this);
   m_pdcpSapProvider = new LtePdcpSpecificLtePdcpSapProvider<LtePdcp> (this);
   m_rlcSapUser = new LtePdcpSpecificLteRlcSapUser (this);
-//  m_rlcSapUser2 = new LtePdcpSpecificLteRlcSapUser (this);
+  m_rlcSapUser_leg = new LtePdcpSpecificLteRlcSapUser (this);//zjh_add
 }
 
 LtePdcp::~LtePdcp ()
@@ -102,6 +106,16 @@ LtePdcp::GetTypeId (void)
                      "PDU received.",
                      MakeTraceSourceAccessor (&LtePdcp::m_rxPdu),
                      "ns3::LtePdcp::PduRxTracedCallback")
+    //zjh_add---
+    .AddTraceSource ("TxPDU_leg",
+                   "PDU_leg transmission notified to the RLC.",
+                   MakeTraceSourceAccessor (&LtePdcp::m_txPdu_leg),
+                   "ns3::LtePdcp::PduTxTracedCallback")
+    .AddTraceSource ("RxPDU_leg",
+                   "PDU_leg received.",
+                   MakeTraceSourceAccessor (&LtePdcp::m_rxPdu_leg),
+                   "ns3::LtePdcp::PduRxTracedCallback")
+    //---zjh_add
     ;
   return tid;
 }
@@ -112,6 +126,7 @@ LtePdcp::DoDispose ()
   NS_LOG_FUNCTION (this);
   delete (m_pdcpSapProvider);
   delete (m_rlcSapUser);
+  delete (m_rlcSapUser_leg);//zjh_add
 }
 
 
@@ -125,8 +140,18 @@ LtePdcp::SetRnti (uint16_t rnti)
 void
 LtePdcp::SetLcId (uint8_t lcId)
 {
-  NS_LOG_FUNCTION (this << (uint32_t) lcId);
+  //NS_LOG_FUNCTION (this << (uint32_t) lcId);//zjh_com
+
+  NS_LOG_INFO (this << " LtePdcp::SetLcId " << (uint32_t) lcId);//zjh_add
   m_lcid = lcId;
+}
+
+//zjh_new:
+void
+LtePdcp::SetLcId_leg (uint8_t lcId)
+{
+  NS_LOG_INFO (this << " LtePdcp::SetLcId_leg " << (uint32_t) lcId);
+  m_lcid_leg = lcId;
 }
 
 void
@@ -134,6 +159,14 @@ LtePdcp::SetLtePdcpSapUser (LtePdcpSapUser * s)
 {
   NS_LOG_FUNCTION (this << s);
   m_pdcpSapUser = s;
+}
+
+//zjh_new:
+void
+LtePdcp::SetLtePdcpSapUser_leg (LtePdcpSapUser * s)
+{
+  NS_LOG_FUNCTION (this << s);
+  m_pdcpSapUser_leg = s;
 }
 
 LtePdcpSapProvider*
@@ -150,12 +183,12 @@ LtePdcp::SetLteRlcSapProvider (LteRlcSapProvider * s)
   m_rlcSapProvider = s;
 }
 
-//sht
+//zjh_new:
 void
-LtePdcp::SetLteRlcSapProvider2 (LteRlcSapProvider * s)
+LtePdcp::SetLteRlcSapProvider_leg (LteRlcSapProvider * s)
 {
   NS_LOG_FUNCTION (this << s);
-  m_rlcSapProvider2 = s;
+  m_rlcSapProvider_leg = s;
 }
 
 LteRlcSapUser*
@@ -165,12 +198,13 @@ LtePdcp::GetLteRlcSapUser ()
   return m_rlcSapUser;
 }
 
-//LteRlcSapUser*
-//LtePdcp::GetLteRlcSapUser2 ()
-//{
-//  NS_LOG_FUNCTION (this);
-//  return m_rlcSapUser2;
-//}
+//zjh_new:
+LteRlcSapUser*
+LtePdcp::GetLteRlcSapUser_leg ()
+{
+  NS_LOG_FUNCTION (this);
+  return m_rlcSapUser_leg;
+}
 
 LtePdcp::Status 
 LtePdcp::GetStatus ()
@@ -188,14 +222,29 @@ LtePdcp::SetStatus (Status s)
   m_rxSequenceNumber = s.rxSn;
 }
 
+//zjh_new:
+bool
+LtePdcp::GetDuplication ()
+{
+  return m_pdcpDuplication;
+}
+
+//zjh_new:
+void
+LtePdcp::SetDuplication (bool onoff)
+{
+  m_pdcpDuplication = onoff;
+}
+
 ////////////////////////////////////////
 
 void
 LtePdcp::DoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters params)
 {
   NS_LOG_FUNCTION (this << m_rnti << static_cast <uint16_t> (m_lcid) << params.pdcpSdu->GetSize ());
+  NS_LOG_INFO (this << " LtePdcp::DoTransmitPdcpSdu m_lcid = " << (uint16_t) m_lcid << " m_lcid_leg = " << (uint16_t) m_lcid_leg);//zjh_add
   Ptr<Packet> p = params.pdcpSdu;
-  NS_LOG_FUNCTION(this<<"p address"<<&p);
+
   // Sender timestamp
   PdcpTag pdcpTag (Simulator::Now ());
 
@@ -214,73 +263,65 @@ LtePdcp::DoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters params
   p->AddHeader (pdcpHeader);
   p->AddByteTag (pdcpTag, 1, pdcpHeader.GetSerializedSize ());
 
-  m_txPdu (m_rnti, m_lcid, p->GetSize ());
-//  m_txPdu (m_rnti, m_lcid+99, p->GetSize ());
+  m_txPdu (m_rnti, m_lcid, p->GetSize ());//zjh_note:TracedCallback
 
   LteRlcSapProvider::TransmitPdcpPduParameters txParams;
   txParams.rnti = m_rnti;
   txParams.lcid = m_lcid;
   txParams.pdcpPdu = p;
-
+  
+  NS_LOG_INFO (" m_lcid = " << (uint16_t) m_lcid);//znr-add
   m_rlcSapProvider->TransmitPdcpPdu (txParams);
 
-}
-
-//sht
-void
-LtePdcp::DoTransmitPdcpSdu2 (LtePdcpSapProvider::TransmitPdcpSduParameters params)
-{
-  NS_LOG_FUNCTION (this << m_rnti << static_cast <uint16_t> (m_lcid) << params.pdcpSdu->GetSize ());
-  Ptr<Packet> p = params.pdcpSdu;
-  NS_LOG_FUNCTION(this<<"p address"<<&p);
-  // Sender timestamp
-  PdcpTag pdcpTag (Simulator::Now ());
-
-  LtePdcpHeader pdcpHeader;
-  pdcpHeader.SetSequenceNumber (m_txSequenceNumber);
-
-  m_txSequenceNumber++;
-  if (m_txSequenceNumber > m_maxPdcpSn)
+  //zjh_add:
+  if (m_pdcpDuplication)
     {
-      m_txSequenceNumber = 0;
+      //Ptr<Packet> p_leg = p;//不能使用指针赋值，会出现LteRlcSduStatusTag错误
+      Ptr<Packet> p_leg = p->Copy();
+
+      LteRlcSduStatusTag tag;
+      if (p_leg->RemovePacketTag (tag)==true)
+      {
+        NS_LOG_INFO (this << " RemovePacketTag right!");
+      }
+      else
+      {
+        NS_LOG_INFO (this << " RemovePacketTag wrong!");
+      }
+      //m_txPdu_leg (m_rnti, m_lcid_leg, p->GetSize ());//zjh_note:TracedCallback
+
+      LteRlcSapProvider::TransmitPdcpPduParameters txParams_leg;
+      txParams_leg.rnti = m_rnti;
+      txParams_leg.lcid = m_lcid_leg;
+      NS_LOG_INFO (" m_lcid_leg = " << (uint16_t) m_lcid_leg);//znr-add
+      txParams_leg.pdcpPdu = p_leg;
+      m_rlcSapProvider_leg->TransmitPdcpPdu (txParams_leg);
     }
-
-  pdcpHeader.SetDcBit (LtePdcpHeader::DATA_PDU);
-
-  NS_LOG_LOGIC ("PDCP header: " << pdcpHeader);
-  p->AddHeader (pdcpHeader);
-  p->AddByteTag (pdcpTag, 1, pdcpHeader.GetSerializedSize ());
-
-  m_txPdu (m_rnti, m_lcid, p->GetSize ());
-
-  LteRlcSapProvider::TransmitPdcpPduParameters txParams;
-  txParams.rnti = m_rnti;
-  txParams.lcid = m_lcid;
-  txParams.pdcpPdu = p;
-
-  m_rlcSapProvider2->TransmitPdcpPdu2 (txParams);
 }
 
 void
 LtePdcp::DoReceivePdu (Ptr<Packet> p)
 {
+  NS_LOG_INFO (this << " LtePdcp::DoReceivePdu m_lcid = " << (uint16_t) m_lcid << " m_lcid_leg = " << (uint16_t) m_lcid_leg);//zjh_add
   NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << p->GetSize ());
-
+  
   // Receiver timestamp
   PdcpTag pdcpTag;
   Time delay;
   p->FindFirstMatchingByteTag (pdcpTag);
   delay = Simulator::Now() - pdcpTag.GetSenderTimestamp ();
-  m_rxPdu(m_rnti, m_lcid, p->GetSize (), delay.GetNanoSeconds ());
-
+  m_rxPdu(m_rnti, m_lcid, p->GetSize (), delay.GetNanoSeconds ());//zjh_com
+  
   LtePdcpHeader pdcpHeader;
   p->RemoveHeader (pdcpHeader);
   NS_LOG_LOGIC ("PDCP header: " << pdcpHeader);
+  //NS_LOG_INFO (" m_lcid/m_lcid_leg = " << (uint16_t) m_lcid_leg);//znr-add: 并不能真实反映接收数据的逻辑信道
 
   m_rxSequenceNumber = pdcpHeader.GetSequenceNumber () + 1;
   if (m_rxSequenceNumber > m_maxPdcpSn)
     {
       m_rxSequenceNumber = 0;
+      NS_LOG_INFO ("PDCP PDU size: " << p->ToString ());
     }
 
   LtePdcpSapUser::ReceivePdcpSduParameters params;

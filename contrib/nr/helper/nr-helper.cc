@@ -287,9 +287,9 @@ NrHelper::InitializeOperationBand (OperationBandInfo *band, uint8_t flags)
   };
 
   // Iterate over all CCs, and instantiate the channel and propagation model
-  for (const auto & cc : band->m_cc)
+  for (const auto & cc : band->m_cc)//znr_note: 1个band可以对应多个cc，可参考example文件cttc-nr-cc-bwp-demo.cc
     {
-      for (const auto & bwp : cc->m_bwp)
+      for (const auto & bwp : cc->m_bwp)//znr_note: 1个cc可以对应多个bwp
         {
           // Initialize the type ID of the factories by calling the relevant
           // static function defined above and stored inside the lookup table
@@ -458,6 +458,7 @@ NrHelper::InstallUeDevice (const NodeContainer &c,
                                const std::vector<std::reference_wrapper<BandwidthPartInfoPtr> > &allBwps)
 {
   NS_LOG_FUNCTION (this);
+  NS_LOG_INFO (this << " NrHelper::InstallUeDevice");//znr_add
   Initialize ();    // Run DoInitialize (), if necessary
   NetDeviceContainer devices;
   for (NodeContainer::Iterator i = c.Begin (); i != c.End (); ++i)
@@ -478,6 +479,9 @@ NrHelper::InstallGnbDevice (const NodeContainer & c,
   NS_LOG_FUNCTION (this);
   Initialize ();    // Run DoInitialize (), if necessary
   NetDeviceContainer devices;
+  
+  //znr_note: allBwps=2，也就是为每个Gnb设置2个cc&bwp
+  //znr_note: nr的CcBwpHelper只是虚名称，不是类名称，由CcBwpCreator和多个类构建cc&bwp，而lte的CcHelper是一个类。
   for (NodeContainer::Iterator i = c.Begin (); i != c.End (); ++i)
     {
       Ptr<Node> node = *i;
@@ -561,7 +565,6 @@ NrHelper::CreateUePhy (const Ptr<Node> &n, const std::unique_ptr<BandwidthPartIn
       channel->AddDevice (dev, phy->GetSpectrumPhy()->GetAntennaArray());
     }
 
-
   return phy;
 }
 
@@ -570,13 +573,14 @@ NrHelper::InstallSingleUeDevice (const Ptr<Node> &n,
                                      const std::vector<std::reference_wrapper<BandwidthPartInfoPtr> > allBwps)
 {
   NS_LOG_FUNCTION (this);
+  NS_LOG_INFO (this << " NrHelper::InstallSingleUeDevice");//znr_add
 
   Ptr<NrUeNetDevice> dev = m_ueNetDeviceFactory.Create<NrUeNetDevice> ();
   dev->SetNode (n);
 
   std::map<uint8_t, Ptr<BandwidthPartUe> > ueCcMap;
 
-  // Create, for each ue, its bandwidth parts
+  // Create, for each ue, its bandwidth parts  
   for (uint32_t bwpId = 0; bwpId < allBwps.size (); ++bwpId)
     {
       Ptr <BandwidthPartUe> cc =  CreateObject<BandwidthPartUe> ();
@@ -618,7 +622,8 @@ NrHelper::InstallSingleUeDevice (const Ptr<Node> &n,
   rrc->m_numberOfComponentCarriers = ueCcMap.size ();
   // run intializeSap to create the proper number of sap provider/users
   rrc->InitializeSap ();
-  rrc->SetLteMacSapProvider (ccmUe->GetLteMacSapProvider ());
+  //rrc->SetLteMacSapProvider (ccmUe->GetLteMacSapProvider ());//znr_com: 在下面循环后进行设置，具体代码见682行！！
+  
   // setting ComponentCarrierManager SAP
   rrc->SetLteCcmRrcSapProvider (ccmUe->GetLteCcmRrcSapProvider ());
   ccmUe->SetLteCcmRrcSapUser (rrc->GetLteCcmRrcSapUser ());
@@ -642,13 +647,17 @@ NrHelper::InstallSingleUeDevice (const Ptr<Node> &n,
       rrc->SetLteUeRrcSapUser (rrcProtocol->GetLteUeRrcSapUser ());
     }
 
+  //znr_note: 第2次InstallSingleUeDevice时，m_epcHelper != nullptr，此时rlc为Sm是否有问题？？？
+  //是否对LteUeRrc::ApplyRadioResourceConfigDedicated函数造成判断影响？不会，因为m_epcHelper不为空
   if (m_epcHelper != nullptr)
     {
-      rrc->SetUseRlcSm (false);
+      rrc->SetUseRlcSm (false);//znr_add: 此处rrc是ue rrc
     }
   else
     {
-      rrc->SetUseRlcSm (true);
+      NS_LOG_INFO(this << " rrc->SetUseRlcSm (true)");//znr_add
+      rrc->SetUseRlcSm (true);//znr_com
+      //rrc->SetUseRlcSm (false);//znr_add: test，对于调用第2个pdcp不起作用
     }
   Ptr<EpcUeNas> nas = CreateObject<EpcUeNas> ();
 
@@ -677,6 +686,12 @@ NrHelper::InstallSingleUeDevice (const Ptr<Node> &n,
           NS_FATAL_ERROR ("Error in SetComponentCarrierMacSapProviders");
         }
     }
+ 
+  //znr_add: 关键代码，需要在配置控制面参数ccmUe->SetComponentCarrierMacSapProviders之后
+  std::map <uint8_t, LteMacSapProvider*> lmspMap = ccmUe->GetLteMacSapProvidersMap ();//znr_add
+  rrc->SetLteMacSapProvider (lmspMap.at(0));//znr_add
+  rrc->SetLteMacSapProvider_leg (lmspMap.at(1));//znr_add
+  
 
   NS_ABORT_MSG_IF (m_imsiCounter >= 0xFFFFFFFF, "max num UEs exceeded");
   uint64_t imsi = ++m_imsiCounter;
@@ -689,8 +704,7 @@ NrHelper::InstallSingleUeDevice (const Ptr<Node> &n,
 
   n->AddDevice (dev);
 
-
-  if (m_epcHelper != nullptr)
+  if (m_epcHelper != nullptr)//znr_note: 第2次InstallSingleUeDevice时，m_epcHelper != nullptr
     {
       m_epcHelper->AddUe (dev, dev->GetImsi ());
     }
@@ -742,7 +756,8 @@ NrHelper::CreateGnbPhy (const Ptr<Node> &n, const std::unique_ptr<BandwidthPartI
   channelPhy->AddSrsSinrChunkProcessor (pSrs);
 
   Ptr<MobilityModel> mm = n->GetObject<MobilityModel> ();
-  NS_ASSERT_MSG (mm, "MobilityModel needs to be set on node before calling NrHelper::InstallEnbDevice ()");
+  //NS_ASSERT_MSG (mm, "MobilityModel needs to be set on node before calling NrHelper::InstallEnbDevice ()");//znr_com
+  NS_ASSERT_MSG (mm, "MobilityModel needs to be set on node before calling NrHelper::InstallGnbDevice ()");//znr_change
   channelPhy->SetMobility (mm);
   channelPhy->SetPhyRxDataEndOkCallback (MakeCallback (&NrGnbPhy::PhyDataPacketReceived, phy));
   channelPhy->SetPhyRxCtrlEndOkCallback (phyEndCtrlCallback);
@@ -791,11 +806,15 @@ Ptr<NetDevice>
 NrHelper::InstallSingleGnbDevice (const Ptr<Node> &n,
                                       const std::vector<std::reference_wrapper<BandwidthPartInfoPtr> > allBwps)
 {
+  NS_LOG_INFO (this << " NrHelper::InstallSingleGnbDevice ");//znr_add
   NS_ABORT_MSG_IF (m_cellIdCounter == 65535, "max num gNBs exceeded");
 
   Ptr<NrGnbNetDevice> dev = m_gnbNetDeviceFactory.Create<NrGnbNetDevice> ();
 
-  NS_LOG_DEBUG ("Creating gNB, cellId = " << m_cellIdCounter);
+  //NS_LOG_DEBUG ("Creating gNB, cellId = " << m_cellIdCounter);//znr_com
+  //znr_note: 此处cellId与lte-enb-rrc输出的cellId不同？？？
+  NS_LOG_INFO (this << " Creating gNB, cellId = " << m_cellIdCounter);//znr_add
+ 
   uint16_t cellId = m_cellIdCounter++;
 
   dev->SetCellId (cellId);
@@ -803,10 +822,12 @@ NrHelper::InstallSingleGnbDevice (const Ptr<Node> &n,
 
   // create component carrier map for this gNB device
   std::map<uint8_t,Ptr<BandwidthPartGnb> > ccMap;
-
+  NS_LOG_INFO (this << " ccMap.size = " << allBwps.size ());//znr_add
+  
   for (uint32_t bwpId = 0; bwpId < allBwps.size (); ++bwpId)
     {
-      NS_LOG_DEBUG ("Creating BandwidthPart, id = " << bwpId);
+      //NS_LOG_DEBUG ("Creating BandwidthPart, id = " << bwpId);//znr_com
+      NS_LOG_INFO (this << " Creating BandwidthPart, id = " << bwpId);//znr_add
       Ptr <BandwidthPartGnb> cc =  CreateObject<BandwidthPartGnb> ();
       double bwInKhz = allBwps[bwpId].get()->m_channelBandwidth / 1000.0;
       NS_ABORT_MSG_IF (bwInKhz/100.0 > 65535.0, "A bandwidth of " << bwInKhz/100.0 << " kHz cannot be represented");
@@ -862,6 +883,7 @@ NrHelper::InstallSingleGnbDevice (const Ptr<Node> &n,
   // number of component carriers in eNB RRC
 
   ccmEnbManager->SetNumberOfComponentCarriers (ccMap.size ());
+  
   rrc->ConfigureCarriers (ccPhyConfMap);
 
   //nr module currently uses only RRC ideal mode
@@ -871,6 +893,7 @@ NrHelper::InstallSingleGnbDevice (const Ptr<Node> &n,
     {
       Ptr<NrGnbRrcProtocolIdeal> rrcProtocol = CreateObject<NrGnbRrcProtocolIdeal> ();
       rrcProtocol->SetLteEnbRrcSapProvider (rrc->GetLteEnbRrcSapProvider ());
+      //NS_LOG_INFO (" NrHelper 895行");//znr_add
       rrc->SetLteEnbRrcSapUser (rrcProtocol->GetLteEnbRrcSapUser ());
       rrc->AggregateObject (rrcProtocol);
     }
@@ -878,6 +901,7 @@ NrHelper::InstallSingleGnbDevice (const Ptr<Node> &n,
     {
       Ptr<LteEnbRrcProtocolReal> rrcProtocol = CreateObject<LteEnbRrcProtocolReal> ();
       rrcProtocol->SetLteEnbRrcSapProvider (rrc->GetLteEnbRrcSapProvider ());
+      //NS_LOG_INFO (" NrHelper 903行");//znr_add
       rrc->SetLteEnbRrcSapUser (rrcProtocol->GetLteEnbRrcSapUser ());
       rrc->AggregateObject (rrcProtocol);
     }
@@ -901,7 +925,8 @@ NrHelper::InstallSingleGnbDevice (const Ptr<Node> &n,
   // instance that needs to implement functions of this interface, and its task will be to
   // forward these calls to the specific MAC of some of the instances of component carriers. This
   // decision will depend on the specific implementation of the component carrier manager.
-  rrc->SetLteMacSapProvider (ccmEnbManager->GetLteMacSapProvider ());
+  
+  //rrc->SetLteMacSapProvider (ccmEnbManager->GetLteMacSapProvider ());//znr_com:在下面循环结束后进行设置，具体代码见945行！！！
   rrc->SetForwardUpCallback (MakeCallback (&NrGnbNetDevice::Receive, dev));
 
   for (auto it = ccMap.begin (); it != ccMap.end (); ++it)
@@ -931,6 +956,11 @@ NrHelper::InstallSingleGnbDevice (const Ptr<Node> &n,
       // insert the pointer to the LteMacSapProvider interface of the MAC layer of the specific component carrier
       ccmEnbManager->SetMacSapProvider (it->first, it->second->GetMac ()->GetMacSapProvider ());
     }
+  
+  //znr_add: 关键代码
+  std::map <uint8_t, LteMacSapProvider*> lmspMap = ccmEnbManager->GetLteMacSapProvidersMap ();//znr_add
+  rrc->SetLteMacSapProvider (lmspMap.at(0));//znr_add
+  rrc->SetLteMacSapProvider_leg (lmspMap.at(1));//znr_add
 
 
   dev->SetAttribute ("LteEnbComponentCarrierManager", PointerValue (ccmEnbManager));
@@ -1261,12 +1291,12 @@ NrHelper::AssignStreams (NetDeviceContainer c, int64_t stream)
       Ptr<NrGnbNetDevice> nrGnb = DynamicCast<NrGnbNetDevice> (netDevice);
       if (nrGnb)
         {
-          for (uint32_t bwp = 0; bwp < nrGnb->GetCcMapSize (); bwp++)
+          //NS_LOG_INFO(this << " nrGnb->GetCcMapSize () = " << (uint16_t)nrGnb->GetCcMapSize ());//znr_add
+          for (uint32_t bwp = 0; bwp < nrGnb->GetCcMapSize (); bwp++)//znr_note: nrGnb->GetCcMapSize () = 2
             {
               currentStream += nrGnb->GetPhy (bwp)->GetSpectrumPhy ()->AssignStreams (currentStream);
               currentStream += nrGnb->GetScheduler (bwp)->AssignStreams (currentStream);
               currentStream += DoAssignStreamsToChannelObjects (nrGnb->GetPhy (bwp)->GetSpectrumPhy (), currentStream);
-
             }
         }
 
@@ -1402,8 +1432,8 @@ NrDrbActivator::ActivateCallback (Ptr<NrDrbActivator> a, std::string context, ui
 void
 NrDrbActivator::ActivateDrb (uint64_t imsi, uint16_t cellId, uint16_t rnti)
 {
-
   NS_LOG_FUNCTION (this << imsi << cellId << rnti << m_active);
+  //NS_LOG_INFO (this << "DataRadioBearerSetupRequest");//znr_add: 无效果
   if ((!m_active) && (imsi == m_imsi))
     {
       Ptr<LteUeRrc> ueRrc = m_ueDevice->GetObject<NrUeNetDevice> ()->GetRrc ();

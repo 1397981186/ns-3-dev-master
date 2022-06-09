@@ -29,7 +29,12 @@
 using namespace ns3;
 
 int main (int argc, char *argv[])
-{
+{  
+  LogComponentEnable ("LtePdcp", LOG_LEVEL_INFO);//zjh_add
+  LogComponentEnable ("LteRlcUm", LOG_LEVEL_INFO);//zjh_add
+  LogComponentEnable ("LteUeMac", LOG_LEVEL_INFO);//zjh_add
+  LogComponentEnable ("LtePhy", LOG_LEVEL_INFO);//zjh_add
+  
   Time simTime = MilliSeconds (1050);
   bool useCa = false;
 

@@ -89,6 +89,8 @@ LteRlcUm::DoDispose ()
 void
 LteRlcUm::DoTransmitPdcpPdu (Ptr<Packet> p)
 {
+  //zjh_add: 此处应修改将数据传入不同的CC？（经调试不做修改，已实现dup）
+  //NS_LOG_INFO (this << " LteRlcUm::DoTransmitPdcpPdu " << (uint32_t) m_lcid);//zjh_add
   NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << p->GetSize ());
 
   if (m_txBufferSize + p->GetSize () <= m_maxTxBufferSize)
@@ -99,48 +101,20 @@ LteRlcUm::DoTransmitPdcpPdu (Ptr<Packet> p)
       p->AddPacketTag (tag);
 
       NS_LOG_LOGIC ("Tx Buffer: New packet added");
-      m_txBuffer.push_back (TxPdu (p, Simulator::Now ()));
+      //NS_LOG_INFO ("Tx Buffer: New packet added");//zjh_add
+      NS_LOG_INFO (this << " LteRlcUm::DoTransmitPdcpPdu " << (uint32_t) m_lcid);//znr_add
+      m_txBuffer.push_back (TxPdu (p, Simulator::Now ()));//znr_note: 打上时间戳，代表数据从rlc进入发送缓存的时间，但不是从phy发出时间。
       m_txBufferSize += p->GetSize ();
       NS_LOG_LOGIC ("NumOfBuffers = " << m_txBuffer.size() );
+      NS_LOG_INFO ("NumOfBuffers = " << m_txBuffer.size() );//zjh_add
       NS_LOG_LOGIC ("txBufferSize = " << m_txBufferSize);
+      NS_LOG_INFO ("txBufferSize = " << m_txBufferSize);//zjh_add
     }
   else
     {
       // Discard full RLC SDU
       NS_LOG_LOGIC ("TxBuffer is full. RLC SDU discarded");
-      NS_LOG_LOGIC ("MaxTxBufferSize = " << m_maxTxBufferSize);
-      NS_LOG_LOGIC ("txBufferSize    = " << m_txBufferSize);
-      NS_LOG_LOGIC ("packet size     = " << p->GetSize ());
-      m_txDropTrace (p);
-    }
-
-  /** Report Buffer Status */
-  DoReportBufferStatus ();
-  m_rbsTimer.Cancel ();
-}
-
-void
-LteRlcUm::DoTransmitPdcpPdu2 (Ptr<Packet> p)
-{
-  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << p->GetSize ());
-
-  if (m_txBufferSize + p->GetSize () <= m_maxTxBufferSize)
-    {
-      /** Store PDCP PDU */
-      LteRlcSduStatusTag tag;
-      tag.SetStatus (LteRlcSduStatusTag::FULL_SDU);
-      p->AddPacketTag (tag);
-
-      NS_LOG_LOGIC ("Tx Buffer: New packet added");
-      m_txBuffer.push_back (TxPdu (p, Simulator::Now ()));
-      m_txBufferSize += p->GetSize ();
-      NS_LOG_LOGIC ("NumOfBuffers = " << m_txBuffer.size() );
-      NS_LOG_LOGIC ("txBufferSize = " << m_txBufferSize);
-    }
-  else
-    {
-      // Discard full RLC SDU
-      NS_LOG_LOGIC ("TxBuffer is full. RLC SDU discarded");
+      //NS_LOG_INFO ("TxBuffer is full. RLC SDU discarded");//zjh_add
       NS_LOG_LOGIC ("MaxTxBufferSize = " << m_maxTxBufferSize);
       NS_LOG_LOGIC ("txBufferSize    = " << m_txBufferSize);
       NS_LOG_LOGIC ("packet size     = " << p->GetSize ());
@@ -160,18 +134,22 @@ LteRlcUm::DoTransmitPdcpPdu2 (Ptr<Packet> p)
 void
 LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams)
 {
-  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << txOpParams.bytes);
-
+  NS_LOG_INFO (this << " LteRlcUm::DoNotifyTxOpportunity");//zjh_add
+  //NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << txOpParams.bytes);//znr_com
+  NS_LOG_INFO ("               m_rnti = "<< (uint32_t) m_rnti << " m_lcid = " << (uint32_t) m_lcid << " txOpParams.bytes = " << txOpParams.bytes);//znr_add
+  
   if (txOpParams.bytes <= 2)
     {
       // Stingy MAC: Header fix part is 2 bytes, we need more bytes for the data
-      NS_LOG_LOGIC ("TX opportunity too small = " << txOpParams.bytes);
+      //NS_LOG_LOGIC ("TX opportunity too small = " << txOpParams.bytes);//znr_com
+      NS_LOG_INFO ("TX opportunity too small = " << txOpParams.bytes);//znr_add
       return;
     }
 
   Ptr<Packet> packet = Create<Packet> ();
   LteRlcHeader rlcHeader;
 
+  //znr_note: 创建数据区
   // Build Data field
   uint32_t nextSegmentSize = txOpParams.bytes - 2;
   uint32_t nextSegmentId = 1;
@@ -179,11 +157,13 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
   uint32_t dataFieldAddedSize = 0;
   std::vector < Ptr<Packet> > dataField;
 
+  //znr_note: 首先取发送缓存中的第1个数据包，至第179行
   // Remove the first packet from the transmission buffer.
   // If only a segment of the packet is taken, then the remaining is given back later
   if ( m_txBuffer.size () == 0 )
     {
-      NS_LOG_LOGIC ("No data pending");
+      //NS_LOG_LOGIC ("No data pending");//znr_com
+      NS_LOG_INFO ("No data pending");//znr_add
       return;
     }
 
@@ -197,10 +177,14 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
   NS_LOG_LOGIC ("Remove SDU from TxBuffer");
   m_txBufferSize -= firstSegment->GetSize ();
   NS_LOG_LOGIC ("txBufferSize      = " << m_txBufferSize );
-  m_txBuffer.erase (m_txBuffer.begin ());
+  m_txBuffer.erase (m_txBuffer.begin ());//znr_note: 删除发送缓存中的第1个数据包
 
-  while ( firstSegment && (firstSegment->GetSize () > 0) && (nextSegmentSize > 0) )
+  while ( firstSegment && (firstSegment->GetSize () > 0) && (nextSegmentSize > 0) )//znr_note: 注意while是循环
     {
+      NS_LOG_INFO ("               firstSegment.size = "<< (uint32_t) firstSegment->GetSize ());//znr_add
+      //NS_LOG_INFO ("               发送缓存数据将放入数据区");//znr_add
+      NS_LOG_INFO (this << " 发送缓存数据将放入数据区");//znr_add
+      
       NS_LOG_LOGIC ("WHILE ( firstSegment && firstSegment->GetSize > 0 && nextSegmentSize > 0 )");
       NS_LOG_LOGIC ("    firstSegment size = " << firstSegment->GetSize ());
       NS_LOG_LOGIC ("    nextSegmentSize   = " << nextSegmentSize);
@@ -213,14 +197,19 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
           // This exception is due to the length of the LI field (just 11 bits)
           uint32_t currSegmentSize = std::min (firstSegment->GetSize (), nextSegmentSize);
 
-          NS_LOG_LOGIC ("    IF ( firstSegment > nextSegmentSize ||");
-          NS_LOG_LOGIC ("         firstSegment > 2047 )");
+          NS_LOG_LOGIC ("    IF ( firstSegment > nextSegmentSize ||");//znr_com
+          NS_LOG_LOGIC ("         firstSegment > 2047 )");//znr_com
+          
+          //NS_LOG_INFO ("    IF ( firstSegment > nextSegmentSize ||");//znr_add
+          //NS_LOG_INFO ("         firstSegment > 2047 )");//znr_add
 
           // Segment txBuffer.FirstBuffer and
           // Give back the remaining segment to the transmission buffer
+          //znr_note: 关键错误，cttc-nr-demo.cc修改为UdpEchoServerHelper（低速模式），此处将报错
           Ptr<Packet> newSegment = firstSegment->CreateFragment (0, currSegmentSize);
           NS_LOG_LOGIC ("    newSegment size   = " << newSegment->GetSize ());
 
+          //znr_note: 为切分段做准备，修改Tag状态
           // Status tag of the new and remaining segments
           // Note: This is the only place where a PDU is segmented and
           // therefore its status can change
@@ -238,6 +227,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
               //oldTag.SetStatus (LteRlcSduStatusTag::LAST_SEGMENT);
             }
 
+          //znr_note: 将切分段剩下的段放回rlc的发送缓存
           // Give back the remaining segment to the transmission buffer
           firstSegment->RemoveAtStart (currSegmentSize);
           NS_LOG_LOGIC ("    firstSegment size (after RemoveAtStart) = " << firstSegment->GetSize ());
@@ -245,16 +235,19 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
             {
               firstSegment->AddPacketTag (oldTag);
 
-              m_txBuffer.insert (m_txBuffer.begin (), TxPdu (firstSegment, firstSegmentTime));
+              m_txBuffer.insert (m_txBuffer.begin (), TxPdu (firstSegment, firstSegmentTime));//znr_note: 将切分段剩下的段放回rlc的发送缓存
               m_txBufferSize += m_txBuffer.begin()->m_pdu->GetSize ();
-
+              
+              //NS_LOG_INFO ("               Give back the remaining segment size = " << (uint16_t)firstSegment->GetSize ());//znr_add
+              NS_LOG_INFO (this << " Give back the remaining segment size = " << (uint16_t)firstSegment->GetSize ());//znr_add
+              
               NS_LOG_LOGIC ("    TX buffer: Give back the remaining segment");
               NS_LOG_LOGIC ("    TX buffers = " << m_txBuffer.size ());
               NS_LOG_LOGIC ("    Front buffer size = " << m_txBuffer.begin()->m_pdu->GetSize ());
               NS_LOG_LOGIC ("    txBufferSize = " << m_txBufferSize );
             }
           else
-            {
+            {             
               // Whole segment was taken, so adjust tag
               if (newTag.GetStatus () == LteRlcSduStatusTag::FIRST_SEGMENT)
                 {
@@ -275,7 +268,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
           // Add Segment to Data field
           dataFieldAddedSize = newSegment->GetSize ();
           dataFieldTotalSize += dataFieldAddedSize;
-          dataField.push_back (newSegment);
+          dataField.push_back (newSegment);//znr_note: 将新的待发送数据包放入数据区
           newSegment = 0;
 
           // ExtensionBit (Next_Segment - 1) = 0
@@ -297,7 +290,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
           // Add txBuffer.FirstBuffer to DataField
           dataFieldAddedSize = firstSegment->GetSize ();
           dataFieldTotalSize += dataFieldAddedSize;
-          dataField.push_back (firstSegment);
+          dataField.push_back (firstSegment);//znr_note: 将新的待发送数据包放入数据区
           firstSegment = 0;
 
           // ExtensionBit (Next_Segment - 1) = 0
@@ -321,13 +314,13 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
           // (NO more segments) → exit
           // break;
         }
-      else // (firstSegment->GetSize () < m_nextSegmentSize) && (m_txBuffer.size () > 0)
+      else // (firstSegment->GetSize () < nextSegmentSize) && (m_txBuffer.size () > 0)//znr_change: "m_nextSegmentSize" change to "nextSegmentSize"
         {
           NS_LOG_LOGIC ("    IF firstSegment < NextSegmentSize && txBuffer.size > 0");
           // Add txBuffer.FirstBuffer to DataField
           dataFieldAddedSize = firstSegment->GetSize ();
           dataFieldTotalSize += dataFieldAddedSize;
-          dataField.push_back (firstSegment);
+          dataField.push_back (firstSegment);//znr_note: 将新的待发送数据包放入数据区
 
           // ExtensionBit (Next_Segment - 1) = 1
           rlcHeader.PushExtensionBit (LteRlcHeader::E_LI_FIELDS_FOLLOWS);
@@ -348,7 +341,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
           NS_LOG_LOGIC ("        Remove SDU from TxBuffer");
 
           // (more segments)
-          firstSegment = m_txBuffer.begin ()->m_pdu->Copy ();
+          firstSegment = m_txBuffer.begin ()->m_pdu->Copy ();//znr_note:重定位至新的、发送缓存中的第1个数据包
           firstSegmentTime = m_txBuffer.begin ()->m_waitingSince;
           m_txBufferSize -= firstSegment->GetSize ();
           m_txBuffer.erase (m_txBuffer.begin ());
@@ -364,41 +357,43 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
   std::vector< Ptr<Packet> >::iterator it;
   it = dataField.begin ();
 
-  uint8_t framingInfo = 0;
+  uint8_t framingInfo = 0;//znr_note: 框架信息，见TS36.322
 
   // FIRST SEGMENT
   LteRlcSduStatusTag tag;
   NS_ASSERT_MSG ((*it)->PeekPacketTag (tag), "LteRlcSduStatusTag is missing");
-  (*it)->PeekPacketTag (tag);
+  (*it)->PeekPacketTag (tag);//znr_note: 查看tag
   if ( (tag.GetStatus () == LteRlcSduStatusTag::FULL_SDU) ||
         (tag.GetStatus () == LteRlcSduStatusTag::FIRST_SEGMENT) )
     {
-      framingInfo |= LteRlcHeader::FIRST_BYTE;
+      framingInfo |= LteRlcHeader::FIRST_BYTE;//znr_note: 二级制按位或运算，LteRlcHeader::FIRST_BYTE 0x00
     }
   else
     {
       framingInfo |= LteRlcHeader::NO_FIRST_BYTE;
     }
 
-  while (it < dataField.end ())
+  while (it < dataField.end ())//znr_note: 指数据区已装入数据的情况
     {
       NS_LOG_LOGIC ("Adding SDU/segment to packet, length = " << (*it)->GetSize ());
 
       NS_ASSERT_MSG ((*it)->PeekPacketTag (tag), "LteRlcSduStatusTag is missing");
       (*it)->RemovePacketTag (tag);
-      if (packet->GetSize () > 0)
+      if (packet->GetSize () > 0)//znr_add: 见第148行，理论上不会大于0？？？错误：很多大于0
         {
+          //NS_LOG_INFO ("               packet->GetSize () > 0");//znr_add 
           packet->AddAtEnd (*it);
         }
       else
         {
           packet = (*it);
         }
-      it++;
+      it++;//znr_add: 数据区装入多个数据
     }
 
   // LAST SEGMENT (Note: There could be only one and be the first one)
-  it--;
+  it--;//znr_note: 只有前面已执行it++，此处it--才能正确，否则从begin位置--是什么位置？
+       //znr_bug: 可见此处存在一个bug
   if ( (tag.GetStatus () == LteRlcSduStatusTag::FULL_SDU) ||
         (tag.GetStatus () == LteRlcSduStatusTag::LAST_SEGMENT) )
     {
@@ -416,21 +411,22 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
 
   // Sender timestamp
   RlcTag rlcTag (Simulator::Now ());
-  packet->AddByteTag (rlcTag, 1, rlcHeader.GetSerializedSize ());
+  packet->AddByteTag (rlcTag, 1, rlcHeader.GetSerializedSize ());//znr_note: 二进制序列化tag
   m_txPdu (m_rnti, m_lcid, packet->GetSize ());
-//  m_txPdu (m_rnti, m_lcid+99, packet->GetSize ());
+
   // Send RLC PDU to MAC layer
   LteMacSapProvider::TransmitPduParameters params;
   params.pdu = packet;
   params.rnti = m_rnti;
   params.lcid = m_lcid;
+  //NS_LOG_INFO ("               LteRlcUm::m_lcid = "<< (uint16_t)m_lcid );//zjh_add
   params.layer = txOpParams.layer;
   params.harqProcessId = txOpParams.harqId;
   params.componentCarrierId = txOpParams.componentCarrierId;
-  params.m_signOfRlc=txOpParams.m_signOfRlc;
-
+  //NS_LOG_INFO ("               m_lcid = "<< (uint16_t)m_lcid << " componentCarrierId = "<< (uint16_t)txOpParams.componentCarrierId);//znr_add
+  
   m_macSapProvider->TransmitPdu (params);
-
+  
   if (! m_txBuffer.empty ())
     {
       m_rbsTimer.Cancel ();
@@ -447,10 +443,8 @@ LteRlcUm::DoNotifyHarqDeliveryFailure ()
 void
 LteRlcUm::DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams)
 {
-  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << rxPduParams.p->GetSize ()<<rxPduParams.lcid);
-  if(rxPduParams.lcid>=99){
-    rxPduParams.lcid=rxPduParams.lcid-99;
-  }
+  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << rxPduParams.p->GetSize ());
+  //NS_LOG_INFO (this << " LteRlcUm::DoReceivePdu");//zjh_add
   // Receiver timestamp
   RlcTag rlcTag;
   Time delay;
@@ -460,7 +454,7 @@ LteRlcUm::DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams)
 
   delay = Simulator::Now() - rlcTag.GetSenderTimestamp ();
   m_rxPdu (m_rnti, m_lcid, rxPduParams.p->GetSize (), delay.GetNanoSeconds ());
-//  m_rxPdu (m_rnti, m_lcid+99, rxPduParams.p->GetSize (), delay.GetNanoSeconds ());
+
   // 5.1.2.2 Receive operations
 
   // Get RLC header parameters
@@ -487,11 +481,11 @@ LteRlcUm::DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams)
   //    - discard the received UMD PDU;
   // - else:
   //    - place the received UMD PDU in the reception buffer.
-
-  NS_LOG_LOGIC ("VR(UR) = " << m_vrUr);//1
-  NS_LOG_LOGIC ("VR(UX) = " << m_vrUx);//0
-  NS_LOG_LOGIC ("VR(UH) = " << m_vrUh);//1
-  NS_LOG_LOGIC ("SN = " << seqNumber);//0
+  
+  NS_LOG_LOGIC ("VR(UR) = " << m_vrUr);
+  NS_LOG_LOGIC ("VR(UX) = " << m_vrUx);
+  NS_LOG_LOGIC ("VR(UH) = " << m_vrUh);
+  NS_LOG_LOGIC ("SN = " << seqNumber);
 
   m_vrUr.SetModulusBase (m_vrUh - m_windowSize);
   m_vrUh.SetModulusBase (m_vrUh - m_windowSize);
@@ -563,7 +557,7 @@ LteRlcUm::DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams)
       m_vrUr = newVrUr;
       NS_LOG_LOGIC ("New VR(UR) = " << m_vrUr);
 
-      ReassembleSnInterval (oldVrUr, m_vrUr);//from here gives to RLC
+      ReassembleSnInterval (oldVrUr, m_vrUr);
     }
 
   // m_vrUh can change previously, set new modulus base
@@ -636,6 +630,7 @@ LteRlcUm::IsInsideReorderingWindow (SequenceNumber10 seqNumber)
 void
 LteRlcUm::ReassembleAndDeliver (Ptr<Packet> packet)
 {
+  NS_LOG_INFO("LteRlcUm::ReassembleAndDeliver");//znr_add
   LteRlcHeader rlcHeader;
   packet->RemoveHeader (rlcHeader);
   uint8_t framingInfo = rlcHeader.GetFramingInfo ();
@@ -1113,6 +1108,7 @@ LteRlcUm::ReassembleOutsideWindow (void)
       NS_LOG_LOGIC ("SN = " << it->first);
 
       // Reassemble RLC SDUs and deliver the PDCP PDU to upper layer
+      NS_LOG_INFO ("LteRlcUm::ReassembleOutsideWindow");//zjh_add
       ReassembleAndDeliver (it->second);
 
       std::map <uint16_t, Ptr<Packet> >::iterator it_tmp = it;
@@ -1147,6 +1143,7 @@ LteRlcUm::ReassembleSnInterval (SequenceNumber10 lowSeqNumber, SequenceNumber10 
           NS_LOG_LOGIC ("SN = " << it->first);
 
           // Reassemble RLC SDUs and deliver the PDCP PDU to upper layer
+          NS_LOG_INFO ("LteRlcUm::ReassembleSnInterval");//zjh_add
           ReassembleAndDeliver (it->second);
 
           m_rxBuffer.erase (it);
@@ -1180,6 +1177,7 @@ LteRlcUm::DoReportBufferStatus (void)
   r.statusPduSize = 0;
 
   NS_LOG_LOGIC ("Send ReportBufferStatus = " << r.txQueueSize << ", " << r.txQueueHolDelay );
+  NS_LOG_FUNCTION (this);//znr_add
   m_macSapProvider->ReportBufferStatus (r);
 }
 
