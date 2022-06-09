@@ -79,7 +79,7 @@ static Ptr<ListPositionAllocator>
 GetGnbPositions (double gNbHeight = 10.0)
 {
   Ptr<ListPositionAllocator> pos = CreateObject<ListPositionAllocator> ();
-  pos->Add (Vector (120, 30, gNbHeight));
+  pos->Add (Vector (0, 0, gNbHeight));
 
   return pos;
 }
@@ -88,7 +88,7 @@ static Ptr<ListPositionAllocator>
 GetUePositions (double ueY, double ueHeight = 1.5)
 {
   Ptr<ListPositionAllocator> pos = CreateObject<ListPositionAllocator> ();
-  pos->Add (Vector (0.0, ueY, ueHeight));
+  pos->Add (Vector (0.0, 29, ueHeight));
 
   return pos;
 }
@@ -122,7 +122,7 @@ main (int argc, char *argv[])
   double ueY = 30.0;
 
   double simTime = 2.0; // 50 seconds: to take statistics
-  uint32_t pktSize = 500;
+  uint32_t pktSize = 410;
   Time udpAppStartTime = MilliSeconds (100);
   Time packetInterval = MilliSeconds (10);
   Time updateChannelInterval = MilliSeconds (8);
@@ -134,7 +134,7 @@ main (int argc, char *argv[])
 
   bool isUl = false;
 
-  std::string errorModel = "ns3::NrEesmIrT2";
+  std::string errorModel = "ns3::NrEesmIrT1";
 
   CommandLine cmd;
 
@@ -239,7 +239,8 @@ main (int argc, char *argv[])
 //  const uint8_t numCcPerBand = 1;
   const uint8_t numCcPerBand = 2;
 
-  CcBwpCreator::SimpleOperationBandConf bandConf1 (centralFrequencyBand1, bandwidthBand, numCcPerBand, BandwidthPartInfo::UMi_StreetCanyon);
+//  CcBwpCreator::SimpleOperationBandConf bandConf1 (centralFrequencyBand1, bandwidthBand, numCcPerBand, BandwidthPartInfo::UMi_StreetCanyon);
+  CcBwpCreator::SimpleOperationBandConf bandConf1 (centralFrequencyBand1, bandwidthBand, numCcPerBand, BandwidthPartInfo::UMi_StreetCanyon_nLoS);
 //  CcBwpCreator::SimpleOperationBandConf bandConf2 (centralFrequencyBand2, bandwidthBand, numCcPerBand, BandwidthPartInfo::UMi_StreetCanyon);
 
   OperationBandInfo band1 = ccBwpCreator.CreateOperationBandContiguousCc (bandConf1);

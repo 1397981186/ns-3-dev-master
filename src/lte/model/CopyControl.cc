@@ -131,6 +131,7 @@ CopyControl::RecvAndSave (Ptr<Packet> p)
   m_drop=false;
   if(ncheader.GetDorC()==1){
     p->AddHeader(ncheader);
+    m_IfTransmitSduFlag=false;
     m_IfRecvArq=true;
     return p;
   }else{
@@ -171,6 +172,7 @@ CopyControl::RecvAndSave (Ptr<Packet> p)
     m_IfTransmitSduFlag=true;
     it1->second.deliverdSN.push_back(para.SN);
     it1->second.m_ncComplete=true;
+    NS_LOG_DEBUG ("---add true group "<<m_groupnum);
     //it1->second.startTime = rxnctag.GetSenderTimestamp();
     m_pollingInterval=10;
     if(m_groupnum%m_pollingInterval==0){
@@ -261,6 +263,7 @@ CopyControl::CopySendArqReq (std::vector<uint64_t>&ArqGroupNums, std::vector<Ptr
       m_ncDecodingBufferList.insert({i,newBuffer});
       it3 = m_ncDecodingBufferList.find(i);
       it3->second.m_noReceive=true;
+      NS_LOG_DEBUG ("---add no recv "<< i);
 
     }
     if (!it3->second.m_ncComplete && !it3->second.m_statusReportTimer.IsRunning())
@@ -269,19 +272,19 @@ CopyControl::CopySendArqReq (std::vector<uint64_t>&ArqGroupNums, std::vector<Ptr
       NS_LOG_DEBUG ("---it at i "<< i);
       if (it3->second.num_statusReport<3)
       {
-//	CalulateDecodingRank(i);
-//	ArqPackets.push_back(MakeSendPackets(i));
-	ArqGroupNums.push_back(i);
-	MakeStatusReport(i,ArqPackets);
-	cnt++;
-	NS_LOG_DEBUG ("---add arq req at i "<< i);
+      //	CalulateDecodingRank(i);
+      //	ArqPackets.push_back(MakeSendPackets(i));
+        ArqGroupNums.push_back(i);
+        MakeStatusReport(i,ArqPackets);
+        cnt++;
+        NS_LOG_DEBUG ("---add arq req at i "<< i);
       }
       else
       {
-	m_statusReportStatistic[it3->second.num_statusReport+1] ++ ;
-	m_failedGroupNum ++;
-	it3->second.m_ncComplete = true;
-	NS_LOG_DEBUG ("num_statusReport is bigger than 3");
+        m_statusReportStatistic[it3->second.num_statusReport+1] ++ ;
+        m_failedGroupNum ++;
+        it3->second.m_ncComplete = true;
+        NS_LOG_DEBUG ("num_statusReport is bigger than 3");
       }
     }
     if(cnt==15){break;}
@@ -341,6 +344,7 @@ CopyControl::MakeCopyArqSendPacket (Ptr<Packet> p)
    }
   NS_LOG_DEBUG ("made copy arq packets to send , num of packets is "<<arqPackets.size());
   return arqPackets;
+
 }
 
 

@@ -144,7 +144,7 @@ LteRlcUm::DoTransmitPdcpPdu (Ptr<Packet> p)
 void
 LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams)
 {
-  NS_LOG_DEBUG (" LteRlcUm::DoNotifyTxOpportunity"<<this
+  NS_LOG_DEBUG (" LteRlcUm::DoNotifyTxOpportunity "<<this
                 <<"  m_rnti = "<< (uint32_t) m_rnti
                 << " m_lcid = " << (uint32_t) m_lcid
                 << " txOpParams.bytes = " << txOpParams.bytes
@@ -460,7 +460,10 @@ LteRlcUm::DoNotifyHarqDeliveryFailure ()
 void
 LteRlcUm::DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams)
 {
-  NS_LOG_DEBUG ("LteRlcUm::DoReceivePdu"<< this << m_rnti << (uint32_t) m_lcid << rxPduParams.p->GetSize ());
+  NS_LOG_DEBUG ("LteRlcUm::DoReceivePdu "<< this
+                <<" m_rnti " <<m_rnti
+                <<" m_lcid "<< (uint32_t) m_lcid
+                << " size "<<rxPduParams.p->GetSize ());
   //NS_LOG_INFO (this << " LteRlcUm::DoReceivePdu");//zjh_add
   // Receiver timestamp
   RlcTag rlcTag;

@@ -598,34 +598,46 @@ LtePdcp::TriggerRecvPdcpSdu(Ptr<Packet> p){
     if(m_Copy->IfRecvArq()){
       std::vector<Ptr<Packet> > arqPackets;
       arqPackets=m_Copy->MakeCopyArqSendPacket(Sdu);
-      for(auto it=arqPackets.begin();it != arqPackets.end();it++){
-        LtePdcpSapProvider::TransmitPdcpSduParameters paramsArq;
-        paramsArq.lcid=m_lcid;
-        paramsArq.rnti=m_rnti;
-        paramsArq.pdcpSdu=* it;
-        paramsArq.NcArqAddTop=1;
-        NS_LOG_DEBUG("---set NcArqAddTop = = 1");
+
+      if(arqPackets.size()!=0){
+
+          for(auto it=arqPackets.begin();it != arqPackets.end();it++){
+            LtePdcpSapProvider::TransmitPdcpSduParameters paramsArq;
+            paramsArq.lcid=m_lcid;
+            paramsArq.rnti=m_rnti;
+            paramsArq.pdcpSdu=* it;
+            paramsArq.NcArqAddTop=1;
+            NS_LOG_DEBUG("---set NcArqAddTop = = 1");
 
 
-        LtePdcpSapProvider::TransmitPdcpSduParameters paramsArq2;
-        paramsArq2.lcid=m_lcid;
-        paramsArq2.rnti=m_rnti;
-        paramsArq2.pdcpSdu=paramsArq.pdcpSdu->Copy();
-        paramsArq2.NcArqAddTop=1;
-        NS_LOG_DEBUG("---set NcArqAddTop = = 1");
+            LtePdcpSapProvider::TransmitPdcpSduParameters paramsArq2;
+            paramsArq2.lcid=m_lcid;
+            paramsArq2.rnti=m_rnti;
+            paramsArq2.pdcpSdu=paramsArq.pdcpSdu->Copy();
+            paramsArq2.NcArqAddTop=1;
+            NS_LOG_DEBUG("---set NcArqAddTop = = 1");
 
-        DoTransmitPdcpSdu(paramsArq);
-        DoTransmitPdcpSdu_leg(paramsArq2);
+            DoTransmitPdcpSdu(paramsArq);
+            DoTransmitPdcpSdu_leg(paramsArq2);
+          }
       }
     }
+//    NS_LOG_DEBUG ("here0");
     if(m_Copy->IfTransmitSdu()){
+//        NS_LOG_DEBUG ("here1");
       LtePdcpSapUser::ReceivePdcpSduParameters params;
+//      NS_LOG_DEBUG ("here2");
       params.pdcpSdu = Sdu;
+//      NS_LOG_DEBUG ("here3");
       params.rnti = m_rnti;
       params.lcid = m_lcid;
+//      NS_LOG_DEBUG ("here4");
       m_pdcpSapUser->ReceivePdcpSdu (params);
+//      NS_LOG_DEBUG ("here5");
     }
+
     m_Copy->stopArqTimer();
+
     if(m_Copy->IfCopySendArq()){
       std::vector <Ptr<Packet>> ArqPackets;
       std::vector <uint64_t> ArqGroupNums;
@@ -645,7 +657,7 @@ LtePdcp::TriggerRecvPdcpSdu(Ptr<Packet> p){
             CopyArqReqSendOnce(ArqGroupNums[i],ArqPackets[i],m_Copy);
         }
     }
-
+//      NS_LOG_DEBUG ("here3");
     }
 
   /**
@@ -667,7 +679,11 @@ LtePdcp::TriggerRecvPdcpSdu(Ptr<Packet> p){
 void
 LtePdcp::DoReceivePdu (Ptr<Packet> p)
 {
-  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << p->GetSize ()<<" time "<<Simulator::Now ().GetNanoSeconds());
+  NS_LOG_DEBUG ("LtePdcp::DoReceivePdu "<<this
+                << " m_rnti "<<m_rnti
+                << " m_lcid "<<(uint32_t) m_lcid
+                << " size "<<p->GetSize ()
+                <<" time "<<Simulator::Now ().GetNanoSeconds());
 //  if(p->GetSize ()!=852){
 //  if(p->GetSize ()!=873&&p->GetSize ()!=24){
 //      NS_LOG_DEBUG("not 542/563/24, drop");
