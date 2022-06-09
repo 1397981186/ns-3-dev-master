@@ -55,6 +55,7 @@ class LteRlc : public Object // SimpleRefCount<LteRlc>
   friend class LteRlcSpecificLteRlcSapProvider<LteRlc>;
 public:
   LteRlc ();
+  uint8_t m_NcArqAddTop=0;
   virtual ~LteRlc ();
   /**
    * \brief Get the type ID.

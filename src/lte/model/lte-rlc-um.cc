@@ -100,11 +100,20 @@ LteRlcUm::DoTransmitPdcpPdu (Ptr<Packet> p)
       tag.SetStatus (LteRlcSduStatusTag::FULL_SDU);
       p->AddPacketTag (tag);
 
+      if(m_NcArqAddTop==1){
+        auto it =m_txBuffer.begin();
+        if(m_txBufferSize!=0){it++;}
+        m_txBuffer.insert(it,TxPdu (p, Simulator::Now ()));
+        NS_LOG_DEBUG("ADD to queue head");
+      }else{
+        m_txBuffer.push_back (TxPdu (p, Simulator::Now ()));
+      }
+
       NS_LOG_LOGIC ("Tx Buffer: New packet added");
       //NS_LOG_INFO ("Tx Buffer: New packet added");//zjh_add
       NS_LOG_INFO (this << " LteRlcUm::DoTransmitPdcpPdu " << (uint32_t) m_lcid);//znr_add
-      m_txBuffer.push_back (TxPdu (p, Simulator::Now ()));//znr_note: 打上时间戳，代表数据从rlc进入发送缓存的时间，但不是从phy发出时间。
-      m_txBufferSize += p->GetSize ();
+//      m_txBuffer.push_back (TxPdu (p, Simulator::Now ()));//znr_note: 打上时间戳，代表数据从rlc进入发送缓存的时间，但不是从phy发出时间。
+//      m_txBufferSize += p->GetSize ();
       NS_LOG_LOGIC ("NumOfBuffers = " << m_txBuffer.size() );
       NS_LOG_INFO ("NumOfBuffers = " << m_txBuffer.size() );//zjh_add
       NS_LOG_LOGIC ("txBufferSize = " << m_txBufferSize);

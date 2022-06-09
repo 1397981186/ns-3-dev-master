@@ -28,6 +28,9 @@
 
 #include "ns3/lte-pdcp-sap.h"
 #include "ns3/lte-rlc-sap.h"
+#include "NcControl.h"
+#include "CopyControl.h"
+#include "ns3/lte-nc-header.h"
 
 namespace ns3 {
 
@@ -179,6 +182,20 @@ protected:
    * \param params the TransmitPdcpSduParameters
    */
   virtual void DoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters params);
+  virtual void DoTransmitPdcpSdu_leg (LtePdcpSapProvider::TransmitPdcpSduParameters params);
+  virtual void TriggerDoTransmitPdcpSdu(LtePdcpSapProvider::TransmitPdcpSduParameters params);
+  void TriggerRecvPdcpSdu(Ptr<Packet> p);
+  void ToogleSend(LtePdcpSapProvider::TransmitPdcpSduParameters params);
+  void SingleSend(LtePdcpSapProvider::TransmitPdcpSduParameters params);
+  void CopyArqReqSendOnce(uint64_t ArqGroupNum,Ptr<Packet> p,CopyControl* m_Copy);
+  void NcArqReqSendOnce(uint64_t ArqGroupNum,Ptr<Packet> p,NcControl* m_Nc);
+  void CopyExpireStatusReportTimer (uint64_t ArqGroupNum,Ptr<Packet> p,CopyControl* m_Copy);
+  void NcExpireStatusReportTimer (uint64_t ArqGroupNum,Ptr<Packet> p,NcControl* m_Nc);
+  Time m_statusReportTimerValuePdcpCopy=MicroSeconds(65000.0);
+  Time m_statusReportTimerValuePdcpNc=MicroSeconds(65000.0);
+
+  NcControl* m_Nc;
+  CopyControl* m_Copy;
 
   LtePdcpSapUser* m_pdcpSapUser; ///< PDCP SAP user
   LtePdcpSapUser* m_pdcpSapUser_leg; //zjh_add
@@ -234,6 +251,9 @@ private:
    * zjh_new: onoff pdcp duplication, See section 7.1 in TS 38.323
    */
   bool m_pdcpDuplication;
+  bool m_NcEnable;
+  bool m_CopyEnable;
+  uint32_t m_NcRlcToSend=0;
 };
 
 

@@ -252,7 +252,7 @@ Packet::GetNixVector (void) const
   return m_nixVector;
 } 
 
-void
+bool
 Packet::AddHeader (const Header &header)
 {
   uint32_t size = header.GetSerializedSize ();
@@ -261,7 +261,7 @@ Packet::AddHeader (const Header &header)
   m_byteTagList.Adjust (size);
   m_byteTagList.AddAtStart (size);
   header.Serialize (m_buffer.Begin ());
-  m_metadata.AddHeader (header, size);
+  return m_metadata.AddHeader (header, size);
 }
 uint32_t
 Packet::RemoveHeader (Header &header, uint32_t size)

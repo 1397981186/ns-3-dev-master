@@ -45,6 +45,7 @@ public:
     Ptr<Packet> pdcpPdu;  /**< the PDCP PDU */
     uint16_t    rnti; /**< the C-RNTI identifying the UE */
     uint8_t     lcid; /**< the logical channel id corresponding to the sending RLC instance */
+    uint8_t     NcArqAddTop;
   };
 
   /**
@@ -115,6 +116,7 @@ LteRlcSpecificLteRlcSapProvider<C>::LteRlcSpecificLteRlcSapProvider ()
 template <class C>
 void LteRlcSpecificLteRlcSapProvider<C>::TransmitPdcpPdu (TransmitPdcpPduParameters params)
 {
+  m_rlc->m_NcArqAddTop=params.NcArqAddTop;
   m_rlc->DoTransmitPdcpPdu (params.pdcpPdu);
 }
 
