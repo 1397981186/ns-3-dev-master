@@ -39,7 +39,7 @@ LteRlcUm::LteRlcUm ()
     m_vrUr (0),
     m_vrUx (0),
     m_vrUh (0),
-    m_windowSize (512),
+    m_windowSize (16),
     m_expectedSeqNumber (0)
 {
   NS_LOG_FUNCTION (this);
@@ -107,13 +107,14 @@ LteRlcUm::DoTransmitPdcpPdu (Ptr<Packet> p)
         NS_LOG_DEBUG("ADD to queue head");
       }else{
         m_txBuffer.push_back (TxPdu (p, Simulator::Now ()));
+
       }
 
       NS_LOG_LOGIC ("Tx Buffer: New packet added");
       //NS_LOG_INFO ("Tx Buffer: New packet added");//zjh_add
       NS_LOG_INFO (this << " LteRlcUm::DoTransmitPdcpPdu " << (uint32_t) m_lcid);//znr_add
 //      m_txBuffer.push_back (TxPdu (p, Simulator::Now ()));//znr_note: 打上时间戳，代表数据从rlc进入发送缓存的时间，但不是从phy发出时间。
-//      m_txBufferSize += p->GetSize ();
+      m_txBufferSize += p->GetSize ();
       NS_LOG_LOGIC ("NumOfBuffers = " << m_txBuffer.size() );
       NS_LOG_INFO ("NumOfBuffers = " << m_txBuffer.size() );//zjh_add
       NS_LOG_LOGIC ("txBufferSize = " << m_txBufferSize);
@@ -143,9 +144,13 @@ LteRlcUm::DoTransmitPdcpPdu (Ptr<Packet> p)
 void
 LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams)
 {
-  NS_LOG_INFO (this << " LteRlcUm::DoNotifyTxOpportunity");//zjh_add
+  NS_LOG_DEBUG (" LteRlcUm::DoNotifyTxOpportunity"<<this
+                <<"  m_rnti = "<< (uint32_t) m_rnti
+                << " m_lcid = " << (uint32_t) m_lcid
+                << " txOpParams.bytes = " << txOpParams.bytes
+                <<" m_allSendPduNums "<<m_allSendPduNums);//zjh_add
   //NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << txOpParams.bytes);//znr_com
-  NS_LOG_INFO ("               m_rnti = "<< (uint32_t) m_rnti << " m_lcid = " << (uint32_t) m_lcid << " txOpParams.bytes = " << txOpParams.bytes);//znr_add
+//  NS_LOG_INFO ("               m_rnti = "<< (uint32_t) m_rnti << " m_lcid = " << (uint32_t) m_lcid << " txOpParams.bytes = " << txOpParams.bytes);//znr_add
   
   if (txOpParams.bytes <= 2)
     {
@@ -187,6 +192,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
   m_txBufferSize -= firstSegment->GetSize ();
   NS_LOG_LOGIC ("txBufferSize      = " << m_txBufferSize );
   m_txBuffer.erase (m_txBuffer.begin ());//znr_note: 删除发送缓存中的第1个数据包
+  m_allSendPduNums++;
 
   while ( firstSegment && (firstSegment->GetSize () > 0) && (nextSegmentSize > 0) )//znr_note: 注意while是循环
     {
@@ -245,6 +251,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
               firstSegment->AddPacketTag (oldTag);
 
               m_txBuffer.insert (m_txBuffer.begin (), TxPdu (firstSegment, firstSegmentTime));//znr_note: 将切分段剩下的段放回rlc的发送缓存
+              m_allSendPduNums--;
               m_txBufferSize += m_txBuffer.begin()->m_pdu->GetSize ();
               
               //NS_LOG_INFO ("               Give back the remaining segment size = " << (uint16_t)firstSegment->GetSize ());//znr_add
@@ -354,6 +361,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
           firstSegmentTime = m_txBuffer.begin ()->m_waitingSince;
           m_txBufferSize -= firstSegment->GetSize ();
           m_txBuffer.erase (m_txBuffer.begin ());
+          m_allSendPduNums++;
           NS_LOG_LOGIC ("        txBufferSize = " << m_txBufferSize );
         }
 
@@ -452,7 +460,7 @@ LteRlcUm::DoNotifyHarqDeliveryFailure ()
 void
 LteRlcUm::DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams)
 {
-  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << rxPduParams.p->GetSize ());
+  NS_LOG_DEBUG ("LteRlcUm::DoReceivePdu"<< this << m_rnti << (uint32_t) m_lcid << rxPduParams.p->GetSize ());
   //NS_LOG_INFO (this << " LteRlcUm::DoReceivePdu");//zjh_add
   // Receiver timestamp
   RlcTag rlcTag;

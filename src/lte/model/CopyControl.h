@@ -106,6 +106,7 @@ public:
   uint64_t m_statusReportStatistic[5] = {0,0,0,0,0};
   bool m_IfSendArq;
   bool m_IfRecvArq;
+  bool m_drop=false;
   uint64_t m_ncVrMs;   //尚未完整接受的最小组号
   uint64_t m_failedGroupNum = 0;
   uint32_t m_pollingInterval=10;

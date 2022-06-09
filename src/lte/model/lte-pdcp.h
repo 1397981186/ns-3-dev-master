@@ -184,7 +184,7 @@ protected:
   virtual void DoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters params);
   virtual void DoTransmitPdcpSdu_leg (LtePdcpSapProvider::TransmitPdcpSduParameters params);
   virtual void TriggerDoTransmitPdcpSdu(LtePdcpSapProvider::TransmitPdcpSduParameters params);
-  void TriggerRecvPdcpSdu(Ptr<Packet> p);
+  int TriggerRecvPdcpSdu(Ptr<Packet> p);
   void ToogleSend(LtePdcpSapProvider::TransmitPdcpSduParameters params);
   void SingleSend(LtePdcpSapProvider::TransmitPdcpSduParameters params);
   void CopyArqReqSendOnce(uint64_t ArqGroupNum,Ptr<Packet> p,CopyControl* m_Copy);

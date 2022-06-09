@@ -514,7 +514,7 @@ LtePdcp::NcExpireStatusReportTimer (uint64_t ArqGroupNum,Ptr<Packet> p,NcControl
   }
 }
 
-void
+int
 LtePdcp::TriggerRecvPdcpSdu(Ptr<Packet> p){
   /**
    *
@@ -592,6 +592,9 @@ LtePdcp::TriggerRecvPdcpSdu(Ptr<Packet> p){
   }else if(m_CopyEnable){
     Ptr<Packet> Sdu=Create<Packet> ();
     Sdu=m_Copy->RecvAndSave(p);
+    if(m_Copy->m_drop){
+        NS_LOG_DEBUG("remove header wrong ,drop ");
+        return 0 ;}
     if(m_Copy->IfRecvArq()){
       std::vector<Ptr<Packet> > arqPackets;
       arqPackets=m_Copy->MakeCopyArqSendPacket(Sdu);
@@ -657,6 +660,7 @@ LtePdcp::TriggerRecvPdcpSdu(Ptr<Packet> p){
     params.lcid = m_lcid;
     m_pdcpSapUser->ReceivePdcpSdu (params);
   }
+  return 1;
 
 }
 
@@ -665,10 +669,10 @@ LtePdcp::DoReceivePdu (Ptr<Packet> p)
 {
   NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << p->GetSize ()<<" time "<<Simulator::Now ().GetNanoSeconds());
 //  if(p->GetSize ()!=852){
-  if(p->GetSize ()!=873&&p->GetSize ()!=24){
-      NS_LOG_DEBUG("not 542/563/24, drop");
-
-  }else{
+//  if(p->GetSize ()!=873&&p->GetSize ()!=24){
+//      NS_LOG_DEBUG("not 542/563/24, drop");
+//
+//  }else{
       // Receiver timestamp
     PdcpTag pdcpTag;
     Time delay;
@@ -685,15 +689,15 @@ LtePdcp::DoReceivePdu (Ptr<Packet> p)
 
       m_rxSequenceNumber = pdcpHeader.GetSequenceNumber () + 1;
       if (m_rxSequenceNumber > m_maxPdcpSn)
-  {
-    m_rxSequenceNumber = 0;
-  }
+      {
+        m_rxSequenceNumber = 0;
+      }
 
       TriggerRecvPdcpSdu(p);
     }else{
-  NS_LOG_DEBUG("size0, drop");
+        NS_LOG_DEBUG("size0, drop");
       }
-  }
+//}
 }
 /**
 void

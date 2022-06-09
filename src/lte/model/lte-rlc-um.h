@@ -50,7 +50,7 @@ public:
    * \param p packet
    */
   virtual void DoTransmitPdcpPdu (Ptr<Packet> p);
-
+  uint64_t m_allSendPduNums=0;
   /**
    * MAC SAP
    *

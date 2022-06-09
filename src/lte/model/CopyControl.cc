@@ -124,8 +124,11 @@ Ptr<Packet>
 CopyControl::RecvAndSave (Ptr<Packet> p)
 {
   NcHeader ncheader;
-  p->RemoveHeader(ncheader);
-
+  if(p->RemoveHeader(ncheader)==0){
+     m_drop=true;
+     return p;
+  }
+  m_drop=false;
   if(ncheader.GetDorC()==1){
     p->AddHeader(ncheader);
     m_IfRecvArq=true;
@@ -328,8 +331,13 @@ CopyControl::MakeCopyArqSendPacket (Ptr<Packet> p)
     NcHeader reTxheader;
     reTxheader.SetGroupnum(ncheader.GetGroupnum());
     Ptr<Packet> reTxpacket = it->second.m_ncVector[m_originalBlockSize-1].p->Copy();
-    reTxpacket->AddHeader(reTxheader);
-    arqPackets.push_back(reTxpacket);
+    if(!reTxpacket->AddHeader(reTxheader)){
+        NS_LOG_DEBUG ("---head add wrong");
+    }else{
+        arqPackets.push_back(reTxpacket);
+    }
+//    reTxpacket->AddHeader(reTxheader);
+//    arqPackets.push_back(reTxpacket);
    }
   NS_LOG_DEBUG ("made copy arq packets to send , num of packets is "<<arqPackets.size());
   return arqPackets;

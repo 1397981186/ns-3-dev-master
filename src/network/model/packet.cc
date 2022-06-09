@@ -283,7 +283,9 @@ Packet::RemoveHeader (Header &header)
   NS_LOG_FUNCTION (this << header.GetInstanceTypeId ().GetName () << deserialized);
   m_buffer.RemoveAtStart (deserialized);
   m_byteTagList.Adjust (-deserialized);
-  m_metadata.RemoveHeader (header, deserialized);
+  if(!m_metadata.RemoveHeader (header, deserialized)){
+      return 0;
+  }
   return deserialized;
 }
 uint32_t

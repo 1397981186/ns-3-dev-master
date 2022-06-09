@@ -497,10 +497,9 @@ NcControl::MakeNcArqSendPacket (Ptr<Packet> p)
       reTxheader.SetCoeff(ncCoeff);
       Ptr<Packet> reTxpacket = it->second.m_ncVector[m_originalBlockSize-1].p->Copy();
       if(!reTxpacket->AddHeader(reTxheader)){
-	  NS_LOG_DEBUG ("---head add wrong");
+          NS_LOG_DEBUG ("---head add wrong");
       }else{
-	  arqPackets.push_back(reTxpacket);
-
+          arqPackets.push_back(reTxpacket);
       }
 //      txEncodingPacketNum ++;
 //      NcTag nctag(Simulator::Now ());

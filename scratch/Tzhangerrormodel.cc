@@ -117,7 +117,7 @@ main (int argc, char *argv[])
   uint16_t numerologyBwp = 4;
 //  double centralFrequencyBand = 28e9;
   double centralFrequencyBand1 = 28e9;
-  double centralFrequencyBand2 = 28.2e9;
+//  double centralFrequencyBand2 = 28.2e9;
   double bandwidthBand = 100e6;
   double ueY = 30.0;
 
@@ -126,12 +126,20 @@ main (int argc, char *argv[])
   Time udpAppStartTime = MilliSeconds (100);
   Time packetInterval = MilliSeconds (10);
   Time updateChannelInterval = MilliSeconds (8);
+
+//    bool ifNc=true;
+    bool ifNc=false;
+//    bool ifCopy=false;
+    bool ifCopy=true;
+
   bool isUl = false;
 
   std::string errorModel = "ns3::NrEesmIrT2";
 
   CommandLine cmd;
 
+  cmd.AddValue("ifNc", "Pdcp do nc if true", ifNc);
+  cmd.AddValue("ifCopy", "Pdcp do copy if true", ifCopy);
   cmd.AddValue ("simTime", "Simulation time", simTime);
   cmd.AddValue ("mcs",
                 "The MCS that will be used in this example",
@@ -163,11 +171,14 @@ main (int argc, char *argv[])
 
   Config::SetDefault ("ns3::NrAmc::ErrorModelType", TypeIdValue (TypeId::LookupByName (errorModel)));
   Config::SetDefault ("ns3::NrAmc::AmcModel", EnumValue (NrAmc::ShannonModel));  // NOT USED in this example. MCS is fixed.
+  Config::SetDefault ("ns3::LtePdcp::NcEnable", BooleanValue(ifNc));
+  Config::SetDefault ("ns3::LtePdcp::CopyEnable", BooleanValue(ifCopy));
+
 
   LogComponentEnable ("UdpClient", LOG_LEVEL_FUNCTION);//zjh_com
   LogComponentEnable ("CttcErrorModelExample", LOG_LEVEL_DEBUG);
   //LogComponentEnable ("UdpServer", LOG_LEVEL_FUNCTION);//zjh_com
-  LogComponentEnable ("LtePdcp", LOG_LEVEL_FUNCTION);//znr-add: 观察程序运行过程，采用LOG_LEVEL_LOGIC
+//  LogComponentEnable ("LtePdcp", LOG_LEVEL_FUNCTION);//znr-add: 观察程序运行过程，采用LOG_LEVEL_LOGIC
 
   //LogComponentEnable ("NrHelper", LOG_LEVEL_INFO);//znr_add
   //LogComponentEnable ("NrHelper", LOG_LEVEL_FUNCTION);//znr_add
@@ -175,6 +186,12 @@ main (int argc, char *argv[])
   //LogComponentEnable ("LteEnbRrc", LOG_LEVEL_FUNCTION);//znr_add
   //LogComponentEnable ("LteUeRrc", LOG_LEVEL_INFO);//znr_add
   LogComponentEnable ("LteRlcUm", LOG_LEVEL_DEBUG);//znr_add
+  LogComponentEnable("LtePdcp", LOG_LEVEL_DEBUG);
+  LogComponentEnable("NcControl", LOG_LEVEL_DEBUG);
+  LogComponentEnable("CopyControl", LOG_LEVEL_DEBUG);
+//  LogComponentEnable("NrSpectrumPhy", LOG_LEVEL_DEBUG);
+  LogComponentEnable("UdpServer", LOG_LEVEL_DEBUG);
+  LogComponentEnable("PacketMetadata", LOG_LEVEL_DEBUG);
 
 
   // create base stations and mobile terminals
@@ -223,10 +240,10 @@ main (int argc, char *argv[])
   const uint8_t numCcPerBand = 2;
 
   CcBwpCreator::SimpleOperationBandConf bandConf1 (centralFrequencyBand1, bandwidthBand, numCcPerBand, BandwidthPartInfo::UMi_StreetCanyon);
-  CcBwpCreator::SimpleOperationBandConf bandConf2 (centralFrequencyBand2, bandwidthBand, numCcPerBand, BandwidthPartInfo::UMi_StreetCanyon);
+//  CcBwpCreator::SimpleOperationBandConf bandConf2 (centralFrequencyBand2, bandwidthBand, numCcPerBand, BandwidthPartInfo::UMi_StreetCanyon);
 
   OperationBandInfo band1 = ccBwpCreator.CreateOperationBandContiguousCc (bandConf1);
-  OperationBandInfo band2 = ccBwpCreator.CreateOperationBandContiguousCc (bandConf2);
+//  OperationBandInfo band2 = ccBwpCreator.CreateOperationBandContiguousCc (bandConf2);
 
 
 
@@ -245,10 +262,10 @@ main (int argc, char *argv[])
    */
   double totalBandwidth = bandwidthBand;
   nrHelper->InitializeOperationBand (&band1);
-  nrHelper->InitializeOperationBand (&band2);
+//  nrHelper->InitializeOperationBand (&band2);
   totalBandwidth += bandwidthBand;
-//  allBwps = CcBwpCreator::GetAllBwps ({band});
-  allBwps = CcBwpCreator::GetAllBwps ({band1, band2});//znr_note: allBwps长度等于2
+  allBwps = CcBwpCreator::GetAllBwps ({band1});
+//  allBwps = CcBwpCreator::GetAllBwps ({band1, band2});//znr_note: allBwps长度等于2
 
   Packet::EnableChecking ();
   Packet::EnablePrinting ();
@@ -429,11 +446,11 @@ main (int argc, char *argv[])
   uint32_t cont = 0;
   for (auto & v : packetsTime)
     {
-      if ( v < 100000 )
-        {
+//      if ( v < 100000 )
+//        {
           sum += v;
           cont++;
-        }
+//        }
     }
   std::cout << "Packets received: " << packetsTime.size () << std::endl;
   std::cout << "Counter (packets not affected by reordering): " << +cont << std::endl;
