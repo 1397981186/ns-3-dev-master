@@ -135,6 +135,8 @@ NcControl::RecvAndSave (Ptr<Packet> p)
   if(ncheader.GetDorC()==1){
     p->AddHeader(ncheader);
     m_IfRecvArq=true;
+    m_IfTransmitSduFlag=false;
+    m_IfSendArq=false;
     return p;
   }else{
     m_IfRecvArq=false;

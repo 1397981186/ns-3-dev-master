@@ -39,7 +39,7 @@ LteRlcUm::LteRlcUm ()
     m_vrUr (0),
     m_vrUx (0),
     m_vrUh (0),
-    m_windowSize (16),
+    m_windowSize (6),
     m_expectedSeqNumber (0)
 {
   NS_LOG_FUNCTION (this);
@@ -110,7 +110,7 @@ LteRlcUm::DoTransmitPdcpPdu (Ptr<Packet> p)
 
       }
 
-      NS_LOG_LOGIC ("Tx Buffer: New packet added");
+      NS_LOG_DEBUG ("rlc Tx Buffer: New packet added");
       //NS_LOG_INFO ("Tx Buffer: New packet added");//zjh_add
       NS_LOG_INFO (this << " LteRlcUm::DoTransmitPdcpPdu " << (uint32_t) m_lcid);//znr_add
 //      m_txBuffer.push_back (TxPdu (p, Simulator::Now ()));//znr_note: 打上时间戳，代表数据从rlc进入发送缓存的时间，但不是从phy发出时间。
@@ -123,7 +123,7 @@ LteRlcUm::DoTransmitPdcpPdu (Ptr<Packet> p)
   else
     {
       // Discard full RLC SDU
-      NS_LOG_LOGIC ("TxBuffer is full. RLC SDU discarded");
+      NS_LOG_DEBUG ("TxBuffer is full. RLC SDU discarded");
       //NS_LOG_INFO ("TxBuffer is full. RLC SDU discarded");//zjh_add
       NS_LOG_LOGIC ("MaxTxBufferSize = " << m_maxTxBufferSize);
       NS_LOG_LOGIC ("txBufferSize    = " << m_txBufferSize);
@@ -148,6 +148,7 @@ LteRlcUm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
                 <<"  m_rnti = "<< (uint32_t) m_rnti
                 << " m_lcid = " << (uint32_t) m_lcid
                 << " txOpParams.bytes = " << txOpParams.bytes
+                <<" m_txBuffer size "<<m_txBuffer.size()
                 <<" m_allSendPduNums "<<m_allSendPduNums);//zjh_add
   //NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << txOpParams.bytes);//znr_com
 //  NS_LOG_INFO ("               m_rnti = "<< (uint32_t) m_rnti << " m_lcid = " << (uint32_t) m_lcid << " txOpParams.bytes = " << txOpParams.bytes);//znr_add
@@ -466,6 +467,10 @@ LteRlcUm::DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams)
                 << " size "<<rxPduParams.p->GetSize ());
   //NS_LOG_INFO (this << " LteRlcUm::DoReceivePdu");//zjh_add
   // Receiver timestamp
+//  if(rxPduParams.p->GetSize ()==73){
+//      NS_LOG_DEBUG (" rlc drop --- sht add ");
+//      return ;
+//  }
   RlcTag rlcTag;
   Time delay;
 

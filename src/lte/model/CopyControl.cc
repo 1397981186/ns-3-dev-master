@@ -133,6 +133,7 @@ CopyControl::RecvAndSave (Ptr<Packet> p)
     p->AddHeader(ncheader);
     m_IfTransmitSduFlag=false;
     m_IfRecvArq=true;
+    m_IfSendArq=false;
     return p;
   }else{
     m_IfRecvArq=false;
@@ -250,8 +251,8 @@ CopyControl::CopySendArqReq (std::vector<uint64_t>&ArqGroupNums, std::vector<Ptr
 //  std::vector<Ptr<Packet> > ArqPackets;
   uint8_t cnt=0;
   NS_LOG_DEBUG ("---it at i "<< m_ncVrMs);
-  if(m_groupnum<50){return ;}
-  for (uint64_t i=m_ncVrMs; i<=m_groupnum-50; i++)
+  if(m_groupnum<20){return ;}
+  for (uint64_t i=m_ncVrMs; i<=m_groupnum-20; i++)
 //  for (uint64_t i=m_ncVrMs; i<=m_MaxRecvGroupnum; i++)
   {
 

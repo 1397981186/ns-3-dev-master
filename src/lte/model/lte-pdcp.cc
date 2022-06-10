@@ -454,7 +454,13 @@ LtePdcp::TriggerDoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters
 
       m_Copy->m_groupnum++;
   }else{
+      LtePdcpSapProvider::TransmitPdcpSduParameters paramsRe;
+      paramsRe.lcid=params.lcid;
+      paramsRe.rnti=params.rnti;
+      paramsRe.pdcpSdu=params.pdcpSdu->Copy();
+
       DoTransmitPdcpSdu (params);
+      DoTransmitPdcpSdu_leg(paramsRe);
   }
 }
 
@@ -466,7 +472,8 @@ LtePdcp::CopyArqReqSendOnce(uint64_t ArqGroupNum,Ptr<Packet> p,CopyControl* m_Co
   paramsArq.rnti=m_rnti;
   paramsArq.pdcpSdu=p->Copy();
   paramsArq.NcArqAddTop=0;
-  DoTransmitPdcpSdu (paramsArq);
+//  DoTransmitPdcpSdu (paramsArq);
+  ToogleSend(paramsArq);
   auto it=m_Copy->m_ncDecodingBufferList.find(ArqGroupNum);
   it->second.num_statusReport ++;
   NS_LOG_DEBUG("CopyArqReqSendOnce group num is "<<ArqGroupNum<<" arq num is "<<(unsigned)it->second.num_statusReport<<" time "<<Simulator::Now ().GetNanoSeconds());
@@ -494,12 +501,12 @@ LtePdcp::NcArqReqSendOnce(uint64_t ArqGroupNum,Ptr<Packet> p,NcControl* m_Nc){
   paramsArq.rnti=m_rnti;
   paramsArq.pdcpSdu=p->Copy();
   paramsArq.NcArqAddTop=0;
-  DoTransmitPdcpSdu (paramsArq);
+  ToogleSend (paramsArq);
   auto it=m_Nc->m_ncDecodingBufferList.find(ArqGroupNum);
   it->second.num_statusReport ++;
   NS_LOG_DEBUG("NcArqReqSendOnce group num is "<<ArqGroupNum<<" arq num is "<<(unsigned)it->second.num_statusReport<<" time "<<Simulator::Now ().GetNanoSeconds());
   it->second.m_statusReportTimer = Simulator::Schedule (m_statusReportTimerValuePdcpCopy,
-                  &LtePdcp::CopyExpireStatusReportTimer, this, ArqGroupNum,p,m_Copy);
+                  &LtePdcp::NcExpireStatusReportTimer, this, ArqGroupNum,p,m_Nc);
 }
 
 void
@@ -685,10 +692,10 @@ LtePdcp::DoReceivePdu (Ptr<Packet> p)
                 << " size "<<p->GetSize ()
                 <<" time "<<Simulator::Now ().GetNanoSeconds());
 //  if(p->GetSize ()!=852){
-//  if(p->GetSize ()!=873&&p->GetSize ()!=24){
-//      NS_LOG_DEBUG("not 542/563/24, drop");
-//
-//  }else{
+  if(p->GetSize ()!=461&&p->GetSize ()!=24){
+      NS_LOG_DEBUG("not 461/24, drop");
+
+  }else{
       // Receiver timestamp
     PdcpTag pdcpTag;
     Time delay;
@@ -713,7 +720,7 @@ LtePdcp::DoReceivePdu (Ptr<Packet> p)
     }else{
         NS_LOG_DEBUG("size0, drop");
       }
-//}
+  }
 }
 /**
 void

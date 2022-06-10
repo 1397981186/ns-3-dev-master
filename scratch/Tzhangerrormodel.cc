@@ -88,7 +88,7 @@ static Ptr<ListPositionAllocator>
 GetUePositions (double ueY, double ueHeight = 1.5)
 {
   Ptr<ListPositionAllocator> pos = CreateObject<ListPositionAllocator> ();
-  pos->Add (Vector (0.0, 29, ueHeight));
+  pos->Add (Vector (0.0, 25, ueHeight));
 
   return pos;
 }
@@ -113,7 +113,7 @@ main (int argc, char *argv[])
   uint32_t mcs = 13;
   const uint8_t gNbNum = 1;
   const uint8_t ueNum = 1;
-  double totalTxPower = 4;
+  double totalTxPower = 5.9;
   uint16_t numerologyBwp = 4;
 //  double centralFrequencyBand = 28e9;
   double centralFrequencyBand1 = 28e9;
@@ -121,11 +121,17 @@ main (int argc, char *argv[])
   double bandwidthBand = 100e6;
   double ueY = 30.0;
 
-  double simTime = 2.0; // 50 seconds: to take statistics
+  double simTime = 0.4; // 50 seconds: to take statistics
   uint32_t pktSize = 410;
   Time udpAppStartTime = MilliSeconds (100);
-  Time packetInterval = MilliSeconds (10);
-  Time updateChannelInterval = MilliSeconds (8);
+
+  uint32_t pktInterval=100;
+  uint32_t updateChannelIntervalMicro=pktInterval*0.8;
+  Time packetInterval = MicroSeconds (pktInterval);
+  Time updateChannelInterval = MicroSeconds (updateChannelIntervalMicro);
+  double byteSpeed = pktSize*(1000000/pktInterval);
+  std::cout<<"Speed = "<<8*byteSpeed/1024/1024<<" Mbps"<<std::endl;
+  std::cout<<"pktInterval = "<<pktInterval<<" MicroSeconds"<<" updateChannelIntervalMicro "<<updateChannelIntervalMicro<<" MicroSeconds "<<std::endl;
 
 //    bool ifNc=true;
     bool ifNc=false;
@@ -166,8 +172,11 @@ main (int argc, char *argv[])
    * Default values for the simulation. We are progressively removing all
    * the instances of SetDefault, but we need it for legacy code (LTE)
    */
+//  Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize",
+//                      UintegerValue (999999999));
   Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize",
-                      UintegerValue (999999999));
+                      UintegerValue (1024*64));
+
 
   Config::SetDefault ("ns3::NrAmc::ErrorModelType", TypeIdValue (TypeId::LookupByName (errorModel)));
   Config::SetDefault ("ns3::NrAmc::AmcModel", EnumValue (NrAmc::ShannonModel));  // NOT USED in this example. MCS is fixed.
@@ -305,7 +314,7 @@ main (int argc, char *argv[])
   nrHelper->SetGnbDlAmcAttribute ("AmcModel", EnumValue (NrAmc::ShannonModel));
   nrHelper->SetGnbUlAmcAttribute ("AmcModel", EnumValue (NrAmc::ShannonModel));
 
-  nrHelper->SetUePhyAttribute ("TxPower", DoubleValue (totalTxPower));
+  nrHelper->SetUePhyAttribute ("TxPower", DoubleValue (80));
 
   uint32_t bwpId = 0;
 
