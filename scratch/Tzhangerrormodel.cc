@@ -121,11 +121,11 @@ main (int argc, char *argv[])
   double bandwidthBand = 100e6;
   double ueY = 30.0;
 
-  double simTime = 0.4; // 50 seconds: to take statistics
+  double simTime = 0.35; // 50 seconds: to take statistics
   uint32_t pktSize = 410;
   Time udpAppStartTime = MilliSeconds (100);
 
-  uint32_t pktInterval=100;
+  uint32_t pktInterval=6;
   uint32_t updateChannelIntervalMicro=pktInterval*0.8;
   Time packetInterval = MicroSeconds (pktInterval);
   Time updateChannelInterval = MicroSeconds (updateChannelIntervalMicro);

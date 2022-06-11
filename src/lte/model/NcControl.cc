@@ -186,6 +186,10 @@ NcControl::RecvAndSave (Ptr<Packet> p)
   }else{
     m_IfTransmitSduFlag=false;
   }
+
+  m_IfSendArq=false;
+  m_IfRecvArq=false;
+
   return p;
 
 }
