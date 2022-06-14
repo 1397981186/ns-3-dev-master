@@ -339,7 +339,6 @@ def build(bld):
         'model/NcControl.h',
         'model/CopyControl.h',
         'model/lte-nc-header.h'
-
         ]
 
     if (bld.env['ENABLE_EMU']):

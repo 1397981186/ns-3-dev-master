@@ -119,7 +119,7 @@ main (int argc, char *argv[])
   double ueY = 30.0;
 
   double simTime = 10.0; // 50 seconds: to take statistics
-  uint32_t pktSize = 200;
+  uint32_t pktSize = 500;
   Time udpAppStartTime = MilliSeconds (1000);
   Time packetInterval = MilliSeconds (200);
   Time updateChannelInterval = MilliSeconds (150);
@@ -156,7 +156,7 @@ main (int argc, char *argv[])
    * the instances of SetDefault, but we need it for legacy code (LTE)
    */
   Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize",
-                      UintegerValue (8000));
+                      UintegerValue (999999999));
 
   Config::SetDefault ("ns3::NrAmc::ErrorModelType", TypeIdValue (TypeId::LookupByName (errorModel)));
   Config::SetDefault ("ns3::NrAmc::AmcModel", EnumValue (NrAmc::ShannonModel));  // NOT USED in this example. MCS is fixed.

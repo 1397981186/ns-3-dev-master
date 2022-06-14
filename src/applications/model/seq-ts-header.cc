@@ -43,18 +43,11 @@ SeqTsHeader::SetSeq (uint32_t seq)
   NS_LOG_FUNCTION (this << seq);
   m_seq = seq;
 }
-
 uint32_t
 SeqTsHeader::GetSeq (void) const
 {
   NS_LOG_FUNCTION (this);
   return m_seq;
-}
-
-void
-SeqTsHeader::SetTs(Time ts)
-{
-	m_ts = ts.GetTimeStep();
 }
 
 Time

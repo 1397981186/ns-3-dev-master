@@ -224,6 +224,8 @@ public:
    * newly created RLC instances
    */
   void SetLteMacSapProvider (LteMacSapProvider* s);
+  
+  void SetLteMacSapProvider_leg (LteMacSapProvider* s);//zjh_add
 
   /** 
    * Set the AS SAP user to interact with the NAS entity
@@ -768,6 +770,8 @@ private:
   LteUeRrcSapProvider* m_rrcSapProvider; ///< RRC SAP provider
 
   LteMacSapProvider* m_macSapProvider; ///< MAC SAP provider
+  LteMacSapProvider* m_macSapProvider_leg; //zjh_add
+  
   LtePdcpSapUser* m_drbPdcpSapUser; ///< DRB PDCP SAP user
 
   LteAsSapProvider* m_asSapProvider; ///< AS SAP provider

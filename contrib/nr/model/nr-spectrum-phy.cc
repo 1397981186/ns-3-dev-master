@@ -482,6 +482,7 @@ NrSpectrumPhy::StartTxDataFrames (const Ptr<PacketBurst>& pb, const std::list<Pt
 
         if (m_channel)
           {
+            NS_LOG_DEBUG(this << " NrSpectrumPhy::StartTxDataFrames");//znr_add
             m_channel->StartTx (txParams);
           }
         else
@@ -1093,16 +1094,10 @@ NrSpectrumPhy::EndRxData ()
                                                                    GetTBInfo(tbIt).m_expected.m_tbSize,
                                                                    GetTBInfo(tbIt).m_expected.m_mcs,
                                                                    harqInfoList);
-      m_allTbSize+=GetTBInfo(tbIt).m_expected.m_tbSize;
-      NS_LOG_DEBUG("-------packet once , all m_allTbSize is "<<m_allTbSize);
       GetTBInfo (tbIt).m_isCorrupted = m_random->GetValue () > GetTBInfo(tbIt).m_outputOfEM->m_tbler ? false : true;
-
-
 
       if (GetTBInfo (tbIt).m_isCorrupted)
         {
-	  m_wrongPackets++;
-	  NS_LOG_DEBUG("-------wrong packet once , all num is "<<m_wrongPackets);
           NS_LOG_INFO ("RNTI " << GetRnti (tbIt) << " processId " <<
                        +GetTBInfo(tbIt).m_expected.m_harqProcessId << " size " <<
                        GetTBInfo (tbIt).m_expected.m_tbSize << " mcs " <<

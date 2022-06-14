@@ -263,7 +263,6 @@ Packet::AddHeader (const Header &header)
   header.Serialize (m_buffer.Begin ());
   return m_metadata.AddHeader (header, size);
 }
-
 uint32_t
 Packet::RemoveHeader (Header &header, uint32_t size)
 {
@@ -281,13 +280,12 @@ uint32_t
 Packet::RemoveHeader (Header &header)
 {
   uint32_t deserialized = header.Deserialize (m_buffer.Begin ());
-  if(deserialized==0){return 0;}
   NS_LOG_FUNCTION (this << header.GetInstanceTypeId ().GetName () << deserialized);
   m_buffer.RemoveAtStart (deserialized);
   m_byteTagList.Adjust (-deserialized);
-  int intFlag=1;
-  intFlag=m_metadata.RemoveHeader (header, deserialized);
-  if(intFlag==0){return 0;}
+  if(!m_metadata.RemoveHeader (header, deserialized)){
+      return 0;
+  }
   return deserialized;
 }
 uint32_t

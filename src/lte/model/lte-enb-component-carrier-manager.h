@@ -123,6 +123,8 @@ public:
    * \returns LteMacSapProvider* 
    */
   virtual LteMacSapProvider* GetLteMacSapProvider ();
+  
+  virtual std::map <uint8_t, LteMacSapProvider*> GetLteMacSapProvidersMap ();//zjh_add
 
   /**
    * \brief Set LteMacSapProvider interface for the MAC object of
@@ -189,6 +191,9 @@ protected:
   // This map is initialized in LteHelper when the Component Carrier Manager is initialized, contains
   // component carrier id and a pointer to the corresponding LteMacSapProvider interface of the
   // MAC instance
+  
+  //LteMacSapProvider* m_macSapProvider_leg;//zjh_add: 有m_macSapProvidersMap，似乎可以不专门增加此？？？只需要修改代码，在函数中实现添加
+  
   std::map <uint8_t, LteMacSapProvider*> m_macSapProvidersMap; //!< A map of pointers to real SAP interfaces of MAC instances.
   // This map contains pointers to LteCcmMacSapProvider interfaces of the
   // MAC instances. LteCcmMacSapProvider is new interface added for the

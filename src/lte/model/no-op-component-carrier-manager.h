@@ -89,8 +89,6 @@ protected:
    * \returns std::vector<LteCcmRrcSapProvider::LcsConfig> 
    */
   virtual std::vector<LteCcmRrcSapProvider::LcsConfig> DoSetupDataRadioBearer (EpsBearer bearer, uint8_t bearerId, uint16_t rnti, uint8_t lcid, uint8_t lcGroup, LteMacSapUser* msu);
-  virtual std::vector<LteCcmRrcSapProvider::LcsConfig> DoSetupDataRadioBearer (EpsBearer bearer, uint8_t bearerId, uint16_t rnti, uint8_t lcid, uint8_t lcGroup, LteMacSapUser* msu, LteMacSapUser* msu2);
-
   /**
    * \brief Transmit PDU.
    * \param params the transmit PDU parameters
@@ -107,7 +105,6 @@ protected:
    * \param txOpParams the LteMacSapUser::TxOpportunityParameters
    */
   virtual void DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams);
-  virtual uint32_t DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams,uint32_t flag);
   /**
    * \brief Receive PDU.
    *

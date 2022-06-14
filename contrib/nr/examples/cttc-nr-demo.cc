@@ -79,21 +79,32 @@ main (int argc, char *argv[])
    * possibly overridden below when command-line arguments are parsed.
    */
   // Scenario parameters (that we will use inside this script):
-  uint16_t gNbNum = 1;
-  uint16_t ueNumPergNb = 2;
-  bool logging = false;
-  bool doubleOperationalBand = true;
+  uint16_t gNbNum = 1;//znr_com
+  //uint16_t gNbNum = 2;//znr_add: 测试是否可避免：原1个基站2个终端（this example），外加pdcp dup两路数据造成的仿真混乱
+  //修改效果：仿真耗费时长大幅增加，仿真数据量大幅增加（文件4与5对比），原因待分析？？？
+  
+  //uint16_t ueNumPergNb = 2;//znr_note: 关键参数
+  uint16_t ueNumPergNb = 1;//znr_add: 只使用一个ue以减少仿真复杂度;但不满足ueLowLat、ueVoice两种应用同时使用？？？//znr_com: （单用户测试）
+  //znr_add: 测试无效果，lcid5、6仍然无数据传输
+  
+  
+  bool logging = true;
+  bool doubleOperationalBand = true;//znr_note: 关键参数，原值doubleOperationalBand = true; 改为false将报错
+  //znr_add: 如果为false，将使得allBwps=1，导致InstallGnbDevice调用InstallSingleGnbDevice中ccMap长度为1，即1个cc
+  //znr_add: Lte设置2个cc，通过LteHelper在InstallSingleEnbDevice中实现，与此方式不同！！！
+  //znr_add: nr pdcp dup第一方案：沿用lte pdcp dup使用2个cc思路。设置true，this example含2个cc，1个cc对应1个bwp，allBwps=2（见第135行说明）。
+  //znr_add: nr pdcp dup第二方案：考虑1个cc对应多个Bwps（暂不实现）
 
   // Traffic parameters (that we will use inside this script):
-  uint32_t udpPacketSizeULL = 100;
+  uint32_t udpPacketSizeULL = 100;//znr_note: rlc之前的数据包大小，影响LteRlcUm::DoNotifyTxOpportunity调用次数，但不是phy资源块大小的决定因素
   uint32_t udpPacketSizeBe = 1252;
   uint32_t lambdaULL = 10000;
-  uint32_t lambdaBe = 10000;
+  uint32_t lambdaBe = 10000;//znr_change: 原值lambdaBe = 10000；关键代码，通过调低流量大小，可避免出现4倍echo流量带来拥堵错误
 
   // Simulation parameters. Please don't use double to indicate seconds; use
   // ns-3 Time values which use integers to avoid portability issues.
-  Time simTime = MilliSeconds (1000);
-  Time udpAppStartTime = MilliSeconds (400);
+  Time simTime = MilliSeconds (300);//znr-change: 原值MilliSeconds (1000)
+  Time udpAppStartTime = MilliSeconds (200);//znr-change: 原值MilliSeconds (400)
 
   // NR parameters. We will take the input from the command line, and then we
   // will pass them inside the NR module.
@@ -196,9 +207,84 @@ main (int argc, char *argv[])
    */
   if (logging)
     {
-      LogComponentEnable ("UdpClient", LOG_LEVEL_INFO);
-      LogComponentEnable ("UdpServer", LOG_LEVEL_INFO);
-      LogComponentEnable ("LtePdcp", LOG_LEVEL_INFO);
+      LogLevel logLevel = (LogLevel)(LOG_PREFIX_FUNC | LOG_PREFIX_TIME | LOG_PREFIX_NODE | LOG_LEVEL_ALL);//znr-add
+ 
+      //LogComponentEnable ("UdpClient", logLevel);//znr-com
+      //LogComponentEnable ("UdpServer", logLevel);//znr-com
+          
+      LogComponentEnable ("NrHelper", logLevel);//znr-add
+      LogComponentEnable ("CcBwpHelper", logLevel);//znr-add
+
+      //LogComponentEnable ("SpectrumChannel", logLevel);//znr-add
+      //LogComponentEnable ("NetDevice", logLevel);//znr-add
+      LogComponentEnable ("NrNetDevice", logLevel);//znr-add: 注意该类函数内部没有log语句，例如this指针，默认情况waf看不到执行过程
+      LogComponentEnable ("NrGnbNetDevice", logLevel);//znr-add
+      //LogComponentEnable ("NrUeNetDevice", logLevel);//znr-add
+      //LogComponentEnable ("EpcUeNas", logLevel);//znr-add
+
+      LogComponentEnable ("LteEnbRrc", logLevel);//znr-add
+      //LogComponentEnable ("LteUeRrc", logLevel);//znr-add
+      //LogComponentEnable ("UeManager", logLevel);//znr-add: 不在日志空间注册，UeManager日志依然是LteEnbRrc，例如：
+                                                 //UeManager::GetDataRadioBearerInfo 在日志中是 LteEnbRrc:GetDataRadioBearerInfo
+      //LogComponentEnable ("LtePdcp", logLevel);
+      //LogComponentEnable ("LteRlcUm", logLevel);//znr-add
+
+      //LogComponentEnable ("nrControlMessage", logLevel);//znr-add
+      //LogComponentEnable ("BwpManagerGnb", logLevel);//znr-add: class BwpManagerGnb : public RrComponentCarrierManager
+                                                                //class RrComponentCarrierManager : public NoOpComponentCarrierManager
+                                                                //class NoOpComponentCarrierManager : public LteEnbComponentCarrierManager
+                                                                //class LteEnbComponentCarrierManager : public Object
+      //LogComponentEnable ("BwpManagerUe", logLevel);//znr-add:  class BwpManagerUe : public SimpleUeComponentCarrierManager
+                                                                //class SimpleUeComponentCarrierManager : public LteUeComponentCarrierManager
+                                                                //class LteUeComponentCarrierManager : public Object
+    
+      //LogComponentEnable ("BandwidthPartGnb", logLevel);//znr-add:class BandwidthPartGnb : public ComponentCarrierBaseStation
+                                                                  //class ComponentCarrierBaseStation: pubilic ComponentCarrier
+      //LogComponentEnable ("BandwidthPartUe", logLevel);//znr-add: class BandwidthPartUe : public ComponentCarrier
+                                                                  //class ComponentCarrier : public Object
+      //LogComponentEnable ("ComponentCarrier", logLevel);//znr-add
+      
+      
+      //LogComponentEnable ("NrMacSchedulerNs3", logLevel);//znr-add: class NrMacSchedulerNs3 : public NrMacScheduler
+                                                                    //class NrMacScheduler : public Object
+      //LogComponentEnable ("NrMacScheduler", logLevel);//znr-add
+      
+      //LogComponentEnable ("NrGnbMac", logLevel);//znr-add: 包含class NrMacEnbMemberPhySapUser : public NrGnbPhySapUser 
+      //LogComponentEnable ("NrUeMac", logLevel);//znr-add
+      
+      //LogComponentEnable ("NrPhy", logLevel);//znr-add
+      //LogComponentEnable ("NrGnbPhy", logLevel);//znr-add
+      //LogComponentEnable ("NrUePhy", logLevel);//znr-add
+      //LogComponentEnable ("NrSpectrumPhy", logLevel);//znr-add
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+      LogComponentEnable ("UdpClient", LOG_LEVEL_FUNCTION);//zjh_com
+      //LogComponentEnable ("UdpServer", LOG_LEVEL_FUNCTION);//zjh_com
+      LogComponentEnable ("LtePdcp", LOG_LEVEL_FUNCTION);//znr-add: 观察程序运行过程，采用LOG_LEVEL_LOGIC
+   
+      //LogComponentEnable ("NrHelper", LOG_LEVEL_INFO);//znr_add
+      //LogComponentEnable ("NrHelper", LOG_LEVEL_FUNCTION);//znr_add
+      //LogComponentEnable ("LteEnbRrc", LOG_LEVEL_INFO);//znr_add
+      //LogComponentEnable ("LteEnbRrc", LOG_LEVEL_FUNCTION);//znr_add
+      //LogComponentEnable ("LteUeRrc", LOG_LEVEL_INFO);//znr_add
+      LogComponentEnable ("LteRlcUm", LOG_LEVEL_FUNCTION);//znr_add
+      //LogComponentEnable ("PacketMetadata", LOG_LEVEL_INFO);//znr_add：不需要修改此函数
+      //LogComponentEnable ("LteRlc", LOG_LEVEL_FUNCTION);//znr_add
+      //LogComponentEnable ("BwpManagerGnb", LOG_LEVEL_FUNCTION);//znr_add
+      //LogComponentEnable ("NrGnbMac", LOG_LEVEL_DEBUG);//znr_add: 使用logLevel或者LOG_LEVEL_LOGIC，在仿真统计结束后有报错？？？（暂且搁置）
+      //LogComponentEnable ("NrUeMac", LOG_LEVEL_INFO);//znr_add  
+      //LogComponentEnable ("NrGnbPhy", LOG_LEVEL_LOGIC);//znr_add
+      //LogComponentEnable ("NrUePhy", LOG_LEVEL_FUNCTION);//znr_add
+      //LogComponentEnable ("NrPhy", LOG_LEVEL_DEBUG);//znr_add
+      //LogComponentEnable ("NrSpectrumPhy", LOG_LEVEL_DEBUG);//znr_add
+      //LogComponentEnable ("MultiModelSpectrumChannel", LOG_LEVEL_INFO);//znr_add 
+      //LogComponentEnable ("CttcNrDemo", LOG_LEVEL_INFO);//znr_add
+      //LogComponentEnable ("EpcEnbApplication", LOG_LEVEL_INFO);//znr_add
+      //LogComponentEnable ("NoOpComponentCarrierManager", LOG_LEVEL_DEBUG);//znr_add
+      //LogComponentEnable ("SimpleUeComponentCarrierManager", LOG_LEVEL_DEBUG);//znr_add
+      //LogComponentEnable ("nrRrcProtocolIdeal", LOG_LEVEL_INFO);//znr_add
+      //LogComponentEnable ("LteHelper", LOG_LEVEL_INFO);//znr_add: NR与LteHelper无关
     }
 
   /*
@@ -212,7 +298,7 @@ main (int argc, char *argv[])
    * the gnbs and ue following a pre-defined pattern. Please have a look at the
    * GridScenarioHelper documentation to see how the nodes will be distributed.
    */
-  int64_t randomStream = 1;
+  int64_t randomStream = 1;//znr_note: 随机数据流序号
   GridScenarioHelper gridScenario;
   gridScenario.SetRows (1);
   gridScenario.SetColumns (gNbNum);
@@ -226,7 +312,7 @@ main (int argc, char *argv[])
   gridScenario.SetUtNumber (ueNumPergNb * gNbNum);
   gridScenario.SetScenarioHeight (3); // Create a 3x3 scenario where the UE will
   gridScenario.SetScenarioLength (3); // be distribuited.
-  randomStream += gridScenario.AssignStreams (randomStream);
+  randomStream += gridScenario.AssignStreams (randomStream);////znr_note: 网格场景随机流x方向设为1,y方向设为2，randomStream增加2变为3
   gridScenario.CreateScenario ();
 
   /*
@@ -235,7 +321,8 @@ main (int argc, char *argv[])
    * while in ueVoice we will put the UEs that will receive the voice traffic.
    */
   NodeContainer ueLowLatContainer, ueVoiceContainer;
-
+  
+  //NS_LOG_INFO("numUT = " << (uint16_t)gridScenario.GetUserTerminals ().GetN ());//znr_add
   for (uint32_t j = 0; j < gridScenario.GetUserTerminals ().GetN (); ++j)
     {
       Ptr<Node> ue = gridScenario.GetUserTerminals ().Get (j);
@@ -268,7 +355,7 @@ main (int argc, char *argv[])
   // Put the pointers inside nrHelper
   nrHelper->SetBeamformingHelper (idealBeamformingHelper);
   nrHelper->SetEpcHelper (epcHelper);
-
+  
   /*
    * Spectrum division. We create two operational bands, each of them containing
    * one component carrier, and each CC containing a single bandwidth part
@@ -278,7 +365,8 @@ main (int argc, char *argv[])
    */
   BandwidthPartInfoPtrVector allBwps;
   CcBwpCreator ccBwpCreator;
-  const uint8_t numCcPerBand = 1;  // in this example, both bands have a single CC
+  //const uint8_t numCcPerBand = 1;  // in this example, both bands have a single CC
+  const uint8_t numCcPerBand = 2;//znr-change: 20220603
 
   // Create the configuration for the CcBwpHelper. SimpleOperationBandConf creates
   // a single BWP per CC
@@ -286,8 +374,9 @@ main (int argc, char *argv[])
   CcBwpCreator::SimpleOperationBandConf bandConf2 (centralFrequencyBand2, bandwidthBand2, numCcPerBand, BandwidthPartInfo::UMi_StreetCanyon);
 
   // By using the configuration created, it is time to make the operation bands
-  OperationBandInfo band1 = ccBwpCreator.CreateOperationBandContiguousCc (bandConf1);
-  OperationBandInfo band2 = ccBwpCreator.CreateOperationBandContiguousCc (bandConf2);
+  //znr_note: 此处创建2个cc
+  OperationBandInfo band1 = ccBwpCreator.CreateOperationBandContiguousCc (bandConf1);//znr_note: 创建cc
+  OperationBandInfo band2 = ccBwpCreator.CreateOperationBandContiguousCc (bandConf2);//znr_note: 创建cc
 
   /*
    * The configured spectrum division is:
@@ -327,11 +416,11 @@ main (int argc, char *argv[])
       // Initialize channel and pathloss, plus other things inside band2
       nrHelper->InitializeOperationBand (&band2);
       totalBandwidth += bandwidthBand2;
-      allBwps = CcBwpCreator::GetAllBwps ({band1, band2});
+      allBwps = CcBwpCreator::GetAllBwps ({band1, band2});//znr_note: allBwps长度等于2
     }
   else
     {
-      allBwps = CcBwpCreator::GetAllBwps ({band1});
+      allBwps = CcBwpCreator::GetAllBwps ({band1});//znr_note: allBwps长度等于1
     }
 
   /*
@@ -343,7 +432,7 @@ main (int argc, char *argv[])
    * and applies to some node only, and (iii) parameters that are different for
    * every bandwidth parts. The approach is:
    *
-   * - for (i): Configure the attribute through the helper, and then install;
+   * - for (i): Configure the attribute through the helper, and then install;//znr_note:this example采用第一种模式  
    * - for (ii): Configure the attribute through the helper, and then install
    * for the first set of nodes. Then, change the attribute through the helper,
    * and install again;
@@ -375,20 +464,20 @@ main (int argc, char *argv[])
   nrHelper->SetGnbAntennaAttribute ("AntennaElement", PointerValue (CreateObject<IsotropicAntennaModel> ()));
 
   uint32_t bwpIdForLowLat = 0;
-  uint32_t bwpIdForVoice = 0;
+  //uint32_t bwpIdForVoice = 0;//znr_note: 如果不设置双cc，那么两个应用可能都对应ComponentCarrierId=0？//znr_com: （单用户测试）
   if (doubleOperationalBand)
     {
-      bwpIdForVoice = 1;
-      bwpIdForLowLat = 0;
+      //bwpIdForVoice = 1;//znr_note:语音通道，对应ComponentCarrierId？//znr_com: （单用户测试）
+      bwpIdForLowLat = 0;//znr_note:低时延通道，对应ComponentCarrierId？
     }
 
   // gNb routing between Bearer and bandwidh part
   nrHelper->SetGnbBwpManagerAlgorithmAttribute ("NGBR_LOW_LAT_EMBB", UintegerValue (bwpIdForLowLat));
-  nrHelper->SetGnbBwpManagerAlgorithmAttribute ("GBR_CONV_VOICE", UintegerValue (bwpIdForVoice));
+  //nrHelper->SetGnbBwpManagerAlgorithmAttribute ("GBR_CONV_VOICE", UintegerValue (bwpIdForVoice));//znr_com: （单用户测试）
 
   // Ue routing between Bearer and bandwidth part
   nrHelper->SetUeBwpManagerAlgorithmAttribute ("NGBR_LOW_LAT_EMBB", UintegerValue (bwpIdForLowLat));
-  nrHelper->SetUeBwpManagerAlgorithmAttribute ("GBR_CONV_VOICE", UintegerValue (bwpIdForVoice));
+  //nrHelper->SetUeBwpManagerAlgorithmAttribute ("GBR_CONV_VOICE", UintegerValue (bwpIdForVoice));//znr_com: （单用户测试）
 
 
   /*
@@ -408,13 +497,22 @@ main (int argc, char *argv[])
    * to the NetDevices, which contains all the NR stack:
    */
 
+  //znr_note: nrHelper->InstallGnbDevice与lte不同，需要设置allBwps长度为2
+  //znr_note: 第255行，gridScenario配置了ueLowLat、ueVoice
   NetDeviceContainer enbNetDev = nrHelper->InstallGnbDevice (gridScenario.GetBaseStations (), allBwps);
-  NetDeviceContainer ueLowLatNetDev = nrHelper->InstallUeDevice (ueLowLatContainer, allBwps);
-  NetDeviceContainer ueVoiceNetDev = nrHelper->InstallUeDevice (ueVoiceContainer, allBwps);
+  NetDeviceContainer ueLowLatNetDev = nrHelper->InstallUeDevice (ueLowLatContainer, allBwps); 
+  //NetDeviceContainer ueVoiceNetDev = nrHelper->InstallUeDevice (ueVoiceContainer, allBwps);//znr_com: （单用户测试）
 
-  randomStream += nrHelper->AssignStreams (enbNetDev, randomStream);
-  randomStream += nrHelper->AssignStreams (ueLowLatNetDev, randomStream);
-  randomStream += nrHelper->AssignStreams (ueVoiceNetDev, randomStream);
+  NS_LOG_INFO( "randomStream = " << (uint16_t) randomStream);//znr_add: randomStream=3
+  randomStream += nrHelper->AssignStreams (enbNetDev, randomStream);//znr_note: randomStream=17，增加14个流序号
+  NS_LOG_INFO( "randomStream = " << (uint16_t) randomStream);//znr_add
+  
+  randomStream += nrHelper->AssignStreams (ueLowLatNetDev, randomStream);//znr_note: randomStream=27，增加10个流序号
+  NS_LOG_INFO( "randomStream = " << (uint16_t) randomStream);//znr_add
+  
+  //randomStream += nrHelper->AssignStreams (ueVoiceNetDev, randomStream);//znr_note: randomStream=37，增加10个流序号//znr_com: （单用户测试）
+  //NS_LOG_INFO( "randomStream = " << (uint16_t) randomStream);//znr_add
+  
   /*
    * Case (iii): Go node for node and change the attributes we have to setup
    * per-node.
@@ -427,6 +525,7 @@ main (int argc, char *argv[])
 
   if (doubleOperationalBand)
     {
+      //znr_note: 使用enbNetDev.Get(0)只支持1个enb，如果上文设置gNbNum = 2，则需要修改代码
       // Get the first netdevice (enbNetDev.Get (0)) and the second bandwidth part (1)
       // and set the attribute.
       nrHelper->GetGnbPhy (enbNetDev.Get (0), 1)->SetAttribute ("Numerology", UintegerValue (numerologyBwp2));
@@ -437,7 +536,7 @@ main (int argc, char *argv[])
 
   for (auto it = enbNetDev.Begin (); it != enbNetDev.End (); ++it)
     {
-      DynamicCast<NrGnbNetDevice> (*it)->UpdateConfig ();
+      DynamicCast<NrGnbNetDevice> (*it)->UpdateConfig ();//znr_note: 将调用LteEnbRrc::ConfigureCell
     }
 
   for (auto it = ueLowLatNetDev.Begin (); it != ueLowLatNetDev.End (); ++it)
@@ -445,10 +544,13 @@ main (int argc, char *argv[])
       DynamicCast<NrUeNetDevice> (*it)->UpdateConfig ();
     }
 
+  //znr_com: （单用户测试）
+  /*
   for (auto it = ueVoiceNetDev.Begin (); it != ueVoiceNetDev.End (); ++it)
     {
       DynamicCast<NrUeNetDevice> (*it)->UpdateConfig ();
     }
+  */
 
   // From here, it is standard NS3. In the future, we will create helpers
   // for this part as well.
@@ -478,7 +580,7 @@ main (int argc, char *argv[])
 
 
   Ipv4InterfaceContainer ueLowLatIpIface = epcHelper->AssignUeIpv4Address (NetDeviceContainer (ueLowLatNetDev));
-  Ipv4InterfaceContainer ueVoiceIpIface = epcHelper->AssignUeIpv4Address (NetDeviceContainer (ueVoiceNetDev));
+  //Ipv4InterfaceContainer ueVoiceIpIface = epcHelper->AssignUeIpv4Address (NetDeviceContainer (ueVoiceNetDev));//znr_com: （单用户测试）
 
   // Set the default gateway for the UEs
   for (uint32_t j = 0; j < gridScenario.GetUserTerminals ().GetN (); ++j)
@@ -489,25 +591,27 @@ main (int argc, char *argv[])
 
   // attach UEs to the closest eNB
   nrHelper->AttachToClosestEnb (ueLowLatNetDev, enbNetDev);
-  nrHelper->AttachToClosestEnb (ueVoiceNetDev, enbNetDev);
+  //nrHelper->AttachToClosestEnb (ueVoiceNetDev, enbNetDev);//znr_com: （单用户测试）
 
   /*
    * Traffic part. Install two kind of traffic: low-latency and voice, each
    * identified by a particular source port.
    */
   uint16_t dlPortLowLat = 1234;
-  uint16_t dlPortVoice = 1235;
+  //uint16_t dlPortVoice = 1235;//znr_com: （单用户测试）
 
   ApplicationContainer serverApps;
 
   // The sink will always listen to the specified ports
-  UdpServerHelper dlPacketSinkLowLat (dlPortLowLat);
-  UdpServerHelper dlPacketSinkVoice (dlPortVoice);
+  UdpServerHelper dlPacketSinkLowLat (dlPortLowLat);//znr_com
+  //UdpEchoServerHelper dlPacketSinkLowLat (dlPortLowLat);//znr_add
+  //UdpServerHelper dlPacketSinkVoice (dlPortVoice);//znr_com: 为排查问题，不加载voice应用（测试发现输入输出未减少？？？已取消）//znr_com: （单用户测试）
+  //UdpEchoServerHelper dlPacketSinkVoice (dlPortVoice);//znr_add: 测试Ue到gNb通信，调低lambdaBe可以避免数据拥堵错误//znr_com: （单用户测试）
+  //znr_note: 添加Echo应用不能只修改服务器端，还需修改客户端（lambdaBe属于客户端）？已修改，见第585行
 
   // The server, that is the application which is listening, is installed in the UE
   serverApps.Add (dlPacketSinkLowLat.Install (ueLowLatContainer));
-  serverApps.Add (dlPacketSinkVoice.Install (ueVoiceContainer));
-
+  //serverApps.Add (dlPacketSinkVoice.Install (ueVoiceContainer));//znr_com: 为排查问题，不加载voice应用（测试发现输入输出未减少？？？已取消）//znr_com: （单用户测试）
 
   /*
    * Configure attributes for the different generators, using user-provided
@@ -532,12 +636,17 @@ main (int argc, char *argv[])
   lowLatTft->Add (dlpfLowLat);
 
 
+  /*
+  //znr_com: （单用户测试）
   // Voice configuration and object creation:
-  UdpClientHelper dlClientVoice;
+  //UdpClientHelper dlClientVoice;//znr_com
+  UdpEchoClientHelper dlClientVoice(ueVoiceIpIface.GetAddress (0), dlPortVoice);//znr_add
+  
   dlClientVoice.SetAttribute ("RemotePort", UintegerValue (dlPortVoice));
   dlClientVoice.SetAttribute ("MaxPackets", UintegerValue (0xFFFFFFFF));
   dlClientVoice.SetAttribute ("PacketSize", UintegerValue (udpPacketSizeBe));
-  dlClientVoice.SetAttribute ("Interval", TimeValue (Seconds (1.0 / lambdaBe)));
+  //dlClientVoice.SetAttribute ("Interval", TimeValue (Seconds (1.0 / lambdaBe)));//znr_com: echoclient不采用高速率
+  dlClientVoice.SetAttribute ("Interval", TimeValue (Seconds (0.0005)));//znr_add
 
   // The bearer that will carry voice traffic
   EpsBearer voiceBearer (EpsBearer::GBR_CONV_VOICE);
@@ -548,6 +657,7 @@ main (int argc, char *argv[])
   dlpfVoice.localPortStart = dlPortVoice;
   dlpfVoice.localPortEnd = dlPortVoice;
   voiceTft->Add (dlpfVoice);
+  */
 
   /*
    * Let's install the applications!
@@ -569,6 +679,9 @@ main (int argc, char *argv[])
       nrHelper->ActivateDedicatedEpsBearer (ueDevice, lowLatBearer, lowLatTft);
     }
 
+  //znr_com: （单用户测试）
+  //znr_com---: 为排查问题，暂不加载voice应用（测试发现输入输出未减少？？？已取消）
+  /***
   for (uint32_t i = 0; i < ueVoiceContainer.GetN (); ++i)
     {
       Ptr<Node> ue = ueVoiceContainer.Get (i);
@@ -583,6 +696,8 @@ main (int argc, char *argv[])
       // Activate a dedicated bearer for the traffic type
       nrHelper->ActivateDedicatedEpsBearer (ueDevice, voiceBearer, voiceTft);
     }
+    ***/
+    //---znr_com
 
   // start UDP server and client apps
   serverApps.Start (udpAppStartTime);
@@ -606,7 +721,7 @@ main (int argc, char *argv[])
 
   Simulator::Stop (simTime);
   Simulator::Run ();
-
+  //NS_LOG_INFO ("CttcNrDemo go to here!");//zjh_add: 用于确定程序报错位置
   /*
    * To check what was installed in the memory, i.e., BWPs of eNb Device, and its configuration.
    * Example is: Node 1 -> Device 0 -> BandwidthPartMap -> {0,1} BWPs -> NrGnbPhy -> Numerology,
@@ -687,5 +802,3 @@ main (int argc, char *argv[])
   Simulator::Destroy ();
   return 0;
 }
-
-

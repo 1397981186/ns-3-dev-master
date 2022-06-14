@@ -167,3 +167,4 @@ NrMacHeaderVs::GetSize() const
 }
 
 } // namespace ns3
+

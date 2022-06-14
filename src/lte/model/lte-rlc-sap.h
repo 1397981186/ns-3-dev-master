@@ -55,7 +55,6 @@ public:
    * \param params the TransmitPdcpPduParameters
    */
   virtual void TransmitPdcpPdu (TransmitPdcpPduParameters params) = 0;
-  virtual void TransmitPdcpPdu2 (TransmitPdcpPduParameters params) = 0;
 };
 
 
@@ -97,11 +96,12 @@ public:
    * \param params the TransmitPdcpPduParameters
    */
   virtual void TransmitPdcpPdu (TransmitPdcpPduParameters params);
-  virtual void TransmitPdcpPdu2 (TransmitPdcpPduParameters params);
+
 
 private:
   LteRlcSpecificLteRlcSapProvider ();
   C* m_rlc; ///< the RLC
+
 };
 
 template <class C>
@@ -122,12 +122,6 @@ void LteRlcSpecificLteRlcSapProvider<C>::TransmitPdcpPdu (TransmitPdcpPduParamet
   m_rlc->DoTransmitPdcpPdu (params.pdcpPdu);
 }
 
-template <class C>
-void LteRlcSpecificLteRlcSapProvider<C>::TransmitPdcpPdu2 (TransmitPdcpPduParameters params)
-{
-  m_rlc->m_NcArqAddTop=params.NcArqAddTop;
-  m_rlc->DoTransmitPdcpPdu2 (params.pdcpPdu);
-}
 
 /// LteRlcSpecificLteRlcSapUser class
 template <class C>
@@ -143,7 +137,6 @@ public:
 
   // Interface implemented from LteRlcSapUser
   virtual void ReceivePdcpPdu (Ptr<Packet> p);
-  C* getPdcp();
 
 private:
   LteRlcSpecificLteRlcSapUser ();
@@ -165,12 +158,7 @@ template <class C>
 void LteRlcSpecificLteRlcSapUser<C>::ReceivePdcpPdu (Ptr<Packet> p)
 {
   m_pdcp->DoReceivePdcpPdu (p);
-}
 
-template <class C>
-C* LteRlcSpecificLteRlcSapUser<C>::getPdcp ()
-{
-	return m_pdcp;
 }
 
 

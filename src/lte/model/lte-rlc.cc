@@ -45,10 +45,8 @@ public:
 
   // Interface implemented from LteMacSapUser
   virtual void NotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters params);
-  uint32_t NotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters params,uint32_t flag);
   virtual void NotifyHarqDeliveryFailure ();
   virtual void ReceivePdu (LteMacSapUser::ReceivePduParameters params);
-  LteRlc* getRlc();
 
 private:
   LteRlcSpecificLteMacSapUser ();
@@ -65,18 +63,8 @@ LteRlcSpecificLteMacSapUser::LteRlcSpecificLteMacSapUser ()
 void
 LteRlcSpecificLteMacSapUser::NotifyTxOpportunity (TxOpportunityParameters params)
 {
+  NS_LOG_FUNCTION (this);//zjh_add
   m_rlc->DoNotifyTxOpportunity (params);
-}
-
-uint32_t
-LteRlcSpecificLteMacSapUser::NotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters params,uint32_t flag)
-{
-  uint32_t remain=1;
-  remain=m_rlc->DoNotifyTxOpportunity (params,flag);
-  m_toogleFlagMac=m_rlc->m_toogleFlagRlc;
-  m_noDataFlagMac=m_rlc->m_noDataFlagRlc;
-  //add getm_toogleFlagMac() method at fatherclass
-  return remain;
 }
 
 void
@@ -89,10 +77,6 @@ void
 LteRlcSpecificLteMacSapUser::ReceivePdu (LteMacSapUser::ReceivePduParameters params)
 {
   m_rlc->DoReceivePdu (params);
-}
-
-LteRlc* LteRlcSpecificLteMacSapUser::getRlc(){
-	return m_rlc;
 }
 
 
@@ -236,12 +220,6 @@ LteRlcSm::DoTransmitPdcpPdu (Ptr<Packet> p)
 }
 
 void
-LteRlcSm::DoTransmitPdcpPdu2 (Ptr<Packet> p)
-{
-  NS_LOG_FUNCTION (this << p);
-}
-
-void
 LteRlcSm::DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams)
 {
   NS_LOG_FUNCTION (this << rxPduParams.p);
@@ -288,15 +266,6 @@ LteRlcSm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
   m_macSapProvider->TransmitPdu (params);
   ReportBufferStatus ();
 }
-
-//sht
-uint32_t
-LteRlcSm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters params,uint32_t flag)
-{
-  NS_LOG_LOGIC ("!!!!!!!!!!!!!!this should not be used");
-  return flag;
-}
-
 
 void
 LteRlcSm::DoNotifyHarqDeliveryFailure ()

@@ -546,6 +546,8 @@ private:
   State m_state;
   
   LtePdcpSapUser* m_drbPdcpSapUser; ///< DRB PDCP SAP user
+  
+  //LtePdcpSapUser* m_drbPdcpSapUser_leg;//zjh_add:DRB PDCP SAP user//zjh_add: 无用处，不保留
 
   bool m_pendingRrcConnectionReconfiguration; ///< pending RRC connection reconfiguration
 
@@ -813,6 +815,7 @@ public:
    * newly created RLC instances
    */
   void SetLteMacSapProvider (LteMacSapProvider* s);
+  void SetLteMacSapProvider_leg (LteMacSapProvider* s);//zjh_add  
 
 
   /** 
@@ -1480,9 +1483,9 @@ private:
   LteHandoverManagementSapProvider* m_handoverManagementSapProvider;
 
   /// Receive API calls from the LteEnbComponentCarrierManager instance.
-  LteCcmRrcSapUser* m_ccmRrcSapUser;
+  LteCcmRrcSapUser* m_ccmRrcSapUser;//znr_note: 关键参数
   /// Interface to the LteEnbComponentCarrierManager instance.
-  LteCcmRrcSapProvider* m_ccmRrcSapProvider;
+  LteCcmRrcSapProvider* m_ccmRrcSapProvider;//znr_note: 关键参数
 
   /// Receive API calls from the ANR instance.
   LteAnrSapUser* m_anrSapUser;
@@ -1501,6 +1504,7 @@ private:
 
   /// Interface to the eNodeB MAC instance, to be used by RLC instances.
   LteMacSapProvider* m_macSapProvider;
+  LteMacSapProvider* m_macSapProvider_leg;//zjh_add
 
   /// Interface to send messages to core network over the S1 protocol.
   EpcEnbS1SapProvider* m_s1SapProvider;

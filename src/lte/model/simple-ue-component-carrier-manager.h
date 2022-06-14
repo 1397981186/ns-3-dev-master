@@ -53,7 +53,7 @@ public:
 
   // inherited from LteComponentCarrierManager
   virtual LteMacSapProvider* GetLteMacSapProvider ();
-
+  virtual std::map <uint8_t, LteMacSapProvider*> GetLteMacSapProvidersMap ();//zjh_add
 
 
   /// let the forwarder class access the protected and private members
@@ -112,7 +112,6 @@ protected:
    * \returns updated LC config list
    */
   virtual std::vector<LteUeCcmRrcSapProvider::LcsConfig> DoAddLc (uint8_t lcId,  LteUeCmacSapProvider::LogicalChannelConfig lcConfig, LteMacSapUser* msu);
-  virtual std::vector<LteUeCcmRrcSapProvider::LcsConfig> DoAddLc (uint8_t lcId,  LteUeCmacSapProvider::LogicalChannelConfig lcConfig, LteMacSapUser* msu,LteMacSapUser* msu2);
   /**
    * \brief Remove LC function
    * \param lcid the LCID

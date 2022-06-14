@@ -135,6 +135,8 @@ NcControl::RecvAndSave (Ptr<Packet> p)
   if(ncheader.GetDorC()==1){
     p->AddHeader(ncheader);
     m_IfRecvArq=true;
+    m_IfTransmitSduFlag=false;
+    m_IfSendArq=false;
     return p;
   }else{
     m_IfRecvArq=false;
@@ -184,6 +186,8 @@ NcControl::RecvAndSave (Ptr<Packet> p)
   }else{
     m_IfTransmitSduFlag=false;
   }
+  m_IfSendArq=false;
+  m_IfRecvArq=false;
   return p;
 
 }
@@ -376,8 +380,8 @@ NcControl::NcSendArqReq (std::vector <uint64_t> &ArqGroupNums,std::vector <Ptr<P
 //  std::vector<Ptr<Packet> > ArqPackets;
   uint8_t cnt=0;
   NS_LOG_DEBUG ("---it at i "<< m_ncVrMs);
-  if(m_groupnum<4){return ;}
-  for (uint64_t i=m_ncVrMs; i<=m_groupnum-4; i++)
+  if(m_groupnum<2){return ;}
+  for (uint64_t i=m_ncVrMs; i<=m_groupnum-2; i++)
 //  for (uint64_t i=m_ncVrMs; i<=m_MaxRecvGroupnum; i++)
   {
 
@@ -441,7 +445,7 @@ NcControl::NcSendArqReq (std::vector <uint64_t> &ArqGroupNums,std::vector <Ptr<P
 	NS_LOG_DEBUG ("num_statusReport is bigger than 3");
       }
     }
-    if(cnt==10){break;}
+    if(cnt==20){break;}
   }
   // 将m_ncVrMs置为ncCompelte=1的连续的最小组号+1
   auto it1 = m_ncDecodingBufferList.find(m_ncVrMs);

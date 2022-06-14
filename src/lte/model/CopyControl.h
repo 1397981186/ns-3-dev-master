@@ -51,6 +51,7 @@ public:
   std::map<uint64_t,NcEncodingBuffer> m_ncEncodingBufferList;
   uint64_t m_groupnum = 0;
   uint64_t m_MaxRecvGroupnum = 0;
+  bool m_drop;
   std::vector < ncPara > m_ncVector; //ncBuffer
 
 //recv use

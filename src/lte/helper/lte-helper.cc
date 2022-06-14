@@ -46,6 +46,7 @@
 #include <ns3/lte-ffr-algorithm.h>
 #include <ns3/lte-handover-algorithm.h>
 #include <ns3/lte-enb-component-carrier-manager.h>
+//#include <ns3/no-op-component-carrier-manager.h>//zjh_add
 #include <ns3/lte-ue-component-carrier-manager.h>
 #include <ns3/lte-anr.h>
 #include <ns3/lte-rlc.h>
@@ -185,13 +186,15 @@ TypeId LteHelper::GetTypeId (void)
     .AddAttribute ("UseCa",
                    "If true, Carrier Aggregation feature is enabled and a valid Component Carrier Map is expected."
                    "If false, single carrier simulation.",
-                   BooleanValue (false),
+                   //BooleanValue (false),//zjh_com
+                   BooleanValue (true),//zjh_add
                    MakeBooleanAccessor (&LteHelper::m_useCa),
                    MakeBooleanChecker ())
     .AddAttribute ("NumberOfComponentCarriers",
                    "Set the number of Component carrier to use "
                    "If it is more than one and m_useCa is false, it will raise an error ",
-                   UintegerValue (1),
+                   //UintegerValue (1),//zjh_com
+                   UintegerValue (2),//zjh_add: 是否修改为2？？？
                    MakeUintegerAccessor (&LteHelper::m_noOfCcs),
                    MakeUintegerChecker<uint16_t> (MIN_NO_CC, MAX_NO_CC))
   ;
@@ -504,6 +507,9 @@ Ptr<NetDevice>
 LteHelper::InstallSingleEnbDevice (Ptr<Node> n)
 {
   NS_LOG_FUNCTION (this << n);
+  
+  NS_LOG_INFO (this << " LteHelper::InstallSingleEnbDevice");//zjh_add
+  
   uint16_t cellId = m_cellIdCounter; // \todo Remove, eNB has no cell ID
 
   Ptr<LteEnbNetDevice> dev = m_enbNetDeviceFactory.Create<LteEnbNetDevice> ();
@@ -518,6 +524,7 @@ LteHelper::InstallSingleEnbDevice (Ptr<Node> n)
                    m_noOfCcs << ")");
 
   // create component carrier map for this eNb device
+  //zjh_add: 创建Enb端的分量载波地图
   std::map<uint8_t,Ptr<ComponentCarrierBaseStation> > ccMap;
   for (std::map<uint8_t, ComponentCarrier >::iterator it = m_componentCarrierPhyParams.begin ();
        it != m_componentCarrierPhyParams.end ();
@@ -533,15 +540,20 @@ LteHelper::InstallSingleEnbDevice (Ptr<Node> n)
       cc->SetCellId (m_cellIdCounter++);
       ccMap [it->first] =  cc;
     }
-  // CC map is not needed anymore
+  NS_LOG_INFO (this << " ccMap.size = " << ccMap.size ());//znr_add
+   
+  // CC map is not needed anymore//zjh_note: error???
+  //zjh_add: m_componentCarrierPhyParams is not needed anymore
   m_componentCarrierPhyParams.clear ();
 
   NS_ABORT_MSG_IF (m_useCa && ccMap.size()<2, "You have to either specify carriers or disable carrier aggregation");
+  //zjh_add: 启用分量载波变量m_useCa的默认值false，需要人工设置 ？？？
   NS_ASSERT (ccMap.size () == m_noOfCcs);
 
   for (auto it = ccMap.begin (); it != ccMap.end (); ++it)
     {
-      NS_LOG_DEBUG (this << "component carrier map size " << (uint16_t) ccMap.size ());
+      //NS_LOG_DEBUG (this << " component carrier map size " << (uint16_t) ccMap.size ());//zjh_change
+      //zjh_add: 分量载波是phy、mac多份，都在ComponentCarrierEnb声明分配地址，在此处设置
       Ptr<LteSpectrumPhy> dlPhy = CreateObject<LteSpectrumPhy> ();
       Ptr<LteSpectrumPhy> ulPhy = CreateObject<LteSpectrumPhy> ();
       Ptr<LteEnbPhy> phy = CreateObject<LteEnbPhy> (dlPhy, ulPhy);
@@ -564,8 +576,8 @@ LteHelper::InstallSingleEnbDevice (Ptr<Node> n)
       pInterf->AddCallback (MakeCallback (&LteEnbPhy::ReportInterference, phy));
       ulPhy->AddInterferenceDataChunkProcessor (pInterf);   // for interference power tracing
 
-      dlPhy->SetChannel (m_downlinkChannel);
-      ulPhy->SetChannel (m_uplinkChannel);
+      dlPhy->SetChannel (m_downlinkChannel);//zjh_add: 设置信道
+      ulPhy->SetChannel (m_uplinkChannel);//zjh_add: 设置信道
 
       Ptr<MobilityModel> mm = n->GetObject<MobilityModel> ();
       NS_ASSERT_MSG (mm, "MobilityModel needs to be set on node before calling LteHelper::InstallEnbDevice ()");
@@ -580,14 +592,15 @@ LteHelper::InstallSingleEnbDevice (Ptr<Node> n)
       Ptr<LteEnbMac> mac = CreateObject<LteEnbMac> ();
       Ptr<FfMacScheduler> sched = m_schedulerFactory.Create<FfMacScheduler> ();
       Ptr<LteFfrAlgorithm> ffrAlgorithm = m_ffrAlgorithmFactory.Create<LteFfrAlgorithm> ();
-      DynamicCast<ComponentCarrierEnb> (it->second)->SetMac (mac);
+      DynamicCast<ComponentCarrierEnb> (it->second)->SetMac (mac);//zjh_note: 设置Enb分量载波的mac
       DynamicCast<ComponentCarrierEnb> (it->second)->SetFfMacScheduler (sched);
       DynamicCast<ComponentCarrierEnb> (it->second)->SetFfrAlgorithm (ffrAlgorithm);
-      DynamicCast<ComponentCarrierEnb> (it->second)->SetPhy (phy);
+      DynamicCast<ComponentCarrierEnb> (it->second)->SetPhy (phy);//zjh_note: 设置Enb分量载波的phy
     }
 
   Ptr<LteEnbRrc> rrc = CreateObject<LteEnbRrc> ();
   Ptr<LteEnbComponentCarrierManager> ccmEnbManager = m_enbComponentCarrierManagerFactory.Create<LteEnbComponentCarrierManager> ();
+  //Ptr<LteEnbComponentCarrierManager> ccmEnbManager = m_enbComponentCarrierManagerFactory.Create<NoOpComponentCarrierManager> ();//zjh_add: 关键函数，测试CC副载波（LteEnbComponentCarrierManager只使用主载波）？？？
   
   //ComponentCarrierManager SAP
   rrc->SetLteCcmRrcSapProvider (ccmEnbManager->GetLteCcmRrcSapProvider ());
@@ -596,7 +609,7 @@ LteHelper::InstallSingleEnbDevice (Ptr<Node> n)
   // number of component carriers in eNB RRC
   ccmEnbManager->SetNumberOfComponentCarriers (m_noOfCcs);
 
-  rrc->ConfigureCarriers (ccMap);
+  rrc->ConfigureCarriers (ccMap);//zjh_add: 关键函数，将ccMap注册到rrc
 
   if (m_useIdealRrc)
     {
@@ -637,7 +650,10 @@ LteHelper::InstallSingleEnbDevice (Ptr<Node> n)
   // instance that needs to implement functions of this interface, and its task will be to
   // forward these calls to the specific MAC of some of the instances of component carriers. This
   // decision will depend on the specific implementation of the component carrier manager.
-  rrc->SetLteMacSapProvider (ccmEnbManager->GetLteMacSapProvider ());
+  
+  //zjh_add: 此处只设置一个LteMacSapProvider，将使所有数据将存到1个Phy突发包队列，为duplicate分开传输需要有2个Phy突发包队列
+  //zjh_add: ccmEnbManager->GetLteMacSapProvider，只获取了1个未实例化的MacSapProvider的指针地址？？？
+  //rrc->SetLteMacSapProvider (ccmEnbManager->GetLteMacSapProvider ());//zjh_com: 在下面循环结束后进行设置，具体代码见696行！！！
 
   bool ccmTest;
   for (auto it = ccMap.begin (); it != ccMap.end (); ++it)
@@ -682,7 +698,10 @@ LteHelper::InstallSingleEnbDevice (Ptr<Node> n)
         }
     }
 
-
+  //zjh_add: 关键代码
+  std::map <uint8_t, LteMacSapProvider*> lmspMap = ccmEnbManager->GetLteMacSapProvidersMap ();//zjh_add
+  rrc->SetLteMacSapProvider (lmspMap.at(0));//zjh_add
+  rrc->SetLteMacSapProvider_leg (lmspMap.at(1));//zjh_add
 
   dev->SetNode (n);
   dev->SetAttribute ("CellId", UintegerValue (cellId));
@@ -707,6 +726,7 @@ LteHelper::InstallSingleEnbDevice (Ptr<Node> n)
       ccPhy->SetDevice (dev);
       ccPhy->GetUlSpectrumPhy ()->SetDevice (dev);
       ccPhy->GetDlSpectrumPhy ()->SetDevice (dev);
+      //zjh_add:设置将EnbPhy的接收数据、接收控制消息、Harq成功反馈通知到ccPhy？？？
       ccPhy->GetUlSpectrumPhy ()->SetLtePhyRxDataEndOkCallback (MakeCallback (&LteEnbPhy::PhyPduReceived, ccPhy));
       ccPhy->GetUlSpectrumPhy ()->SetLtePhyRxCtrlEndOkCallback (MakeCallback (&LteEnbPhy::ReceiveLteControlMessageList, ccPhy));
       ccPhy->GetUlSpectrumPhy ()->SetLtePhyUlHarqFeedbackCallback (MakeCallback (&LteEnbPhy::ReportUlHarqFeedback, ccPhy));
@@ -732,9 +752,11 @@ LteHelper::InstallSingleEnbDevice (Ptr<Node> n)
   dev->Initialize ();
   n->AddDevice (dev);
 
-  for (it = ccMap.begin (); it != ccMap.end (); ++it)
+  for (it = ccMap.begin (); it != ccMap.end (); ++it)//zjh_add: 将每个分量载波的频谱物理层加入Enb上行接收信道，
+  //每个分量载波的频谱物理层是否加入Enb下行发送信道？？？但是没有AddTx()函数！！！
     {
       m_uplinkChannel->AddRx (DynamicCast<ComponentCarrierEnb>(it->second)->GetPhy ()->GetUlSpectrumPhy ());
+      
     }
 
   if (m_epcHelper != 0)
@@ -761,7 +783,9 @@ Ptr<NetDevice>
 LteHelper::InstallSingleUeDevice (Ptr<Node> n)
 {
   NS_LOG_FUNCTION (this);
-
+  
+  NS_LOG_INFO (this << " LteHelper::InstallSingleUeDevice");//zjh_add
+  
   Ptr<LteUeNetDevice> dev = m_ueNetDeviceFactory.Create<LteUeNetDevice> ();
 
   // Initialize the component carriers with default values in order to initialize MACs and PHYs
@@ -773,10 +797,10 @@ LteHelper::InstallSingleUeDevice (Ptr<Node> n)
   NS_ABORT_MSG_IF (m_componentCarrierPhyParams.size() != m_noOfCcs,
                    "CC map size (" << m_componentCarrierPhyParams.size () <<
                    ") must be equal to number of carriers (" <<
-                   m_noOfCcs << ")");
+                   m_noOfCcs << ")");        
 
+  //zjh_add: 创建Ue端的分量载波地图
   std::map<uint8_t, Ptr<ComponentCarrierUe> > ueCcMap;
-
   for (std::map< uint8_t, ComponentCarrier >::iterator it = m_componentCarrierPhyParams.begin();
        it != m_componentCarrierPhyParams.end();
        ++it)
@@ -854,10 +878,12 @@ LteHelper::InstallSingleUeDevice (Ptr<Node> n)
 
       it->second->SetPhy(phy);
     }
+    
   Ptr<LteUeComponentCarrierManager> ccmUe = m_ueComponentCarrierManagerFactory.Create<LteUeComponentCarrierManager> ();
-
   Ptr<LteUeRrc> rrc = CreateObject<LteUeRrc> ();
-  rrc->SetLteMacSapProvider (ccmUe->GetLteMacSapProvider ());
+  //rrc->SetLteMacSapProvider (ccmUe->GetLteMacSapProvider ());//zjh_com: 在下面循环后进行设置，具体代码见937行！！
+
+  
   // setting ComponentCarrierManager SAP
   rrc->SetLteCcmRrcSapProvider (ccmUe->GetLteCcmRrcSapProvider ());
   ccmUe->SetLteCcmRrcSapUser (rrc->GetLteCcmRrcSapUser ());
@@ -866,7 +892,7 @@ LteHelper::InstallSingleUeDevice (Ptr<Node> n)
   ccmUe->SetNumberOfComponentCarriers (m_noOfCcs);
 
   // run intializeSap to create the proper number of MAC and PHY control sap provider/users
-   rrc->InitializeSap();
+  rrc->InitializeSap();//zjh_note: 关键函数？？？
 
   if (m_useIdealRrc)
     {
@@ -894,6 +920,7 @@ LteHelper::InstallSingleUeDevice (Ptr<Node> n)
   nas->SetAsSapProvider (rrc->GetAsSapProvider ());
   rrc->SetAsSapUser (nas->GetAsSapUser ());
 
+  //zjh_note: 配置控制面参数
   for (std::map<uint8_t, Ptr<ComponentCarrierUe> >::iterator it = ueCcMap.begin (); it != ueCcMap.end (); ++it)
     {
       rrc->SetLteUeCmacSapProvider (it->second->GetMac ()->GetLteUeCmacSapProvider (), it->first);
@@ -914,6 +941,11 @@ LteHelper::InstallSingleUeDevice (Ptr<Node> n)
         }
     }
 
+  //zjh_add: 关键代码，需要在配置控制面参数ccmUe->SetComponentCarrierMacSapProviders之后
+  std::map <uint8_t, LteMacSapProvider*> lmspMap = ccmUe->GetLteMacSapProvidersMap ();//zjh_add
+  rrc->SetLteMacSapProvider (lmspMap.at(0));//zjh_add
+  rrc->SetLteMacSapProvider_leg (lmspMap.at(1));//zjh_add
+
   NS_ABORT_MSG_IF (m_imsiCounter >= 0xFFFFFFFF, "max num UEs exceeded");
   uint64_t imsi = ++m_imsiCounter;
 
@@ -928,6 +960,7 @@ LteHelper::InstallSingleUeDevice (Ptr<Node> n)
   // when the default PDP context is created. This is a simplification.
   dev->SetAddress (Mac64Address::Allocate ());
 
+  NS_LOG_INFO(this << "               ueCcMap size = " << ueCcMap.size());//zjh_add 
   for (std::map<uint8_t, Ptr<ComponentCarrierUe> >::iterator it = ueCcMap.begin (); it != ueCcMap.end (); ++it)
     {
       Ptr<LteUePhy> ccPhy = it->second->GetPhy ();
@@ -935,6 +968,7 @@ LteHelper::InstallSingleUeDevice (Ptr<Node> n)
       ccPhy->GetUlSpectrumPhy ()->SetDevice (dev);
       ccPhy->GetDlSpectrumPhy ()->SetDevice (dev);
       ccPhy->GetDlSpectrumPhy ()->SetLtePhyRxDataEndOkCallback (MakeCallback (&LteUePhy::PhyPduReceived, ccPhy));
+      //zjh_note: 关键函数，为UePhy设置控制消息队列
       ccPhy->GetDlSpectrumPhy ()->SetLtePhyRxCtrlEndOkCallback (MakeCallback (&LteUePhy::ReceiveLteControlMessageList, ccPhy));
       ccPhy->GetDlSpectrumPhy ()->SetLtePhyRxPssCallback (MakeCallback (&LteUePhy::ReceivePss, ccPhy));
       ccPhy->GetDlSpectrumPhy ()->SetLtePhyDlHarqFeedbackCallback (MakeCallback (&LteUePhy::EnqueueDlHarqFeedback, ccPhy));
@@ -1188,7 +1222,8 @@ DrbActivator::ActivateDrb (uint64_t imsi, uint16_t cellId, uint16_t rnti)
       params.rnti = rnti;
       params.bearer = m_bearer;
       params.bearerId = 0;
-      params.gtpTeid = 0; // don't care
+      params.gtpTeid = 0; // don't care  
+      //NS_LOG_INFO ("DrbActivator::ActivateDrb enbRrc->GetS1SapUser ()->DataRadioBearerSetupRequest");//znr_add: NR与LteHelper无关
       enbRrc->GetS1SapUser ()->DataRadioBearerSetupRequest (params);
       m_active = true;
     }
@@ -1198,6 +1233,7 @@ DrbActivator::ActivateDrb (uint64_t imsi, uint16_t cellId, uint16_t rnti)
 void 
 LteHelper::ActivateDataRadioBearer (Ptr<NetDevice> ueDevice, EpsBearer bearer)
 {
+  //NS_LOG_INFO (this << " LteHelper::ActivateDataRadioBearer");//znr_add
   NS_LOG_FUNCTION (this << ueDevice);
   NS_ASSERT_MSG (m_epcHelper == 0, "this method must not be used when the EPC is being used");
 
@@ -1300,19 +1336,22 @@ LteHelper::DoComponentCarrierConfigure (uint32_t ulEarfcn, uint32_t dlEarfcn, ui
   NS_LOG_FUNCTION (this << ulEarfcn << dlEarfcn << ulbw << dlbw);
 
   NS_ABORT_MSG_IF (m_componentCarrierPhyParams.size() != 0, "CC map is not clean");
-  Ptr<CcHelper> ccHelper = CreateObject<CcHelper> ();
+  //NS_LOG_INFO ("m_componentCarrierPhyParams.size "<< (uint16_t)m_componentCarrierPhyParams.size());//zjh_add
+  
+  Ptr<CcHelper> ccHelper = CreateObject<CcHelper> ();//znr_note: 关键函数
   ccHelper->SetNumberOfComponentCarriers (m_noOfCcs);
   ccHelper->SetUlEarfcn (ulEarfcn);
   ccHelper->SetDlEarfcn (dlEarfcn);
   ccHelper->SetDlBandwidth (dlbw);
   ccHelper->SetUlBandwidth (ulbw);
-  m_componentCarrierPhyParams = ccHelper->EquallySpacedCcs ();
+  m_componentCarrierPhyParams = ccHelper->EquallySpacedCcs ();//znr_note: 加入2个cc
   m_componentCarrierPhyParams.at (0).SetAsPrimary (true);
 }
 
 void 
 LteHelper::ActivateDataRadioBearer (NetDeviceContainer ueDevices, EpsBearer bearer)
 {
+  NS_LOG_INFO (this << " LteHelper::ActivateDataRadioBearer");//znr_add
   NS_LOG_FUNCTION (this);
   for (NetDeviceContainer::Iterator i = ueDevices.Begin (); i != ueDevices.End (); ++i)
     {

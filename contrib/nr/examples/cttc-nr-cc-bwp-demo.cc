@@ -93,7 +93,7 @@ main (int argc, char *argv[])
   double centralFrequencyBand = 28e9;
   double bandwidthBand = 3e9;
 
-  bool contiguousCc = false;
+  bool contiguousCc = false;//znr-change: 原值contiguousCc = false
   uint16_t numerology = 3;                      //numerology for contiguous case
 
   //non-contiguous case
@@ -116,7 +116,7 @@ main (int argc, char *argv[])
   uint32_t lambdaUll = 10000;
   uint32_t lambdaBe = 1000;
 
-  bool logging = false;
+  bool logging = true;//znr-change: 原值logging = false
 
   bool disableDl = false;
   bool disableUl = true;
@@ -124,8 +124,8 @@ main (int argc, char *argv[])
   std::string simTag = "default";
   std::string outputDir = "./";
 
-  double simTime = 1; // seconds
-  double udpAppStartTime = 0.4; //seconds
+  double simTime = 0.3; // seconds //znr-change: 原值simTime = 1
+  double udpAppStartTime = 0.2; //seconds //znr-change: 原值udpAppStartTime = 0.4
 
   CommandLine cmd;
 
@@ -229,12 +229,17 @@ main (int argc, char *argv[])
   // enable logging or not
   if (logging)
     {
-      LogComponentEnable ("Nr3gppPropagationLossModel", LOG_LEVEL_ALL);
-      LogComponentEnable ("Nr3gppBuildingsPropagationLossModel", LOG_LEVEL_ALL);
-      LogComponentEnable ("Nr3gppChannel", LOG_LEVEL_ALL);
-      LogComponentEnable ("UdpClient", LOG_LEVEL_INFO);
-      LogComponentEnable ("UdpServer", LOG_LEVEL_INFO);
-      LogComponentEnable ("LtePdcp", LOG_LEVEL_INFO);
+      //LogComponentEnable ("Nr3gppPropagationLossModel", LOG_LEVEL_ALL);//znr-com: 程序报错，因此暂屏蔽
+      //LogComponentEnable ("Nr3gppBuildingsPropagationLossModel", LOG_LEVEL_ALL);//znr-com
+      //LogComponentEnable ("Nr3gppChannel", LOG_LEVEL_ALL);//znr-com
+      //LogComponentEnable ("UdpClient", LOG_LEVEL_INFO);//znr-com
+      //LogComponentEnable ("UdpServer", LOG_LEVEL_INFO);//znr-com
+      LogComponentEnable ("NrHelper", LOG_LEVEL_LOGIC);//znr-add
+      //LogComponentEnable ("LtePdcp", LOG_LEVEL_INFO);//znr-com
+      //LogComponentEnable ("LteEnbRrc", LOG_LEVEL_INFO);//znr-add
+      //LogComponentEnable ("NrGnbMac", LOG_LEVEL_INFO);//znr-add
+      //LogComponentEnable ("NrGnbPhy", LOG_LEVEL_FUNCTION);//znr-add
+      
     }
 
   Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize", UintegerValue (999999999));
@@ -344,13 +349,13 @@ main (int argc, char *argv[])
        * ------BWP0-----|------BWP0------|-------BWP0------|-------BWP0------
        */
 
-      const uint8_t numContiguousCcs = 4; // 4 CCs per Band
+      const uint8_t numContiguousCcs = 4; // 4 CCs per Band //znr-change: 原值numContiguousCcs = 4
 
       // Create the configuration for the CcBwpHelper
       CcBwpCreator::SimpleOperationBandConf bandConf (centralFrequencyBand, bandwidthBand,
                                                       numContiguousCcs, BandwidthPartInfo::UMi_StreetCanyon_LoS);
 
-      bandConf.m_numBwp = 1; // 1 BWP per CC
+      bandConf.m_numBwp = 1; // 1 BWP per CC //znr-change: 原值bandConf.m_numBwp = 1
 
       // By using the configuration created, it is time to make the operation band
       band = ccBwpCreator.CreateOperationBandContiguousCc (bandConf);

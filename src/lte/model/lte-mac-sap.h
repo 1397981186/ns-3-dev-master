@@ -50,7 +50,6 @@ public:
     uint8_t     layer; /**< the layer value that was passed by the MAC in the call to NotifyTxOpportunity that generated this PDU */
     uint8_t     harqProcessId; /**< the HARQ process id that was passed by the MAC in the call to NotifyTxOpportunity that generated this PDU */
     uint8_t componentCarrierId; /**< the component carrier id corresponding to the sending Mac istance */
-    uint16_t  m_signOfRlc;
   };
 
   /**
@@ -74,7 +73,6 @@ public:
     uint32_t retxQueueSize;  /**<  the current size of the RLC retransmission queue in bytes */
     uint16_t retxQueueHolDelay;  /**<  the Head Of Line delay of the retransmission queue */
     uint16_t statusPduSize;  /**< the current size of the pending STATUS RLC  PDU message in bytes */
-    uint16_t  m_signOfRlc;
   };
 
   /**
@@ -97,14 +95,6 @@ public:
 class LteMacSapUser
 {
 public:
-  bool m_toogleFlagMac=false;
-  bool m_noDataFlagMac=false;
-
-  bool getToogleFlagMac(){
-    return m_toogleFlagMac;
-  }
-
-
   virtual ~LteMacSapUser ();
   /**
    * Parameters for LteMacSapUser::NotifyTxOpportunity
@@ -131,18 +121,6 @@ public:
       this->rnti = rnti;
       this->lcid = lcId;
     }
-
-    TxOpportunityParameters (uint32_t bytes, uint8_t layer, uint8_t harqId,
-                             uint8_t ccId, uint16_t rnti, uint8_t lcId,uint16_t signOfRlc)
-    {
-      this->bytes = bytes;
-      this->layer = layer;
-      this->harqId = harqId;
-      this->componentCarrierId = ccId;
-      this->rnti = rnti;
-      this->lcid = lcId;
-      this->m_signOfRlc=signOfRlc;
-    }
     /**
      * \brief TxOpportunityParameters default constructor (DEPRECATED)
      */
@@ -154,7 +132,6 @@ public:
     uint8_t componentCarrierId; /**< the component carrier id */
     uint16_t rnti; /**< the C-RNTI identifying the UE */
     uint8_t lcid; /**< the logical channel id */
-    uint16_t  m_signOfRlc;
   };
   /**
    * Called by the MAC to notify the RLC that the scheduler granted a
@@ -163,7 +140,7 @@ public:
    * \param params the TxOpportunityParameters
    */
   virtual void NotifyTxOpportunity (TxOpportunityParameters params) = 0;
-  virtual uint32_t NotifyTxOpportunity (TxOpportunityParameters params,uint32_t flag)=0;//must be virtual
+
   /**
    * Called by the MAC to notify the RLC that an HARQ process related
    * to this RLC instance has failed
@@ -195,18 +172,9 @@ public:
       this->rnti = rnti;
       this->lcid = lcid;
     }
-
-    ReceivePduParameters (const Ptr<Packet> &p, uint16_t rnti, uint8_t lcid,uint16_t signOfRlc)
-    {
-      this->p = p;
-      this->rnti = rnti;
-      this->lcid = lcid;
-      this->m_signOfRlc=signOfRlc;
-    }
     Ptr<Packet> p;  /**< the RLC PDU to be received */
     uint16_t rnti; /**< the C-RNTI identifying the UE */
     uint8_t lcid; /**< the logical channel id */
-    uint16_t  m_signOfRlc;
   };
   /**
    * Called by the MAC to notify the RLC of the reception of a new PDU

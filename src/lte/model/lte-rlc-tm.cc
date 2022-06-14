@@ -100,32 +100,7 @@ LteRlcTm::DoTransmitPdcpPdu (Ptr<Packet> p)
   m_rbsTimer.Cancel ();
 }
 
-void
-LteRlcTm::DoTransmitPdcpPdu2 (Ptr<Packet> p)
-{
-  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << p->GetSize ());
 
-  if (m_txBufferSize + p->GetSize () <= m_maxTxBufferSize)
-    {
-      NS_LOG_LOGIC ("Tx Buffer: New packet added");
-      m_txBuffer.push_back (TxPdu (p, Simulator::Now ()));
-      m_txBufferSize += p->GetSize ();
-      NS_LOG_LOGIC ("NumOfBuffers = " << m_txBuffer.size() );
-      NS_LOG_LOGIC ("txBufferSize = " << m_txBufferSize);
-    }
-  else
-    {
-      // Discard full RLC SDU
-      NS_LOG_LOGIC ("TxBuffer is full. RLC SDU discarded");
-      NS_LOG_LOGIC ("MaxTxBufferSize = " << m_maxTxBufferSize);
-      NS_LOG_LOGIC ("txBufferSize    = " << m_txBufferSize);
-      NS_LOG_LOGIC ("packet size     = " << p->GetSize ());
-    }
-
-  /** Report Buffer Status */
-  DoReportBufferStatus ();
-  m_rbsTimer.Cancel ();
-}
 /**
  * MAC SAP
  */
@@ -177,14 +152,6 @@ LteRlcTm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpPara
       m_rbsTimer.Cancel ();
       m_rbsTimer = Simulator::Schedule (MilliSeconds (10), &LteRlcTm::ExpireRbsTimer, this);
     }
-}
-
-//sht
-uint32_t
-LteRlcTm::DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters params,uint32_t flag)
-{
-  NS_LOG_LOGIC ("!!!!!!!!!!!!!!this should not be used");
-  return flag;
 }
 
 void

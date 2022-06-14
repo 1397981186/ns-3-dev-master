@@ -54,10 +54,8 @@ class LteRlc : public Object // SimpleRefCount<LteRlc>
   /// allow LteRlcSpecificLteRlcSapProvider<LteRlc> class friend access
   friend class LteRlcSpecificLteRlcSapProvider<LteRlc>;
 public:
-  bool m_toogleFlagRlc=false;//sht add for rlc2 source use
-  bool m_noDataFlagRlc=false;//sht add for rlc2 source use
-  uint8_t m_NcArqAddTop=0;
   LteRlc ();
+  uint8_t m_NcArqAddTop=0;
   virtual ~LteRlc ();
   /**
    * \brief Get the type ID.
@@ -143,10 +141,9 @@ protected:
    * \param p packet
    */
   virtual void DoTransmitPdcpPdu (Ptr<Packet> p) = 0;
-  virtual void DoTransmitPdcpPdu2 (Ptr<Packet> p) = 0;
+
   LteRlcSapUser* m_rlcSapUser; ///< RLC SAP user
   LteRlcSapProvider* m_rlcSapProvider; ///< RLC SAP provider
-
 
   // Interface forwarded by LteMacSapUser
   /**
@@ -155,7 +152,6 @@ protected:
    * \param params LteMacSapUser::TxOpportunityParameters
    */ 
   virtual void DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters params) = 0;
-  virtual uint32_t DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters params,uint32_t flag)=0;
   /**
    * Notify HARQ delivery failure
    */ 
@@ -213,9 +209,7 @@ public:
   virtual void DoDispose ();
 
   virtual void DoTransmitPdcpPdu (Ptr<Packet> p);
-  virtual void DoTransmitPdcpPdu2 (Ptr<Packet> p);
   virtual void DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams);
-  virtual uint32_t DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters params,uint32_t flag);
   virtual void DoNotifyHarqDeliveryFailure ();
   virtual void DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams);
 

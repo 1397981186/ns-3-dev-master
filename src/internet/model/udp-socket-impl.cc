@@ -607,9 +607,7 @@ UdpSocketImpl::DoSendTo (Ptr<Packet> p, Ipv4Address dest, uint16_t port, uint8_t
                    m_endPoint->GetLocalPort (), port, 0);
       NotifyDataSent (p->GetSize ());
       NotifySend (GetTxAvailable ());
-      uint32_t debug1=p->GetSize ();
-//      return p->GetSize ();
-      return debug1;
+      return p->GetSize ();
     }
   else if (ipv4->GetRoutingProtocol () != 0)
     {
@@ -644,10 +642,7 @@ UdpSocketImpl::DoSendTo (Ptr<Packet> p, Ipv4Address dest, uint16_t port, uint8_t
           m_udp->Send (p->Copy (), header.GetSource (), header.GetDestination (),
                        m_endPoint->GetLocalPort (), port, route);
           NotifyDataSent (p->GetSize ());
-          uint32_t debug=p->GetSize ();
-
-//          return p->GetSize ();
-          return debug;
+          return p->GetSize ();
         }
       else 
         {

@@ -169,7 +169,7 @@ CcHelper::DoCreateSingleCc (uint16_t ulBandwidth, uint16_t dlBandwidth, uint32_t
 }
 
 std::map< uint8_t, ComponentCarrier >
-CcHelper::EquallySpacedCcs ()
+CcHelper::EquallySpacedCcs ()//znr_note: nr的CcBwpHelper没有这个函数
 {
   std::map< uint8_t, ComponentCarrier > ccmap;
 

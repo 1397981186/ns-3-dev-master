@@ -1224,8 +1224,10 @@ Time
 NrGnbPhy::DlData (const std::shared_ptr<DciInfoElementTdma> &dci)
 {
   NS_LOG_FUNCTION (this);
-  NS_LOG_DEBUG ("Starting DL DATA TTI at symbol " << +m_currSymStart <<
-                " to " << +m_currSymStart + dci->m_numSym);
+  //NS_LOG_DEBUG ("Starting DL DATA TTI at symbol " << +m_currSymStart <<
+                //" to " << +m_currSymStart + dci->m_numSym);//znr_com
+                
+  NS_LOG_DEBUG (this << " NrGnbPhy::DlData");//znr_add
 
   Time varTtiPeriod = GetSymbolPeriod () * dci->m_numSym;
 

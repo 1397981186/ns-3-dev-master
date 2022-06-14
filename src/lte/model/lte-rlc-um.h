@@ -50,7 +50,6 @@ public:
    * \param p packet
    */
   virtual void DoTransmitPdcpPdu (Ptr<Packet> p);
-  virtual void DoTransmitPdcpPdu2 (Ptr<Packet> p);
   uint64_t m_allSendPduNums=0;
   /**
    * MAC SAP
@@ -58,7 +57,6 @@ public:
    * \param txOpParams the LteMacSapUser::TxOpportunityParameters
    */
   virtual void DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams);
-  virtual uint32_t DoNotifyTxOpportunity (LteMacSapUser::TxOpportunityParameters txOpParams,uint32_t flag);
   virtual void DoNotifyHarqDeliveryFailure ();
   virtual void DoReceivePdu (LteMacSapUser::ReceivePduParameters rxPduParams);
 

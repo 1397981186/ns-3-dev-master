@@ -648,6 +648,8 @@ void
 LteEnbMac::DoReceiveLteControlMessage  (Ptr<LteControlMessage> msg)
 {
   NS_LOG_FUNCTION (this << msg);
+  NS_LOG_INFO (this << " LteEnbMac::DoReceiveLteControlMessage");//zjh_add
+  
   if (msg->GetMessageType () == LteControlMessage::DL_CQI)
     {
       Ptr<DlCqiLteControlMessage> dlcqi = DynamicCast<DlCqiLteControlMessage> (msg);
@@ -807,9 +809,14 @@ LteEnbMac::DoAddUe (uint16_t rnti)
 {
   NS_LOG_FUNCTION (this << " rnti=" << rnti);
   std::map<uint8_t, LteMacSapUser*> empty;
+  std::map<uint8_t, LteMacSapUser*> empty_leg;//zjh_add
+
   std::pair <std::map <uint16_t, std::map<uint8_t, LteMacSapUser*> >::iterator, bool> 
     ret = m_rlcAttached.insert (std::pair <uint16_t,  std::map<uint8_t, LteMacSapUser*> > 
-                                (rnti, empty));
+                                (rnti, empty));                       
+    m_rlcAttached.insert (std::pair <uint16_t,  std::map<uint8_t, LteMacSapUser*> >
+                              (rnti, empty_leg));//zjh_add
+
   NS_ASSERT_MSG (ret.second, "element already present, RNTI already existed");
 
   FfMacCschedSapProvider::CschedUeConfigReqParameters params;
@@ -1053,7 +1060,9 @@ LteEnbMac::DoTransmitPdu (LteMacSapProvider::TransmitPduParameters params)
   NS_LOG_DEBUG (this << " LAYER " << (uint16_t)tag.GetLayer () << " HARQ ID " << (uint16_t)params.harqProcessId);
   
   //(*it).second.at (params.layer).at (params.harqProcessId) = params.pdu;//->Copy ();
-  (*it).second.at (params.layer).at (params.harqProcessId)->AddPacket (params.pdu);
+  (*it).second.at (params.layer).at (params.harqProcessId)->AddPacket (params.pdu);  
+  NS_LOG_INFO (this << " LteEnbMac::DoTransmitPdu");//zjh_add
+  NS_LOG_INFO ("               LteEnbMac::m_lcid = "<< (uint16_t)params.lcid);//zjh_add
   m_enbPhySapProvider->SendMacPdu (params.pdu);
 }
 
@@ -1114,8 +1123,13 @@ LteEnbMac::DoSchedDlConfigInd (FfMacSchedSapUser::SchedDlConfigIndParameters ind
                   // New Data -> retrieve it from RLC
                   uint16_t rnti = ind.m_buildDataList.at (i).m_rnti;
                   uint8_t lcid = ind.m_buildDataList.at (i).m_rlcPduList.at (j).at (k).m_logicalChannelIdentity;
+
+                  NS_LOG_INFO (this << " zjh_mark 2: rnti: " << (uint32_t)rnti << " lcid: " << (uint32_t)lcid);//zjh_add
+
                   std::map <uint16_t, std::map<uint8_t, LteMacSapUser*> >::iterator rntiIt = m_rlcAttached.find (rnti);
                   NS_ASSERT_MSG (rntiIt != m_rlcAttached.end (), "could not find RNTI" << rnti);
+
+                  //zjh_add:下文NS_ASSERT_MSG如果报错，表示未找到对应的LteMacSapUser
                   std::map<uint8_t, LteMacSapUser*>::iterator lcidIt = rntiIt->second.find (lcid);
                   NS_ASSERT_MSG (lcidIt != rntiIt->second.end (), "could not find LCID" << (uint32_t)lcid<<" carrier id:"<<(uint16_t)m_componentCarrierId);
                   NS_LOG_DEBUG (this << " rnti= " << rnti << " lcid= " << (uint32_t) lcid << " layer= " << k);

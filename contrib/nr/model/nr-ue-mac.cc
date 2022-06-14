@@ -32,7 +32,7 @@
 #include <ns3/random-variable-stream.h>
 #include "nr-phy-sap.h"
 #include "nr-control-messages.h"
-#include "nr-mac-header-vs-dl.h"
+#include "nr-mac-header-vs.h"
 #include "nr-mac-short-bsr-ce.h"
 
 namespace ns3 {
@@ -570,29 +570,22 @@ NrUeMac::DoReceivePhyPdu (Ptr<Packet> p)
       return;
     }
 
-  NrMacHeaderVsDl header;
+  NrMacHeaderVs header;
   p->RemoveHeader (header);
-//  NrMacHeaderVs header;
-//  p->RemoveHeader (header);
 
   LteMacSapUser::ReceivePduParameters rxParams;
   rxParams.p = p;
   rxParams.rnti = m_rnti;
-  rxParams.m_signOfRlc=header.GetSignOfRlc();
-  if(rxParams.m_signOfRlc==0){
-      rxParams.lcid = header.GetLcId ();
-  }else{
-      rxParams.lcid = header.GetLcId ()+99;
-  }
-//  rxParams.lcid = header.GetLcId ();
-  NS_LOG_DEBUG ("-----------signOfRlc: "<<rxParams.m_signOfRlc<<"----------");
+  rxParams.lcid = header.GetLcId ();
 
   auto it = m_lcInfoMap.find (header.GetLcId());
+  //NS_LOG_DEBUG (this << " NrUeMac::DoReceivePhyPdu");//znr_add: 与放在i下方f判断中效果相同
 
   // p can be empty. Well, right now no, but when someone will add CE in downlink,
   // then p can be empty.
   if (rxParams.p->GetSize () > 0)
     {
+      NS_LOG_DEBUG (this << " NrUeMac::DoReceivePhyPdu");//znr_add
       it->second.macSapUser->ReceivePdu (rxParams);
     }
 }

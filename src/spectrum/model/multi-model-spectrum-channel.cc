@@ -330,10 +330,11 @@ MultiModelSpectrumChannel::StartTx (Ptr<SpectrumSignalParameters> txParams)
               Ptr<NetDevice> netDev = (*rxPhyIterator)->GetDevice ();
               if (netDev)
                 {
+                  NS_LOG_INFO (this << " MultiModelSpectrumChannel::StartTx");//zjh_add
                   // the receiver has a NetDevice, so we expect that it is attached to a Node
                   uint32_t dstNode =  netDev->GetNode ()->GetId ();
                   Simulator::ScheduleWithContext (dstNode, delay, &MultiModelSpectrumChannel::StartRx, this,
-                                                  rxParams, *rxPhyIterator);
+                                                  rxParams, *rxPhyIterator);//zjh_note: 关键函数，同时启动数据接收StartRx
                 }
               else
                 {

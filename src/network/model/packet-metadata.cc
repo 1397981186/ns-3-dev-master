@@ -133,9 +133,11 @@ bool
 PacketMetadata::IsStateOk (void) const
 {
   NS_LOG_FUNCTION (this);
+  //NS_LOG_INFO (this << "PacketMetadata::IsStateOk");//znr_add
   bool ok = m_used <= m_data->m_size;
   ok &= IsPointerOk (m_head);
   ok &= IsPointerOk (m_tail);
+  
   uint16_t current = m_head;
   while (ok && current != 0xffff)
     {
@@ -151,6 +153,7 @@ PacketMetadata::IsStateOk (void) const
       if (current != m_tail)
         {
           ok &= IsPointerOk (item.next);
+          //NS_LOG_INFO (this << " current != m_tail ok = " << ok);//znr_add
         }
       if (current == m_tail)
         {
@@ -654,16 +657,17 @@ bool
 PacketMetadata::AddHeader (const Header &header, uint32_t size)
 {
   NS_LOG_FUNCTION (this << &header << size);
+//  NS_ASSERT (IsStateOk ());
   if(IsStateOk ()){
-      uint32_t uid = header.GetInstanceTypeId ().GetUid () << 1;
-      DoAddHeader (uid, size);
-      return IsStateOk ();
+    uint32_t uid = header.GetInstanceTypeId ().GetUid () << 1;
+    DoAddHeader (uid, size);
+//    NS_ASSERT (IsStateOk ());
+    return IsStateOk ();
   }else{
-      return false;
+    return false;
   }
-//  NS_ASSERT (IsStateOk ());
-//  NS_ASSERT (IsStateOk ());
 }
+
 void
 PacketMetadata::DoAddHeader (uint32_t uid, uint32_t size)
 {
@@ -685,7 +689,7 @@ PacketMetadata::DoAddHeader (uint32_t uid, uint32_t size)
   UpdateHead (written);
 }
 
-int
+bool
 PacketMetadata::RemoveHeader (const Header &header, uint32_t size)
 {
   uint32_t uid = header.GetInstanceTypeId ().GetUid () << 1;
@@ -694,7 +698,7 @@ PacketMetadata::RemoveHeader (const Header &header, uint32_t size)
   if (!m_enable) 
     {
       m_metadataSkipped = true;
-      return 1;
+      return false;
     }
   struct PacketMetadata::SmallItem item;
   struct PacketMetadata::ExtraItem extraItem;
@@ -704,11 +708,8 @@ PacketMetadata::RemoveHeader (const Header &header, uint32_t size)
     {
       if (m_enableChecking)
         {
-//          NS_FATAL_ERROR ("Removing unexpected header.");
-          NS_LOG_DEBUG("Removing unexpected header. drop");
-//          size=0;
-	  return 0;
-
+          NS_LOG_DEBUG ("Removing unexpected header.");
+          return false;
         }
     }
   else if (item.typeUid != uid &&
@@ -718,9 +719,8 @@ PacketMetadata::RemoveHeader (const Header &header, uint32_t size)
       if (m_enableChecking)
         {
 //          NS_FATAL_ERROR ("Removing incomplete header.");
-          NS_LOG_DEBUG("Removing incomplete header. drop");
-//          size=0;
-          return 0;
+          NS_LOG_DEBUG ("Removing incomplete header.");
+          return false;
         }
     }
   if (m_head + read == m_used)
@@ -737,7 +737,7 @@ PacketMetadata::RemoveHeader (const Header &header, uint32_t size)
       m_head = item.next;
     }
   NS_ASSERT (IsStateOk ());
-  return 1;
+  return true;
 }
 void 
 PacketMetadata::AddTrailer (const Trailer &trailer, uint32_t size)

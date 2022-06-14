@@ -87,14 +87,6 @@ public:
    * \return true if the lcId value stored internally matches with a variable-size header
    */
   bool IsVariableSizeHeader () const;
-
-  uint16_t GetSignOfRlc () const;
-  void Serialize (Buffer::Iterator start) const;
-  uint32_t Deserialize (Buffer::Iterator start);
-  uint32_t GetSerializedSize () const;
-  void SetSignOfRlc (uint16_t size);
-protected:
-  uint16_t  m_signOfRlc {0}; //!< Size (L in the standard)
 };
 
 } //namespace ns3

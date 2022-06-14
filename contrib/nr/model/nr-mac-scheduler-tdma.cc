@@ -308,9 +308,6 @@ NrMacSchedulerTdma::CreateDlDci (PointInFTPlane *spoint,
                                            ueInfo->m_dlRBG * GetNumRbPerRbg ());
   // If is less than 7 (3 mac header, 2 rlc header, 2 data), then we can't
   // transmit any new data, so don't create dci.
-  if(tbs==1042){
-      NS_LOG_DEBUG ("1042 Here");
-  }
   if (tbs < 7)
     {
       NS_LOG_DEBUG ("While creating DCI for UE " << ueInfo->m_rnti <<
