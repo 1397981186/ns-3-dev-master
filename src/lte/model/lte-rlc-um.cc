@@ -107,7 +107,7 @@ LteRlcUm::DoTransmitPdcpPdu (Ptr<Packet> p)
         NS_LOG_DEBUG("ADD to queue head");
       }else{
         m_txBuffer.push_back (TxPdu (p, Simulator::Now ()));
-
+//        NS_LOG_DEBUG("ADD to queue tail");
       }
 
       NS_LOG_LOGIC ("Tx Buffer: New packet added");

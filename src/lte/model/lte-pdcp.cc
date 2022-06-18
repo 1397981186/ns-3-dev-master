@@ -289,6 +289,7 @@ LtePdcp::DoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters params
   txParams.rnti = m_rnti;
   txParams.lcid = m_lcid;
   txParams.pdcpPdu = p;
+  txParams.NcArqAddTop=params.NcArqAddTop;
   
   NS_LOG_INFO (" m_lcid = " << (uint16_t) m_lcid);//znr-add
   m_rlcSapProvider->TransmitPdcpPdu (txParams);
@@ -353,6 +354,7 @@ LtePdcp::DoTransmitPdcpSdu_leg (LtePdcpSapProvider::TransmitPdcpSduParameters pa
   txParams.rnti = m_rnti;
   txParams.lcid = m_lcid_leg;
   txParams.pdcpPdu = p_leg;
+  txParams.NcArqAddTop=params.NcArqAddTop;
 
   NS_LOG_INFO (" m_lcid = " << (uint16_t) m_lcid_leg);//znr-add
   m_rlcSapProvider_leg->TransmitPdcpPdu (txParams);
@@ -429,7 +431,7 @@ LtePdcp::TriggerDoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters
           paramsRe.NcArqAddTop=0;
           Ncedsize++;
           if(var==m_Nc->m_encodingBlockSize-m_Nc->m_originalBlockSize-1){
-            Simulator::Schedule (MicroSeconds(10000),&LtePdcp::ToogleSend, this, paramsRe);
+            Simulator::Schedule (MicroSeconds(1200),&LtePdcp::ToogleSend, this, paramsRe);
           }else{
             ToogleSend(paramsRe);
           }
@@ -479,22 +481,23 @@ LtePdcp::CopyArqReqSendOnce(uint64_t ArqGroupNum,Ptr<Packet> p,CopyControl* m_Co
   ToogleSend(paramsArq);
   auto it=m_Copy->m_ncDecodingBufferList.find(ArqGroupNum);
   it->second.num_statusReport ++;
+  it->second.m_lastTransTimeMicroInt=Simulator::Now ().GetMicroSeconds();
   NS_LOG_DEBUG("CopyArqReqSendOnce group num is "<<ArqGroupNum<<" arq num is "<<(unsigned)it->second.num_statusReport<<" time "<<Simulator::Now ().GetNanoSeconds());
-  it->second.m_statusReportTimer = Simulator::Schedule (m_statusReportTimerValuePdcpCopy,
-                  &LtePdcp::CopyExpireStatusReportTimer, this, ArqGroupNum,p,m_Copy);
+//  it->second.m_statusReportTimer = Simulator::Schedule (m_statusReportTimerValuePdcpCopy,
+//                  &LtePdcp::CopyExpireStatusReportTimer, this, ArqGroupNum,p,m_Copy);
 }
 
-void
-LtePdcp::CopyExpireStatusReportTimer (uint64_t ArqGroupNum,Ptr<Packet> p,CopyControl* m_Copy)
-{
-  auto it = m_Copy->m_ncDecodingBufferList.find(ArqGroupNum);
-
-  if (it->second.num_statusReport<3)
-  {
-      NS_LOG_DEBUG("CopyExpireStatusReportTimer group num is "<<ArqGroupNum<<" arq num is "<<(unsigned)it->second.num_statusReport<<" time "<<Simulator::Now ().GetNanoSeconds());
-      CopyArqReqSendOnce(ArqGroupNum,p,m_Copy);
-  }
-}
+//void
+//LtePdcp::CopyExpireStatusReportTimer (uint64_t ArqGroupNum,Ptr<Packet> p,CopyControl* m_Copy)
+//{
+//  auto it = m_Copy->m_ncDecodingBufferList.find(ArqGroupNum);
+//
+//  if (it->second.num_statusReport<3)
+//  {
+//      NS_LOG_DEBUG("CopyExpireStatusReportTimer group num is "<<ArqGroupNum<<" arq num is "<<(unsigned)it->second.num_statusReport<<" time "<<Simulator::Now ().GetNanoSeconds());
+//      CopyArqReqSendOnce(ArqGroupNum,p,m_Copy);
+//  }
+//}
 
 void
 LtePdcp::NcArqReqSendOnce(uint64_t ArqGroupNum,Ptr<Packet> p,NcControl* m_Nc){

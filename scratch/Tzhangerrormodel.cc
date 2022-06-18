@@ -88,7 +88,8 @@ static Ptr<ListPositionAllocator>
 GetUePositions (double ueY, double ueHeight = 1.5)
 {
   Ptr<ListPositionAllocator> pos = CreateObject<ListPositionAllocator> ();
-  pos->Add (Vector (0.0, 200, ueHeight));
+  pos->Add (Vector (0.0, 205, ueHeight));
+//  pos->Add (Vector (0.0, 200, ueHeight));
 
   return pos;
 }
@@ -122,11 +123,11 @@ main (int argc, char *argv[])
   double bandwidthBand = 100e6;
   double ueY = 30.0;
 
-  double simTime = 0.9; // 50 seconds: to take statistics
+  double simTime =0.8; // 50 seconds: to take statistics
   uint32_t pktSize = 410;
   Time udpAppStartTime = MilliSeconds (100);
 
-  uint32_t pktInterval=75;
+  uint32_t pktInterval=16;
   uint32_t updateChannelIntervalMicro=pktInterval*0.8;
   Time packetInterval = MicroSeconds (pktInterval);
   Time updateChannelInterval = MicroSeconds (updateChannelIntervalMicro);
@@ -134,10 +135,10 @@ main (int argc, char *argv[])
   std::cout<<"Speed = "<<8*byteSpeed/1024/1024<<" Mbps"<<std::endl;
   std::cout<<"pktInterval = "<<pktInterval<<" MicroSeconds"<<" updateChannelIntervalMicro "<<updateChannelIntervalMicro<<" MicroSeconds "<<std::endl;
 
-//    bool ifNc=true;
-    bool ifNc=false;
-//    bool ifCopy=false;
-    bool ifCopy=true;
+    bool ifNc=true;
+//    bool ifNc=false;
+    bool ifCopy=false;
+//    bool ifCopy=true;
 
   bool isUl = false;
 

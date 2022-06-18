@@ -67,6 +67,7 @@ public:
     bool m_noReceive= false;
     uint8_t num_statusReport = 0;
     EventId m_statusReportTimer;
+    int64_t m_lastTransTimeMicroInt=0;
     std::vector<uint8_t> deliverdSN;
     Time startTime;
     std::vector <uint32_t> seqVector;
@@ -111,7 +112,8 @@ public:
   uint64_t m_failedGroupNum = 0;
   uint32_t m_pollingInterval=10;
 //  Time m_statusReportTimerValue = MilliSeconds(40.0);
-  Time m_statusReportTimerValue = MicroSeconds(80000.0);
+  Time m_statusReportTimerValue = MicroSeconds(65000.0);
+  int64_t m_statusReportTimerValueInt = 65000;
 //  Time m_statusReportTimerValue1 = MicroSeconds(100000.0);
 //  Time m_statusReportTimerValue2 = MicroSeconds(200000.0);
 //  Time m_statusReportTimerValue3 = MicroSeconds(200000.0);

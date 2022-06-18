@@ -211,6 +211,7 @@ CopyControl::RecvAndSave (Ptr<Packet> p)
 //  }else{
 //    m_IfTransmitSduFlag=false;
 //  }
+
   m_IfSendArq=false;
   m_IfRecvArq=false;
   return p;
@@ -267,7 +268,7 @@ CopyControl::CopySendArqReq (std::vector<uint64_t>&ArqGroupNums, std::vector<Ptr
       it3->second.m_noReceive=true;
 
     }
-    if (!it3->second.m_ncComplete && !it3->second.m_statusReportTimer.IsRunning())
+    if (!it3->second.m_ncComplete && ((Simulator::Now ().GetMicroSeconds()-it3->second.m_lastTransTimeMicroInt)>m_statusReportTimerValueInt))
 //    if (!it3->second.m_ncComplete )
     {
       NS_LOG_DEBUG ("---it at i "<< i);
