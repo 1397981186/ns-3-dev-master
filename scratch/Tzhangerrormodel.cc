@@ -88,8 +88,7 @@ static Ptr<ListPositionAllocator>
 GetUePositions (double ueY, double ueHeight = 1.5)
 {
   Ptr<ListPositionAllocator> pos = CreateObject<ListPositionAllocator> ();
-  pos->Add (Vector (0.0, 205, ueHeight));
-//  pos->Add (Vector (0.0, 200, ueHeight));
+  pos->Add (Vector (0.0, 190, ueHeight));
 
   return pos;
 }
@@ -114,27 +113,31 @@ main (int argc, char *argv[])
   uint32_t mcs = 13;
   const uint8_t gNbNum = 1;
   const uint8_t ueNum = 1;
-//  double totalTxPower = 5.9;
-  double totalTxPower = 1;
+  double totalTxPower = 4.1;
   uint16_t numerologyBwp = 4;
 //  double centralFrequencyBand = 28e9;
   double centralFrequencyBand1 = 28e9;
 //  double centralFrequencyBand2 = 28.2e9;
-  double bandwidthBand = 100e6;
+  double bandwidthBand = 160e6;
   double ueY = 30.0;
 
-  double simTime =0.8; // 50 seconds: to take statistics
-  uint32_t pktSize = 410;
+  double simTime = 9.24; // 50 seconds: to take statistics
+  uint32_t pktSize = 600;
   Time udpAppStartTime = MilliSeconds (100);
+//  Time packetInterval = MilliSeconds (10);
+    uint32_t pktInterval=457;
+    uint32_t updateChannelIntervalMicro=pktInterval*0.8;
+    Time packetInterval = MicroSeconds (pktInterval);
+    Time updateChannelInterval = MicroSeconds (updateChannelIntervalMicro);
 
-  uint32_t pktInterval=16;
-  uint32_t updateChannelIntervalMicro=pktInterval*0.8;
-  Time packetInterval = MicroSeconds (pktInterval);
-  Time updateChannelInterval = MicroSeconds (updateChannelIntervalMicro);
+//  Time packetInterval = MicroSeconds (100);
+//  Time updateChannelInterval = MicroSeconds (80);
+//  Time updateChannelInterval = MilliSeconds (8);
+
+
   double byteSpeed = pktSize*(1000000/pktInterval);
-  std::cout<<"Speed = "<<8*byteSpeed/1024/1024<<" Mbps"<<std::endl;
-  std::cout<<"pktInterval = "<<pktInterval<<" MicroSeconds"<<" updateChannelIntervalMicro "<<updateChannelIntervalMicro<<" MicroSeconds "<<std::endl;
-
+    std::cout<<"Speed = "<<8*byteSpeed/1024/1024<<" Mbps"<<std::endl;
+    std::cout<<"pktInterval = "<<pktInterval<<" MicroSeconds"<<" updateChannelIntervalMicro "<<updateChannelIntervalMicro<<" MicroSeconds "<<std::endl;
     bool ifNc=true;
 //    bool ifNc=false;
     bool ifCopy=false;
@@ -174,11 +177,8 @@ main (int argc, char *argv[])
    * Default values for the simulation. We are progressively removing all
    * the instances of SetDefault, but we need it for legacy code (LTE)
    */
-//  Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize",
-//                      UintegerValue (999999999));
   Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize",
                       UintegerValue (1024*64));
-
 
   Config::SetDefault ("ns3::NrAmc::ErrorModelType", TypeIdValue (TypeId::LookupByName (errorModel)));
   Config::SetDefault ("ns3::NrAmc::AmcModel", EnumValue (NrAmc::ShannonModel));  // NOT USED in this example. MCS is fixed.
@@ -251,6 +251,7 @@ main (int argc, char *argv[])
   const uint8_t numCcPerBand = 2;
 
 //  CcBwpCreator::SimpleOperationBandConf bandConf1 (centralFrequencyBand1, bandwidthBand, numCcPerBand, BandwidthPartInfo::UMi_StreetCanyon);
+//  CcBwpCreator::SimpleOperationBandConf bandConf1 (centralFrequencyBand1, bandwidthBand, numCcPerBand, BandwidthPartInfo::UMi_StreetCanyon_nLoS);
   CcBwpCreator::SimpleOperationBandConf bandConf1 (centralFrequencyBand1, bandwidthBand, numCcPerBand, BandwidthPartInfo::UMi_StreetCanyon_LoS);
 //  CcBwpCreator::SimpleOperationBandConf bandConf2 (centralFrequencyBand2, bandwidthBand, numCcPerBand, BandwidthPartInfo::UMi_StreetCanyon);
 
@@ -316,7 +317,7 @@ main (int argc, char *argv[])
   nrHelper->SetGnbDlAmcAttribute ("AmcModel", EnumValue (NrAmc::ShannonModel));
   nrHelper->SetGnbUlAmcAttribute ("AmcModel", EnumValue (NrAmc::ShannonModel));
 
-  nrHelper->SetUePhyAttribute ("TxPower", DoubleValue (80));
+  nrHelper->SetUePhyAttribute ("TxPower", DoubleValue (10));
 
   uint32_t bwpId = 0;
 
@@ -436,7 +437,7 @@ main (int argc, char *argv[])
   // start UDP server and client apps
   sinkApps.Start (udpAppStartTime);
   txApps.Start (udpAppStartTime);
-  sinkApps.Stop (Seconds (simTime));
+  sinkApps.Stop (Seconds (simTime+0.05));
   txApps.Stop (Seconds (simTime));
 
   // attach UEs to the closest eNB
@@ -445,7 +446,7 @@ main (int argc, char *argv[])
   // enable the traces provided by the nr module
   //nrHelper->EnableTraces();
 
-  Simulator::Stop (Seconds (simTime));
+  Simulator::Stop (Seconds (simTime+0.05));
 
   auto start = std::chrono::steady_clock::now ();
 
